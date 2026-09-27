@@ -38,7 +38,8 @@ for (const def of FURNITURE) {
   if (bake) {
     // 安装面（地面 / 墙面 / 天花板）既是 AO 的遮挡面，也是阴影、光斑贴花所在的平面
     const plane = def.mount ?? 'floor';
-    ao = await bake.bakeAO(geo.lods[0], geo.layout, { samples: fast ? 48 : 160, plane: MOUNTS[plane].n, ...(def.ao || {}) });
+    // ao: false —— 不需要 AO 的构件（地板这种一整块平面）不烘焙，也不带 AO 贴图
+    if (def.ao !== false) ao = await bake.bakeAO(geo.lods[0], geo.layout, { samples: fast ? 48 : 160, plane: MOUNTS[plane].n, ...(def.ao || {}) });
     if (def.shadow !== false) shadow = await bake.bakeShadow(geo.lods[0], { plane, samples: fast ? 64 : 256, ...(def.shadow || {}) });
     if (def.glow) glow = await bake.bakeGlow(geo.lods[0], { plane, samples: fast ? 16 : 64, ...def.glow });
   }

@@ -172,5 +172,56 @@ export const MATERIALS = {
   },
 };
 
+// —— 建筑构件 ——
+// 地板、墙面是“可拼接模块”：贴图按模块对齐（noOffset，不加随机偏移），周期整除 2m 模块，相邻模块无缝接上
+const PLASTER_BASE = [242, 240, 236];
+Object.assign(MATERIALS, {
+  floor_oak: {
+    label: '人字拼橡木（哑光清漆）',
+    tex: 'herringbone', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.7,
+    clearcoat: { factor: 0.3, roughness: 0.4 },
+  },
+  floor_smoked: {
+    label: '烟熏橡木宽板（木蜡油）',
+    tex: 'planks', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.7,
+    clearcoat: { factor: 0.15, roughness: 0.5 },
+  },
+  terrazzo: {
+    label: '水磨石（磨光，黄铜分隔条）',
+    // 金属度贴图只在铜条上是 1
+    tex: 'terrazzo', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+    clearcoat: { factor: 0.35, roughness: 0.12 },
+  },
+  plaster: {
+    label: '乳胶漆（暖白）',
+    tex: 'plaster', tile: [0.5, 0.5], noOffset: true, color: tint([238, 234, 226], PLASTER_BASE),
+    roughness: 1, metallic: 0, normalScale: 0.45,
+  },
+  plaster_sage: {
+    label: '乳胶漆（鼠尾草绿）',
+    tex: 'plaster', tile: [0.5, 0.5], noOffset: true, color: tint([140, 152, 134], PLASTER_BASE),
+    roughness: 1, metallic: 0, normalScale: 0.45,
+  },
+  paint_sage: {
+    label: '护墙板线条（鼠尾草绿缎面漆）',
+    color: srgb(140, 152, 134), metallic: 0, roughness: 0.5,
+    clearcoat: { factor: 0.12, roughness: 0.4 },
+  },
+  glass: {
+    label: '透明玻璃',
+    // 半透明混合；不参与 AO 遮挡，自己也不压 AO（玻璃边上不该有一圈黑）
+    color: srgb(226, 236, 234, 0.16), metallic: 0, roughness: 0.04,
+    alphaMode: 'BLEND', aoStrength: 0,
+  },
+  cane: {
+    label: '藤编（维也纳藤编）',
+    tex: 'cane', tile: [0.1, 0.1],
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

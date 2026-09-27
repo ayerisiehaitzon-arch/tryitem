@@ -21,11 +21,35 @@ export function sweep(k, o) {
     grain = 'len', density = {}, xf = null, maxChart = 0.9, scale = null,
   } = o;
   const part = k.part(mat, name);
-  const pts = closed ? [...path, path[0]] : path;
+  const arc = (P) => {
+    const S = [0];
+    for (let i = 1; i < P.length; i++) S.push(S[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1], P[i][2] - P[i - 1][2]));
+    return S;
+  };
+  let pts = closed ? [...path, path[0]] : path;
+  // 长路径按 maxChart 切成几片（每片一个 AO 图块）。在分片边界处插入路径点（共线点，不改变形状）：
+  // 否则一条长直段会被相邻两片各生成一遍，得到两层重叠的面
+  const K = k.pieces(`${name}:w`, arc(pts)[pts.length - 1], maxChart);
+  if (K > 1) {
+    const S0 = arc(pts), L0 = S0[S0.length - 1];
+    const out = [pts[0]];
+    let p = 1;
+    for (let i = 1; i < pts.length; i++) {
+      while (p < K && (p * L0) / K < S0[i] - 1e-6) {
+        const s = (p * L0) / K;
+        if (s > S0[i - 1] + 1e-6) {
+          const t = (s - S0[i - 1]) / (S0[i] - S0[i - 1]);
+          out.push(pts[i - 1].map((v, j) => v + (pts[i][j] - v) * t));
+        }
+        p++;
+      }
+      out.push(pts[i]);
+    }
+    pts = out;
+  }
   const F = rmFrames(pts, up, closed);
   const n = pts.length;
-  const S = [0];
-  for (let i = 1; i < n; i++) S.push(S[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1], pts[i][2] - pts[i - 1][2]));
+  const S = arc(pts);
   const Ltot = S[n - 1];
   const sc = (i) => (scale ? scale(S[i] / Ltot) : 1);
   // 拐点处截面沿弯折方向放大 1/cos(θ/2)（斜接），否则弯管在每个节点处会被“捏细”
@@ -59,7 +83,6 @@ export function sweep(k, o) {
     F.R[i][2] * n2[0] + F.U[i][2] * n2[1],
   ];
 
-  const K = k.pieces(`${name}:w`, Ltot, maxChart);
   const P = sh.length;
   for (let p = 0; p < K; p++) {
     // 找到这一片覆盖的路径点区间

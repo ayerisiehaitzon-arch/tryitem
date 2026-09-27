@@ -13,9 +13,9 @@ import { MOUNTS, onPlane } from '../core/mount.js';
 const WORKER = new URL('./ao-worker.js', import.meta.url);
 
 // 遮挡体：透明裁剪（alphaMode MASK）的面片不算 —— 流苏这种“一张卡片上画的细线”
-// 如果当成实心面去挡光，会在地毯边和地面上压出一整条黑影
+// 如果当成实心面去挡光，会在地毯边和地面上压出一整条黑影；半透明的玻璃（BLEND）同理
 function gatherTris(lod, keep = () => true) {
-  const prims = lod.prims.filter((pr) => MATERIALS[pr.mat]?.alphaMode !== 'MASK' && keep(pr.mat));
+  const prims = lod.prims.filter((pr) => !MATERIALS[pr.mat]?.alphaMode && keep(pr.mat));
   let n = 0;
   for (const pr of prims) n += pr.index.length / 3;
   const tris = new Float32Array(n * 9);

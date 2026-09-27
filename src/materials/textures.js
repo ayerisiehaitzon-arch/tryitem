@@ -10,6 +10,7 @@ import sharp from 'sharp';
 import { perlin, fbm, worley, mulberry } from './noise.js';
 import * as decor from './decor-textures.js';
 import * as lamp from './lamp-textures.js';
+import { INTERIOR } from './interior-textures.js';
 
 const VERSION = 8;
 
@@ -297,6 +298,13 @@ export const TEXTURES = {
   fringe: { size: 512, normalStrength: 2, v: 4, alpha: true, gen: decor.fringe },
   // —— 灯具 ——
   paper: { size: 1024, detail: 0.5, normalStrength: 2.5, v: 4, emit: true, gen: lamp.paper },
+  // —— 建筑构件 ——（地板贴图的周期整除 2m 模块：人字拼 1m、宽板 2m、水磨石 1m）
+  herringbone: { size: 1024, detail: 0.5, normalStrength: 3, v: 3, gen: INTERIOR.herringbone },
+  planks: { size: 2048, detail: 0.5, normalStrength: 3, v: 1, gen: INTERIOR.planks },
+  terrazzo: { size: 1024, detail: 0.5, normalStrength: 1.2, v: 2, gen: INTERIOR.terrazzo },
+  plaster: { size: 512, normalStrength: 1.2, v: 1, gen: INTERIOR.plaster },
+  // —— 新家具 ——
+  cane: { size: 512, normalStrength: 3, v: 2, gen: INTERIOR.cane },
 };
 
 function alloc(S) {

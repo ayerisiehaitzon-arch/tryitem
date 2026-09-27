@@ -217,7 +217,7 @@
   </div>
   <p class="caption" id="caption"></p>
   <nav class="dock">
-    <div class="items" id="items" role="toolbar" aria-label="家具、摆件与灯具"></div>
+    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具与墙地门窗"></div>
     <div class="controls">
       <div class="seg" role="group" aria-label="显示">
         <button id="t-wire" aria-pressed="false">线框</button>
@@ -265,8 +265,11 @@ const css = (name) => getComputedStyle(document.documentElement).getPropertyValu
 
 // —— 渲染器 / 场景 ——
 const canvas = $('stage');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: SHOT });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, SHOT ? 1 : 2));
+// 截图模式（shots.js）不用 MSAA，改成按 2 倍分辨率渲染再缩小（超采样）：
+// 无头浏览器里的软件渲染器做 MSAA 时，深度是在像素中心插值的，几乎侧对相机的面（墙模块端头的封口面）
+// 会断断续续地“透”到墙面前面来；超采样没有这个问题，边缘也更干净
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !SHOT, preserveDrawingBuffer: SHOT });
+renderer.setPixelRatio(SHOT ? Number(params.get('pr') ?? 1) : Math.min(window.devicePixelRatio || 1, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.NeutralToneMapping;
 renderer.toneMappingExposure = 1.0;
@@ -298,6 +301,7 @@ scene.add(key, key.target);
 // 无缝影棚：地面不受光照、与背景同色，只靠烘焙的接触阴影“落地”
 const floor = new THREE.Mesh(new THREE.CircleGeometry(30, 64), new THREE.MeshBasicMaterial({ toneMapped: false }));
 floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.03; // 略低于 y = 0：地板构件的上表面就在 y = 0，不能和影棚地面打架
 scene.add(floor);
 const shadowCatcher = new THREE.Mesh(new THREE.CircleGeometry(12, 64), new THREE.ShadowMaterial({ opacity: 0.22 }));
 shadowCatcher.rotation.x = -Math.PI / 2;
@@ -310,12 +314,6 @@ const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshB
 backdrop.position.set(0, 10, 0);
 backdrop.visible = false;
 scene.add(backdrop);
-// 全屋陈列：卧室后面一段展示墙，壁灯挂在上面
-const stageWall = new THREE.Mesh(new THREE.BoxGeometry(3.7, 2.5, 0.08), new THREE.MeshStandardMaterial({ roughness: 0.95 }));
-stageWall.position.set(3.85, 1.25, -1.76);
-stageWall.receiveShadow = true;
-stageWall.visible = false;
-scene.add(stageWall);
 
 // 安装方式：吊灯挂在 2.45m 高的“天花板”下，壁灯装在 1.45m 高的墙上
 const MOUNT_AT = { floor: [0, 0, 0], ceiling: [0, 2.45, 0], wall: [0, 1.45, 0] };
@@ -325,7 +323,6 @@ function applyTheme() {
   scene.background = stage;
   floor.material.color.copy(stage);
   backdrop.material.color.copy(stage);
-  stageWall.material.color.set(css('--wall'));
   wireMat.color.set(css('--accent'));
   requestRender();
 }
@@ -460,36 +457,69 @@ function instantiate(asset, pos = [0, 0, 0], rotY = 0, { lift = 0 } = {}) {
   return { asset, group, levels, shadow, glow, sphere, box, level: 0 };
 }
 
-// 全屋陈列：书房 + 客厅 + 餐厅 + 卧室，同一模型多次摆放（4 把餐椅、2 张吧台凳、2 盏壁灯）；
-// 摆件放在家具上：书在书架第二层，花瓶在茶几上，地毯压在沙发前腿下；
-// 灯具：台灯在书桌上，纸灯笼吊在餐桌上方 2.45m 的“天花板”下，壁灯挂在卧室的展示墙上
+// 全屋陈列：一套“剖开的公寓”——后墙和左墙是墙地门窗构件拼出来的（2m 模块），前面敞开；
+//   书房（窗下书桌）→ 门 → 客厅（书架、沙发、地毯）→ 卧室（护墙板墙、一对壁灯），左前方是餐厅（水磨石地面，餐边柜靠左墙）。
+// 地面：书房、客厅人字拼，餐厅水磨石，卧室宽板；地板模块按 2m 网格铺，接缝处的图案严丝合缝。
+// 摆件放在家具上：书在书架第二层，花瓶在茶几上，台灯在书桌上；地毯压在沙发前腿下。
+const WZ = -2.06; // 后墙中线（墙面在 z = -2）
+const LX = -6.06; // 左墙中线（墙面在 x = -6）
 const ROOM = [
-  ['rug', [0, 0, -0.22], 0],
-  ['desk', [-3.75, 0, -1.45], 0],
-  ['table_lamp', [-3.42, 0.75, -1.45], 0],
-  ['office_chair', [-3.75, 0, -0.78], Math.PI - 0.25],
-  ['snake_plant', [-2.95, 0, -1.62], 0.3],
-  ['sofa', [0, 0, -1.25], 0, { lift: 0.021 }],
-  ['coffee_table', [0, 0, 0.05], 0, { lift: 0.021 }],
-  ['vases', [0.02, 0.422, 0.06], 0.4],
-  ['armchair', [1.5, 0, 0.12], -Math.PI / 2 + 0.3],
-  ['fiddle_fig', [1.62, 0, -1.55], 0.5],
-  ['floor_lamp', [-1.42, 0, -1.5], 0],
-  ['bookshelf', [-2.3, 0, -1.55], 0],
-  ['books', [-2.3, 0.451, -1.524], 0],
-  ['dining_table', [-2.75, 0, 1.25], 0],
-  ['pendant_lantern', [-2.75, 2.45, 1.25], 0],
-  ['dining_chair', [-3.15, 0, 1.86], Math.PI],
-  ['dining_chair', [-2.35, 0, 1.86], Math.PI],
-  ['dining_chair', [-3.15, 0, 0.64], 0],
-  ['dining_chair', [-2.35, 0, 0.64], 0],
-  ['bed', [3.55, 0, -0.55], 0],
-  ['wall_lamp', [3.02, 1.42, -1.72], 0],
-  ['wall_lamp', [4.08, 1.42, -1.72], 0],
-  ['nightstand', [2.4, 0, -1.4], 0],
-  ['wardrobe', [5.05, 0, -1.4], 0],
-  ['bar_stool', [0.85, 0, 1.75], 0.3],
-  ['bar_stool', [1.4, 0, 1.75], -0.2],
+  // —— 墙 ——
+  ['wall_window', [-5, 0, WZ], 0],
+  ['wall_door', [-3, 0, WZ], 0],
+  ['wall', [-1, 0, WZ], 0],
+  ['wall', [1, 0, WZ], 0],
+  ['wall_wainscot', [3, 0, WZ], 0],
+  ['wall_wainscot', [5, 0, WZ], 0],
+  ['wall', [LX, 0, -1.12], Math.PI / 2],
+  ['wall', [LX, 0, 0.88], Math.PI / 2],
+  // —— 地面 ——
+  ['floor_herringbone', [-5, 0, -1], 0],
+  ['floor_herringbone', [-3, 0, -1], 0],
+  ['floor_terrazzo', [-5, 0, 1], 0],
+  ['floor_terrazzo', [-3, 0, 1], 0],
+  ['floor_herringbone', [-1, 0, -1], 0],
+  ['floor_herringbone', [1, 0, -1], 0],
+  ['floor_herringbone', [-1, 0, 1], 0],
+  ['floor_herringbone', [1, 0, 1], 0],
+  ['floor_plank', [3, 0, -1], 0],
+  ['floor_plank', [5, 0, -1], 0],
+  ['floor_plank', [3, 0, 1], 0],
+  ['floor_plank', [5, 0, 1], 0],
+  // —— 书房 ——
+  ['desk', [-5, 0, -1.66], 0],
+  ['table_lamp', [-4.7, 0.75, -1.7], 0],
+  ['office_chair', [-5, 0, -1.02], Math.PI - 0.25],
+  ['snake_plant', [-5.78, 0, -1.78], 0.3],
+  ['fiddle_fig', [-3.98, 0, -1.58], 0.5],
+  // —— 餐厅 ——
+  ['sideboard', [-5.77, 0, 0.95], Math.PI / 2],
+  ['dining_table', [-3.85, 0, 0.95], 0],
+  ['pendant_lantern', [-3.85, 2.6, 0.95], 0],
+  ['dining_chair', [-4.25, 0, 1.56], Math.PI],
+  ['dining_chair', [-3.45, 0, 1.56], Math.PI],
+  ['dining_chair', [-4.25, 0, 0.34], 0],
+  ['dining_chair', [-3.45, 0, 0.34], 0],
+  // —— 客厅 ——
+  ['bookshelf', [-1.45, 0, -1.83], 0],
+  ['books', [-1.45, 0.451, -1.804], 0],
+  ['floor_lamp', [-0.75, 0, -1.7], 0],
+  ['rug', [0.55, 0, -0.45], 0],
+  ['sofa', [0.55, 0, -1.51], 0, { lift: 0.021 }],
+  ['side_table', [1.83, 0, -1.5], 0],
+  ['coffee_table', [0.55, 0, -0.42], 0, { lift: 0.021 }],
+  ['vases', [0.57, 0.422, -0.41], 0.4],
+  ['armchair', [-1.0, 0, -0.25], Math.PI / 2 - 0.3],
+  ['bar_stool', [-1.45, 0, 1.2], 0.3],
+  ['bar_stool', [-0.95, 0, 1.45], -0.2],
+  // —— 卧室 ——
+  ['bed', [3.5, 0, -0.88], 0],
+  ['nightstand', [2.33, 0, -1.77], 0],
+  ['nightstand', [4.67, 0, -1.77], 0],
+  ['wall_lamp', [2.5, 1.42, -2.0], 0],
+  ['wall_lamp', [4.5, 1.42, -2.0], 0],
+  ['wardrobe', [5.45, 0, -1.69], 0],
+  ['bench', [3.5, 0, 0.44], 0],
 ];
 
 async function buildView(id) {
@@ -499,7 +529,6 @@ async function buildView(id) {
     const list = await Promise.all(ROOM.map(async ([aid, pos, rot, opt]) => instantiate(await loadAsset(aid), pos, rot, opt)));
     const box = new THREE.Box3();
     list.forEach((i) => box.union(i.box));
-    box.union(new THREE.Box3().setFromObject(stageWall));
     const ids = [...new Set(ROOM.map((r) => r[0]))];
     const lods = [0, 1, 2].map((l) => ({
       tris: list.reduce((a, i) => a + i.asset.stats.lods[l].tris, 0),
@@ -570,7 +599,6 @@ function applyView() {
   $('t-ao').setAttribute('aria-pressed', String(state.ao));
   $('t-light').setAttribute('aria-pressed', String(state.lights));
   backdrop.visible = !view.room && view.mount === 'wall';
-  stageWall.visible = !!view.room;
   $('caption').textContent = captionText();
   requestRender();
 }
@@ -622,7 +650,7 @@ function renderStats(v) {
     $('kv').innerHTML = `
       <dt>顶点</dt><dd>${fmt(s.lods[0].verts)}</dd>
       <dt>Draw call</dt><dd>${s.lods[0].drawCalls} + ${(v.instances[0].shadow ? 1 : 0) + (v.instances[0].glow ? 1 : 0)}</dd>
-      <dt>AO 图集</dt><dd>${s.aoAtlas}²<span class="wide"> · ${s.aoDensity} px/m</span></dd>
+      <dt>AO 图集</dt><dd>${s.aoAtlas ? `${s.aoAtlas}²<span class="wide"> · ${s.aoDensity} px/m</span>` : '不需要'}</dd>
       <dt>文件</dt><dd>${s.fileKB ?? '—'} KB</dd>`;
   }
 }
@@ -638,8 +666,9 @@ function highlightLod() {
 let tween = null;
 function frame(v, instant = false) {
   const box = v.box;
-  const az = THREE.MathUtils.degToRad(Number(params.get('az') ?? (v.room ? 24 : 36)));
-  const el = THREE.MathUtils.degToRad(Number(params.get('el') ?? (v.room ? 34 : 18)));
+  const hint = v.stats?.view ?? {}; // 构件自带的默认取景（地板从上往下看）
+  const az = THREE.MathUtils.degToRad(Number(params.get('az') ?? hint.az ?? (v.room ? 24 : 36)));
+  const el = THREE.MathUtils.degToRad(Number(params.get('el') ?? hint.el ?? (v.room ? 34 : 18)));
   const center = box.getCenter(new THREE.Vector3());
   // 落地的东西取景点略低（把地上的影子带进来）；吊灯、壁灯就对准它本身
   const target = new THREE.Vector3(center.x, center.y * (v.room ? 0.5 : v.mount && v.mount !== 'floor' ? 1 : 0.9), center.z);
@@ -666,8 +695,13 @@ function frame(v, instant = false) {
   };
   let lo = 0.2, hi = 40;
   for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (fits(mid)) hi = mid; else lo = mid; }
-  const dist = hi * Number(params.get('dist') ?? 1);
+  const dist = hi * Number(params.get('dist') ?? hint.dist ?? 1);
   const pos = target.clone().addScaledVector(dir, dist);
+  // 近裁剪面跟着取景距离走：看全屋时相机在十几米外，近裁剪面还是 5cm 的话，
+  // 远处的深度精度只剩约 2mm，墙模块接缝处藏在墙里的封口面会断断续续地“透”出来
+  camera.near = THREE.MathUtils.clamp(dist * 0.02, 0.02, 0.4);
+  camera.far = Math.max(60, dist * 8);
+  camera.updateProjectionMatrix();
   key.target.position.copy(target);
   key.position.set(target.x - 2.6, 4.2, target.z + 3.2);
   controls.minDistance = dist * 0.2;
@@ -794,7 +828,8 @@ $('items').innerHTML = `
   </button>`
   + group('家具', mf.items.filter((s) => (s.category ?? 'furniture') === 'furniture'))
   + group('摆件', mf.items.filter((s) => s.category === 'decor'))
-  + group('灯具', mf.items.filter((s) => s.category === 'lighting'));
+  + group('灯具', mf.items.filter((s) => s.category === 'lighting'))
+  + group('墙地门窗', mf.items.filter((s) => s.category === 'architecture'));
 for (const b of document.querySelectorAll('.item')) b.onclick = () => select(b.dataset.id);
 const wanted = params.get('item') || location.hash.slice(1);
 const first = wanted === 'room' || mf.items.find((s) => s.id === wanted) ? wanted : mf.items[0].id;

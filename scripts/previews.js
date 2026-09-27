@@ -1,13 +1,17 @@
 // 生成 README 用的预览图：node scripts/previews.js
 //   docs/previews/overview.jpg        全部家具一览
 //   docs/previews/furniture-detail.jpg 家具特写：衣柜门板对花、黄铜脚套、书桌信件抽屉、办公椅盾形靠背
+//   docs/previews/furniture-new.jpg   新家具：藤编餐边柜、绗缝丝绒床尾凳、C 型边几
 //   docs/previews/decor.jpg           全部摆件一览
 //   docs/previews/decor-detail.jpg    摆件特写：书脊、釉面、叶片、流苏
 //   docs/previews/lighting.jpg        全部灯具一览
 //   docs/previews/lighting-detail.jpg 灯具特写：台灯开灯 / 关灯、纸灯笼、壁灯
-//   docs/previews/room.jpg            全屋陈列
-//   docs/previews/living.jpg          客厅一角
-//   docs/previews/bedroom.jpg         卧室：展示墙上的一对壁灯
+//   docs/previews/architecture.jpg    墙地门窗一览
+//   docs/previews/architecture-detail.jpg 墙地门窗特写：人字拼、门执手与合页、护墙板线条、钢窗与窗台
+//   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
+//   docs/previews/living.jpg          客厅
+//   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
+//   docs/previews/dining.jpg          书房与餐厅
 //   docs/previews/normals.jpg         同一个沙发：平滑法线 / 平直着色 / 线框
 //   docs/previews/ao.jpg              扶手椅：有 / 无烘焙 AO
 import fs from 'node:fs/promises';
@@ -23,7 +27,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -46,6 +50,12 @@ fd.push(...await shoot({ items: ['nightstand'], views: ['&target=0.12:0.16:0.1&d
 fd.push(...await shoot({ items: ['desk'], views: ['&target=-0.3:0.72:-0.05&dist=0.4&el=18&az=25'], size: [800, 600], outDir: tmp, name: () => 'f2.png' }));
 fd.push(...await shoot({ items: ['office_chair'], views: ['&target=0:0.8:-0.15&dist=0.4&el=30&az=50'], size: [800, 600], outDir: tmp, name: () => 'f3.png' }));
 await grid(fd, 2, [600, 450], path.join(out, 'furniture-detail.jpg'));
+
+const nf = [];
+nf.push(...await shoot({ items: ['sideboard'], views: ['close'], size: [800, 600], outDir: tmp, name: () => 'n0.png' }));
+nf.push(...await shoot({ items: ['bench'], views: ['close'], size: [800, 600], outDir: tmp, name: () => 'n1.png' }));
+nf.push(...await shoot({ items: ['side_table'], views: ['hero'], size: [800, 600], outDir: tmp, name: () => 'n2.png' }));
+await grid(nf, 3, [480, 360], path.join(out, 'furniture-new.jpg'));
 
 const decor = await shoot({ items: decorIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `d_${id}.png` });
 await grid(decor, 3, [480, 360], path.join(out, 'decor.jpg'));
@@ -70,17 +80,32 @@ lit.push(...await shoot({ items: ['pendant_lantern'], views: ['&target=0:1.75:0&
 lit.push(...await shoot({ items: ['wall_lamp'], views: ['&dist=0.75&el=12&az=28'], size: [800, 600], outDir: tmp, name: () => 'y3.png' }));
 await grid(lit, 2, [600, 450], path.join(out, 'lighting-detail.jpg'));
 
-const room = await shoot({ items: ['room'], views: ['&el=30&az=24&dist=0.84'], size: [1600, 900], outDir: tmp, name: () => 'room.png' });
+const arch = await shoot({ items: archIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `a_${id}.png` });
+await grid(arch, 4, [360, 270], path.join(out, 'architecture.jpg'));
+
+// 墙地门窗特写：人字拼的板缝与木纹、门执手和合页、护墙板线条和腰线、钢窗与大理石窗台
+const ad = [];
+ad.push(...await shoot({ items: ['floor_herringbone'], views: ['&target=0:0:0.3&dist=0.35&el=24&az=20'], size: [800, 600], outDir: tmp, name: () => 'b0.png' }));
+ad.push(...await shoot({ items: ['wall_door'], views: ['&target=0.22:1:0.06&dist=0.2&el=10&az=30'], size: [800, 600], outDir: tmp, name: () => 'b1.png' }));
+ad.push(...await shoot({ items: ['wall_wainscot'], views: ['&target=-0.5:0.9:0.06&dist=0.28&el=10&az=30'], size: [800, 600], outDir: tmp, name: () => 'b2.png' }));
+ad.push(...await shoot({ items: ['wall_window'], views: ['&target=0.1:1.2:0.05&dist=0.3&el=14&az=30'], size: [800, 600], outDir: tmp, name: () => 'b3.png' }));
+await grid(ad, 2, [600, 450], path.join(out, 'architecture-detail.jpg'));
+
+const room = await shoot({ items: ['room'], views: ['&el=32&az=24&dist=0.9'], size: [1600, 900], outDir: tmp, name: () => 'room.png' });
 await sharp(room[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'room.jpg'));
 console.log('→ docs/previews/room.jpg');
 
-const living = await shoot({ items: ['room'], views: ['&target=-0.4:0.3:-0.7&dist=0.36&el=24&az=18'], size: [1600, 900], outDir: tmp, name: () => 'living.png' });
+const living = await shoot({ items: ['room'], views: ['&target=0.4:0.5:-0.9&dist=0.3&el=20&az=14'], size: [1600, 900], outDir: tmp, name: () => 'living.png' });
 await sharp(living[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'living.jpg'));
 console.log('→ docs/previews/living.jpg');
 
-const bedroom = await shoot({ items: ['room'], views: ['&target=2.4:1:-0.9&dist=0.3&el=16&az=12'], size: [1600, 900], outDir: tmp, name: () => 'bedroom.png' });
+const bedroom = await shoot({ items: ['room'], views: ['&target=3.6:0.95:-1.0&dist=0.3&el=14&az=8'], size: [1600, 900], outDir: tmp, name: () => 'bedroom.png' });
 await sharp(bedroom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'bedroom.jpg'));
 console.log('→ docs/previews/bedroom.jpg');
+
+const dining = await shoot({ items: ['room'], views: ['&target=-4.2:0.7:-0.3&dist=0.32&el=22&az=32'], size: [1600, 900], outDir: tmp, name: () => 'dining.png' });
+await sharp(dining[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'dining.jpg'));
+console.log('→ docs/previews/dining.jpg');
 
 let n = 0;
 const seq = (prefix) => () => `${prefix}_${n++}.png`;

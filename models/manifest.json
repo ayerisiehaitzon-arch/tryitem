@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T11:32:36.157Z",
+  "generated": "2026-09-27T14:33:33.075Z",
   "items": [
     {
       "id": "dining_chair",
@@ -447,6 +447,119 @@
       "fileKB": 461
     },
     {
+      "id": "sideboard",
+      "name": "餐边柜",
+      "nameEn": "Cane Sideboard",
+      "category": "furniture",
+      "mount": "floor",
+      "size": [
+        1500,
+        781,
+        462
+      ],
+      "lods": [
+        {
+          "tris": 716,
+          "verts": 654,
+          "drawCalls": 3
+        },
+        {
+          "tris": 500,
+          "verts": 487,
+          "drawCalls": 3
+        },
+        {
+          "tris": 246,
+          "verts": 334,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "藤编（维也纳藤编）",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 243,
+      "lodDistances": null,
+      "fileKB": 732
+    },
+    {
+      "id": "bench",
+      "name": "床尾凳",
+      "nameEn": "Channel-Tufted Velvet Bench",
+      "category": "furniture",
+      "mount": "floor",
+      "size": [
+        1290,
+        473,
+        390
+      ],
+      "lods": [
+        {
+          "tris": 804,
+          "verts": 631,
+          "drawCalls": 3
+        },
+        {
+          "tris": 476,
+          "verts": 410,
+          "drawCalls": 3
+        },
+        {
+          "tris": 174,
+          "verts": 204,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "丝绒（墨绿）",
+        "胡桃木（哑光清漆）",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 191,
+      "lodDistances": null,
+      "fileKB": 393
+    },
+    {
+      "id": "side_table",
+      "name": "边几",
+      "nameEn": "C Side Table",
+      "category": "furniture",
+      "mount": "floor",
+      "size": [
+        420,
+        558,
+        420
+      ],
+      "lods": [
+        {
+          "tris": 562,
+          "verts": 440,
+          "drawCalls": 2
+        },
+        {
+          "tris": 354,
+          "verts": 304,
+          "drawCalls": 2
+        },
+        {
+          "tris": 192,
+          "verts": 188,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "黑色粉末喷涂钢"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 313,
+      "lodDistances": null,
+      "fileKB": 441
+    },
+    {
       "id": "books",
       "name": "书",
       "nameEn": "Clothbound Books",
@@ -781,6 +894,296 @@
       "aoDensity": 526,
       "lodDistances": null,
       "fileKB": 89
+    },
+    {
+      "id": "wall",
+      "name": "白墙",
+      "nameEn": "Plaster Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        148
+      ],
+      "lods": [
+        {
+          "tris": 66,
+          "verts": 104,
+          "drawCalls": 2
+        },
+        {
+          "tris": 50,
+          "verts": 88,
+          "drawCalls": 2
+        },
+        {
+          "tris": 42,
+          "verts": 80,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "白色哑光烤漆"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 124,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 30
+      },
+      "fileKB": 165
+    },
+    {
+      "id": "wall_wainscot",
+      "name": "护墙板墙",
+      "nameEn": "Wainscot Panel Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        158
+      ],
+      "lods": [
+        {
+          "tris": 624,
+          "verts": 730,
+          "drawCalls": 4
+        },
+        {
+          "tris": 372,
+          "verts": 472,
+          "drawCalls": 4
+        },
+        {
+          "tris": 236,
+          "verts": 402,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "乳胶漆（鼠尾草绿）",
+        "护墙板线条（鼠尾草绿缎面漆）",
+        "白色哑光烤漆"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 124,
+      "lodDistances": null,
+      "view": {
+        "el": 14,
+        "az": 26
+      },
+      "fileKB": 266
+    },
+    {
+      "id": "wall_door",
+      "name": "门",
+      "nameEn": "Shaker Door in Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        198
+      ],
+      "lods": [
+        {
+          "tris": 1066,
+          "verts": 1148,
+          "drawCalls": 3
+        },
+        {
+          "tris": 766,
+          "verts": 948,
+          "drawCalls": 3
+        },
+        {
+          "tris": 270,
+          "verts": 484,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "白色哑光烤漆",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 109,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 28
+      },
+      "fileKB": 334
+    },
+    {
+      "id": "wall_window",
+      "name": "窗",
+      "nameEn": "Steel Casement Window in Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        170
+      ],
+      "lods": [
+        {
+          "tris": 840,
+          "verts": 980,
+          "drawCalls": 5
+        },
+        {
+          "tris": 336,
+          "verts": 604,
+          "drawCalls": 5
+        },
+        {
+          "tris": 260,
+          "verts": 500,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "白色哑光烤漆",
+        "黑色粉末喷涂钢",
+        "透明玻璃",
+        "白色大理石（哑光）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 106,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 26
+      },
+      "fileKB": 366
+    },
+    {
+      "id": "floor_herringbone",
+      "name": "人字拼地板",
+      "nameEn": "Oak Herringbone Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "人字拼橡木（哑光清漆）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 362
+    },
+    {
+      "id": "floor_plank",
+      "name": "宽板地板",
+      "nameEn": "Smoked Oak Plank Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "烟熏橡木宽板（木蜡油）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 1195
+    },
+    {
+      "id": "floor_terrazzo",
+      "name": "水磨石地面",
+      "nameEn": "Terrazzo Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "水磨石（磨光，黄铜分隔条）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 432
     }
   ]
 }

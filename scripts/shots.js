@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import sharp from 'sharp';
 import { serve } from './serve.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -29,7 +30,9 @@ export async function shoot({ items, views = ['hero'], size = [1200, 800], outDi
   const server = await serve(0);
   const port = server.address().port;
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-  const page = await browser.newPage({ viewport: { width: size[0], height: size[1] }, deviceScaleFactor: 1 });
+  // 2 倍超采样：页面按 2 倍像素渲染（预览器截图模式不开 MSAA），截图再缩小到目标尺寸
+  const SS = 2;
+  const page = await browser.newPage({ viewport: { width: size[0], height: size[1] }, deviceScaleFactor: SS });
   await page.route('https://cdn.jsdelivr.net/npm/three@*/**', async (route) => {
     const u = new URL(route.request().url());
     const rel = u.pathname.replace(/^\/npm\/three@[^/]+\//, '');
@@ -43,10 +46,11 @@ export async function shoot({ items, views = ['hero'], size = [1200, 800], outDi
   try {
     for (const id of items) {
       for (const v of views) {
-        await page.goto(`http://localhost:${port}/viewer/?shot=1&item=${id}${VIEWS[v] ?? v}`);
+        await page.goto(`http://localhost:${port}/viewer/?shot=1&pr=${SS}&item=${id}${VIEWS[v] ?? v}`);
         await page.waitForFunction(() => window.__ready === true, null, { timeout: 180000 });
         const file = path.join(outDir, name(id, v));
-        await page.screenshot({ path: file });
+        const png = await page.screenshot();
+        await sharp(png).resize(size[0], size[1], { kernel: 'lanczos3' }).png().toFile(file);
         files.push(file);
         console.log(file);
       }

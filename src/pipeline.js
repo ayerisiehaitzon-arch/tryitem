@@ -57,9 +57,11 @@ export function assembleDoc(def, { lods, layout }, { textures = null, ao = null,
     size: [b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]].map((v) => Math.round(v * 1000)),
     lods: lods.map((l) => ({ tris: l.tris, verts: l.verts, drawCalls: l.prims.length })),
     materials: matNames.map((m) => MATERIALS[m].label),
-    aoAtlas: layout.size,
-    aoDensity: Math.round(layout.density),
+    aoAtlas: def.ao === false ? 0 : layout.size,
+    aoDensity: def.ao === false ? 0 : Math.round(layout.density),
     lodDistances: def.lodDistances ?? null,
+    // 预览器的默认取景（地板这种扁平的构件要从上往下看）
+    ...(def.view ? { view: def.view } : {}),
   };
   root.setExtras({ stats });
   return { doc, stats };

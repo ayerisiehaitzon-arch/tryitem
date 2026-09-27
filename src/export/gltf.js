@@ -45,6 +45,7 @@ export function createMaterial(ctx, name, def, tex, ao) {
     .setRoughnessFactor(def.roughness ?? 0.5)
     .setDoubleSided(!!def.doubleSided);
   if (def.alphaMode === 'MASK') m.setAlphaMode('MASK').setAlphaCutoff(def.alphaCutoff ?? 0.5);
+  if (def.alphaMode === 'BLEND') m.setAlphaMode('BLEND'); // 玻璃：透明度在 baseColorFactor 的 alpha 里
   if (tex?.color) m.setBaseColorTexture(texture(ctx, `${def.key}_color`, tex.color));
   if (tex?.normal) {
     m.setNormalTexture(texture(ctx, `${def.key}_normal`, tex.normal));
