@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T07:41:46.010Z",
+  "generated": "2026-09-27T08:06:11.864Z",
   "items": [
     {
       "id": "dining_chair",
@@ -351,6 +351,112 @@
       "aoDensity": 120,
       "lodDistances": null,
       "fileKB": 320
+    },
+    {
+      "id": "wardrobe",
+      "name": "衣柜",
+      "nameEn": "Nordic Wardrobe",
+      "size": [
+        1000,
+        2001,
+        616
+      ],
+      "lods": [
+        {
+          "tris": 800,
+          "verts": 668,
+          "drawCalls": 2
+        },
+        {
+          "tris": 576,
+          "verts": 524,
+          "drawCalls": 2
+        },
+        {
+          "tris": 124,
+          "verts": 200,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 159,
+      "lodDistances": null,
+      "fileKB": 384
+    },
+    {
+      "id": "desk",
+      "name": "书桌",
+      "nameEn": "Atelier Writing Desk",
+      "size": [
+        1200,
+        929,
+        600
+      ],
+      "lods": [
+        {
+          "tris": 672,
+          "verts": 679,
+          "drawCalls": 2
+        },
+        {
+          "tris": 484,
+          "verts": 539,
+          "drawCalls": 2
+        },
+        {
+          "tris": 166,
+          "verts": 284,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 103,
+      "lodDistances": null,
+      "fileKB": 481
+    },
+    {
+      "id": "office_chair",
+      "name": "办公椅",
+      "nameEn": "Studio Task Chair",
+      "size": [
+        624,
+        1083,
+        640
+      ],
+      "lods": [
+        {
+          "tris": 1917,
+          "verts": 1606,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1072,
+          "verts": 1079,
+          "drawCalls": 3
+        },
+        {
+          "tris": 360,
+          "verts": 477,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "抛光铝",
+        "黑色哑光塑料",
+        "亚麻布（炭灰）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 126,
+      "lodDistances": null,
+      "fileKB": 451
     }
   ]
 }

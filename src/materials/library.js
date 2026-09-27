@@ -47,6 +47,12 @@ export const MATERIALS = {
     roughness: 1, metallic: 0, normalScale: 0.9,
     sheen: { color: [0.38, 0.42, 0.36], roughness: 0.5 },
   },
+  linen_charcoal: {
+    label: '亚麻布（炭灰）',
+    tex: 'linen', tile: [0.12, 0.12], color: tint([76, 78, 82]),
+    roughness: 1, metallic: 0, normalScale: 1.0,
+    sheen: { color: [0.22, 0.23, 0.25], roughness: 0.5 },
+  },
   boucle: {
     label: '圈绒（奶白）',
     tex: 'boucle', tile: [0.16, 0.16],
@@ -72,6 +78,14 @@ export const MATERIALS = {
   brass: {
     label: '拉丝黄铜',
     color: srgb(222, 184, 120), metallic: 1, roughness: 0.32,
+  },
+  aluminum: {
+    label: '抛光铝',
+    color: srgb(214, 216, 219), metallic: 1, roughness: 0.28,
+  },
+  plastic_black: {
+    label: '黑色哑光塑料',
+    color: srgb(30, 30, 32), metallic: 0, roughness: 0.62,
   },
   steel: {
     label: '黑色粉末喷涂钢',

@@ -416,8 +416,10 @@ function instantiate(asset, pos = [0, 0, 0], rotY = 0) {
   return { asset, group, levels, shadow, sphere, box, level: 0 };
 }
 
-// 全屋陈列：客厅 + 餐厅 + 卧室，同一模型多次摆放（4 把餐椅、2 张吧台凳）
+// 全屋陈列：书房 + 客厅 + 餐厅 + 卧室，同一模型多次摆放（4 把餐椅、2 张吧台凳）
 const ROOM = [
+  ['desk', [-3.75, 0, -1.45], 0],
+  ['office_chair', [-3.75, 0, -0.78], Math.PI - 0.25],
   ['sofa', [0, 0, -1.25], 0],
   ['coffee_table', [0, 0, 0.05], 0],
   ['armchair', [1.5, 0, 0.12], -Math.PI / 2 + 0.3],
@@ -430,6 +432,7 @@ const ROOM = [
   ['dining_chair', [-2.35, 0, 0.64], 0],
   ['bed', [3.55, 0, -0.55], 0],
   ['nightstand', [2.4, 0, -1.4], 0],
+  ['wardrobe', [5.05, 0, -1.4], 0],
   ['bar_stool', [0.85, 0, 1.75], 0.3],
   ['bar_stool', [1.4, 0, 1.75], -0.2],
 ];
