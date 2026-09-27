@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T17:17:14.799Z",
+  "generated": "2026-09-27T17:41:39.968Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1226,6 +1226,87 @@
       "fileKB": 837
     },
     {
+      "id": "floor_deck",
+      "name": "户外地板",
+      "nameEn": "Teak Decking",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "柚木色户外地板（留缝铺）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 1019
+    },
+    {
+      "id": "railing",
+      "name": "阳台栏杆",
+      "nameEn": "Steel & Teak Balcony Railing",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2000,
+        1050,
+        66
+      ],
+      "lods": [
+        {
+          "tris": 216,
+          "verts": 400,
+          "drawCalls": 2
+        },
+        {
+          "tris": 200,
+          "verts": 384,
+          "drawCalls": 2
+        },
+        {
+          "tris": 128,
+          "verts": 240,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "柚木（户外油）",
+        "黑色粉末喷涂钢"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 115,
+      "lodDistances": null,
+      "view": {
+        "el": 14,
+        "az": 30
+      },
+      "fileKB": 389
+    },
+    {
       "id": "kitchen_base",
       "name": "橱柜",
       "nameEn": "Shaker Kitchen Base Run",
@@ -1502,6 +1583,130 @@
         "az": 30
       },
       "fileKB": 530
+    },
+    {
+      "id": "lounge_chair",
+      "name": "户外椅",
+      "nameEn": "Teak & Rope Lounge Chair",
+      "category": "balcony",
+      "mount": "floor",
+      "size": [
+        720,
+        739,
+        809
+      ],
+      "lods": [
+        {
+          "tris": 1296,
+          "verts": 1239,
+          "drawCalls": 4
+        },
+        {
+          "tris": 566,
+          "verts": 696,
+          "drawCalls": 4
+        },
+        {
+          "tris": 258,
+          "verts": 422,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "柚木（户外油）",
+        "户外帆布（燕麦色）",
+        "户外编绳（三股拧绳）",
+        "亚麻布（鼠尾草绿）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 251,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 32
+      },
+      "fileKB": 874
+    },
+    {
+      "id": "garden_stool",
+      "name": "鼓凳边桌",
+      "nameEn": "Celadon Garden Stool",
+      "category": "balcony",
+      "mount": "floor",
+      "size": [
+        402,
+        471,
+        402
+      ],
+      "lods": [
+        {
+          "tris": 644,
+          "verts": 464,
+          "drawCalls": 1
+        },
+        {
+          "tris": 342,
+          "verts": 266,
+          "drawCalls": 1
+        },
+        {
+          "tris": 228,
+          "verts": 182,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "阳台陶器（青瓷鼓凳 / 陶土花盆 / 橄榄树皮与盆土）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 400,
+      "lodDistances": null,
+      "view": {
+        "el": 22,
+        "az": 30
+      },
+      "fileKB": 230
+    },
+    {
+      "id": "olive_tree",
+      "name": "橄榄树",
+      "nameEn": "Potted Olive Tree",
+      "category": "balcony",
+      "mount": "floor",
+      "size": [
+        1126,
+        1499,
+        1118
+      ],
+      "lods": [
+        {
+          "tris": 2462,
+          "verts": 3211,
+          "drawCalls": 2
+        },
+        {
+          "tris": 1396,
+          "verts": 1820,
+          "drawCalls": 2
+        },
+        {
+          "tris": 786,
+          "verts": 1138,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "阳台陶器（青瓷鼓凳 / 陶土花盆 / 橄榄树皮与盆土）",
+        "橄榄叶（正面深绿 / 背面银灰）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 153,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 30
+      },
+      "fileKB": 490
     }
   ]
 }

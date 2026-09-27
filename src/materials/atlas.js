@@ -70,3 +70,25 @@ export function ceramicUV(region, u, v) {
   const S = CERAMIC_ATLAS.size, m = CERAMIC_ATLAS.margin;
   return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
 }
+
+// —— 阳台：1024×1024 ——
+//   上半：鼓凳的青瓷釉、陶土花盆（u 绕一圈，v 沿设计曲线的弧长，见 balcony/profiles.js）
+//   下半：橄榄叶正面 / 背面（窄长的格子：叶子细长）、橄榄树皮、盆土（树皮碎屑覆盖）
+export const PATIO_ATLAS = {
+  size: 1024,
+  margin: 4,
+  regions: {
+    stool: [0, 0, 512, 512],
+    pot: [512, 0, 1024, 512],
+    leafA: [0, 512, 256, 1024],   // 叶正面：深灰绿，有光泽；u 横跨叶面（主脉在 0.5），v 从叶尖（上）到叶柄（下）
+    leafB: [256, 512, 512, 1024], // 叶背面：银灰绿，哑光
+    bark: [512, 512, 768, 1024],  // 树皮：v 沿枝干
+    soil: [768, 512, 1024, 768],  // 盆土
+  },
+};
+
+export function patioUV(region, u, v) {
+  const [x0, y0, x1, y1] = PATIO_ATLAS.regions[region];
+  const S = PATIO_ATLAS.size, m = PATIO_ATLAS.margin;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}

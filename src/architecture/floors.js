@@ -1,7 +1,7 @@
 import { xf } from '../core/vec.js';
 
 // 地板模块：2m × 2m（四周各多 1mm 重叠），上表面在 y = 0（家具直接放上去），厚 2cm。
-//   · 贴图周期整除 2m（人字拼 1m、宽板 2m、水磨石 1m、六角马赛克 1m），UV 以模块中心为原点、不加随机偏移 ——
+//   · 贴图周期整除 2m（人字拼 1m、宽板 2m、水磨石 1m、六角马赛克 1m、户外地板 2m），UV 以模块中心为原点、不加随机偏移 ——
 //     模块按 2m 网格摆放，板缝、铜条在模块之间严丝合缝地接上；
 //   · 几何只有一个盒子（底面贴着楼板看不见，不生成）：板缝的倒角槽、年轮、石子全在贴图里；
 //   · 一整块平面没有可烘焙的 AO，也不需要接触阴影：两样都不带。
@@ -22,3 +22,4 @@ export const floorHerringbone = floorModule({ id: 'floor_herringbone', name: '�
 export const floorPlank = floorModule({ id: 'floor_plank', name: '宽板地板', nameEn: 'Smoked Oak Plank Floor', mat: 'floor_smoked' });
 export const floorTerrazzo = floorModule({ id: 'floor_terrazzo', name: '水磨石地面', nameEn: 'Terrazzo Floor', mat: 'terrazzo' });
 export const floorHex = floorModule({ id: 'floor_hex', name: '六角马赛克地面', nameEn: 'Hex Marble Mosaic Floor', mat: 'floor_hex' });
+export const floorDeck = floorModule({ id: 'floor_deck', name: '户外地板', nameEn: 'Teak Decking', mat: 'deck' });

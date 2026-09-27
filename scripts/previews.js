@@ -14,6 +14,9 @@
 //   docs/previews/bathroom.jpg        浴室三件：浴室柜、马桶、淋浴间
 //   docs/previews/bathroom-detail.jpg 浴室特写：台上盆与入墙龙头、马桶盖、淋浴间的釉面砖和混水阀、六角马赛克
 //   docs/previews/bathroom-room.jpg   全屋陈列里的浴室
+//   docs/previews/balcony.jpg         阳台三件：户外椅、鼓凳边桌、橄榄树
+//   docs/previews/balcony-detail.jpg  阳台特写：编绳靠背、青瓷开片与钱纹、橄榄叶、钢栏杆与柚木扶手
+//   docs/previews/balcony-room.jpg    全屋陈列里的阳台
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -33,7 +36,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -103,12 +106,12 @@ await grid(kitchen, 3, [480, 360], path.join(out, 'kitchen.jpg'));
 // 厨房特写：水槽与龙头、墙砖与灯带光斑（在全屋里拍：吊柜装在台面上方）、烟机罩、岛台凸条板
 const kd = [];
 kd.push(...await shoot({ items: ['kitchen_base'], views: ['&target=-0.15:0.95:0&dist=0.26&el=26&az=24'], size: [800, 600], outDir: tmp, name: () => 'c0.png' }));
-kd.push(...await shoot({ items: ['room'], views: ['&target=-9.2:1.2:-1.95&dist=0.07&el=4&az=16'], size: [800, 600], outDir: tmp, name: () => 'c1.png' }));
+kd.push(...await shoot({ items: ['room'], views: ['&target=-9.2:1.25:-1.95&d=4.2&el=4&az=16'], size: [800, 600], outDir: tmp, name: () => 'c1.png' }));
 kd.push(...await shoot({ items: ['kitchen_wall'], views: ['&target=0.62:1.74:0.2&dist=0.46&el=10&az=-28'], size: [800, 600], outDir: tmp, name: () => 'c2.png' }));
 kd.push(...await shoot({ items: ['kitchen_island'], views: ['&target=0.45:0.62:0.3&dist=0.42&el=16&az=38'], size: [800, 600], outDir: tmp, name: () => 'c3.png' }));
 await grid(kd, 2, [600, 450], path.join(out, 'kitchen-detail.jpg'));
 
-const kroom = await shoot({ items: ['room'], views: ['&target=-8.3:0.9:-0.7&dist=0.24&el=22&az=24'], size: [1600, 900], outDir: tmp, name: () => 'kitchen-room.png' });
+const kroom = await shoot({ items: ['room'], views: ['&target=-8.3:0.9:-0.7&d=9.6&el=22&az=24'], size: [1600, 900], outDir: tmp, name: () => 'kitchen-room.png' });
 await sharp(kroom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'kitchen-room.jpg'));
 console.log('→ docs/previews/kitchen-room.jpg');
 
@@ -123,23 +126,40 @@ bd.push(...await shoot({ items: ['shower'], views: ['&target=0:1.25:0.2&dist=0.3
 bd.push(...await shoot({ items: ['floor_hex'], views: ['&target=0:0:0.3&dist=0.3&el=30&az=20'], size: [800, 600], outDir: tmp, name: () => 'e3.png' }));
 await grid(bd, 2, [600, 450], path.join(out, 'bathroom-detail.jpg'));
 
-const broom = await shoot({ items: ['room'], views: ['&target=8.1:0.95:-0.9&dist=0.26&el=18&az=20'], size: [1600, 900], outDir: tmp, name: () => 'bathroom-room.png' });
+const broom = await shoot({ items: ['room'], views: ['&target=8.1:0.95:-0.9&d=9.6&el=18&az=20'], size: [1600, 900], outDir: tmp, name: () => 'bathroom-room.png' });
 await sharp(broom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'bathroom-room.jpg'));
 console.log('→ docs/previews/bathroom-room.jpg');
 
+const bal = await shoot({ items: balconyIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `p_${id}.png` });
+await grid(bal, 3, [480, 360], path.join(out, 'balcony.jpg'));
+
+// 阳台特写：编绳靠背与腰枕、青瓷开片与钱纹镂空、橄榄叶（银绿两面）、钢栏杆与柚木扶手
+const pd = [];
+pd.push(...await shoot({ items: ['lounge_chair'], views: ['&target=0:0.55:-0.05&dist=0.5&el=26&az=36'], size: [800, 600], outDir: tmp, name: () => 'g0.png' }));
+pd.push(...await shoot({ items: ['garden_stool'], views: ['&target=0:0.25:0&dist=0.8&el=16&az=24'], size: [800, 600], outDir: tmp, name: () => 'g1.png' }));
+pd.push(...await shoot({ items: ['olive_tree'], views: ['&target=0.05:1.18:0&dist=0.36&el=8&az=30'], size: [800, 600], outDir: tmp, name: () => 'g2.png' }));
+pd.push(...await shoot({ items: ['railing'], views: ['&target=0.3:0.9:0&dist=0.3&el=22&az=32'], size: [800, 600], outDir: tmp, name: () => 'g3.png' }));
+await grid(pd, 2, [600, 450], path.join(out, 'balcony-detail.jpg'));
+
+const proom = await shoot({ items: ['room'], views: ['&target=0:0.7:2.9&d=6&el=24&az=18'], size: [1600, 900], outDir: tmp, name: () => 'balcony-room.png' });
+await sharp(proom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'balcony-room.jpg'));
+console.log('→ docs/previews/balcony-room.jpg');
+
+// 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
+// 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿
 const room = await shoot({ items: ['room'], views: ['&el=32&az=24&dist=0.9'], size: [1600, 900], outDir: tmp, name: () => 'room.png' });
 await sharp(room[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'room.jpg'));
 console.log('→ docs/previews/room.jpg');
 
-const living = await shoot({ items: ['room'], views: ['&target=0.4:0.5:-0.9&dist=0.3&el=20&az=14'], size: [1600, 900], outDir: tmp, name: () => 'living.png' });
+const living = await shoot({ items: ['room'], views: ['&target=0.4:0.8:-1.2&d=6.4&el=26&az=16'], size: [1600, 900], outDir: tmp, name: () => 'living.png' });
 await sharp(living[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'living.jpg'));
 console.log('→ docs/previews/living.jpg');
 
-const bedroom = await shoot({ items: ['room'], views: ['&target=3.6:0.95:-1.0&dist=0.3&el=14&az=8'], size: [1600, 900], outDir: tmp, name: () => 'bedroom.png' });
+const bedroom = await shoot({ items: ['room'], views: ['&target=3.6:0.95:-1.0&d=8.6&el=14&az=8'], size: [1600, 900], outDir: tmp, name: () => 'bedroom.png' });
 await sharp(bedroom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'bedroom.jpg'));
 console.log('→ docs/previews/bedroom.jpg');
 
-const dining = await shoot({ items: ['room'], views: ['&target=-4.2:0.7:-0.3&dist=0.32&el=22&az=32'], size: [1600, 900], outDir: tmp, name: () => 'dining.png' });
+const dining = await shoot({ items: ['room'], views: ['&target=-4.3:1.0:-0.8&d=9.2&el=30&az=29'], size: [1600, 900], outDir: tmp, name: () => 'dining.png' });
 await sharp(dining[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'dining.jpg'));
 console.log('→ docs/previews/dining.jpg');
 

@@ -11,6 +11,7 @@ import { perlin, fbm, worley, mulberry } from './noise.js';
 import * as decor from './decor-textures.js';
 import * as lamp from './lamp-textures.js';
 import { INTERIOR } from './interior-textures.js';
+import * as patio from './patio-textures.js';
 
 const VERSION = 8;
 
@@ -309,6 +310,18 @@ export const TEXTURES = {
   zellige: { size: 1024, detail: 0.5, normalStrength: 9, v: 3, gen: INTERIOR.zellige },
   // —— 浴室 ——（六角马赛克周期 1m，整除 2m 的地板模块）
   hexmosaic: { size: 2048, detail: 0.5, normalStrength: 2, v: 2, gen: INTERIOR.hexMosaic },
+  // —— 阳台 ——
+  teak: {
+    size: 1024, detail: 0.5, normalStrength: 2, v: 2,
+    gen: (S) => wood(S, {
+      seed: 81, staves: 9, rings: 15, warp: 1.6, archChance: 0.3,
+      staveTint: 0.12, staveWarm: 0.05, pores: 0.8, lateMix: 0.75, colorVar: 0.1, fiberVar: 0.06,
+      early: rgb(166, 114, 70), late: rgb(116, 76, 44), pore: rgb(88, 56, 34), rough: 0.6,
+    }),
+  },
+  rope: { size: 256, normalStrength: 4, v: 1, gen: (S) => patio.rope(S, { seed: 661, color: rgb(168, 156, 136) }) },
+  decking: { size: 2048, detail: 0.5, normalStrength: 3, v: 1, gen: INTERIOR.decking },
+  patio: { size: 1024, detail: 0.5, normalStrength: 2.5, v: 2, gen: patio.patio },
 };
 
 function alloc(S) {

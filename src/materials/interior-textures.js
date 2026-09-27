@@ -319,6 +319,13 @@ export const INTERIOR = {
     ],
     grout: rgb(208, 204, 194), body: rgb(204, 162, 134),
   }),
+  // 户外地板：14cm 宽的柚木色防腐木，板与板之间留 5mm 的缝（缝里很暗），每行一两条端缝
+  decking: (S) => planks(S, {
+    seed: 371, period: 2, rows: 14, twoPieceChance: 0.5, ringSpacing: 0.005, archChance: 0.45, archLen: 1.0,
+    warp: 2.0, pores: 0.8, lateMix: 0.75, colorVar: 0.08, fiberVar: 0.05, plankTint: 0.16, plankWarm: 0.06,
+    early: rgb(152, 104, 68), late: rgb(110, 72, 46), pore: rgb(86, 56, 36), rough: 0.7,
+    groove: 0.0028, seamDark: 0.9, grainRelief: 0.3,
+  }),
   hexMosaic: (S) => hexMosaic(S, {
     seed: 361, period: 1, cols: 21, rows: 24, joint: 0.0018, bevel: 0.0012, depth: 1,
     tone: 0.06, cloud: 0.03, rough: 0.34, accent: 0.03,

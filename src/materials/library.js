@@ -289,5 +289,43 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 阳台 ——
+Object.assign(MATERIALS, {
+  teak: {
+    label: '柚木（户外油）',
+    tex: 'teak', tile: [0.9, 0.9],
+    roughness: 1, metallic: 0, normalScale: 0.6,
+  },
+  rope: {
+    label: '户外编绳（三股拧绳）',
+    // 贴图 u 是一个捻距（3.5cm），v 正好绕绳子一圈（绳径 12mm → 周长 3.77cm）
+    tex: 'rope', tile: [0.035, 0.0377], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    sheen: { color: [0.36, 0.34, 0.3], roughness: 0.6 },
+  },
+  canvas: {
+    label: '户外帆布（燕麦色）',
+    tex: 'linen', tile: [0.12, 0.12], color: tint([214, 204, 186]),
+    roughness: 1, metallic: 0, normalScale: 0.8,
+    sheen: { color: [0.5, 0.48, 0.44], roughness: 0.6 },
+  },
+  deck: {
+    label: '柚木色户外地板（留缝铺）',
+    tex: 'decking', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+  patio: {
+    label: '阳台陶器（青瓷鼓凳 / 陶土花盆 / 橄榄树皮与盆土）',
+    // 图集：u 绕器物一圈，v 沿设计曲线（见 balcony/profiles.js）；粗糙度由贴图给（釉 0.14、陶 0.86）
+    tex: 'patio', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+  patio_leaf: {
+    label: '橄榄叶（正面深绿 / 背面银灰）',
+    tex: 'patio', tile: [1, 1], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.6,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

@@ -217,7 +217,7 @@
   </div>
   <p class="caption" id="caption"></p>
   <nav class="dock">
-    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具、墙地门窗、厨房与浴室"></div>
+    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具、墙地门窗、厨房、浴室与阳台"></div>
     <div class="controls">
       <div class="seg" role="group" aria-label="显示">
         <button id="t-wire" aria-pressed="false">线框</button>
@@ -459,7 +459,8 @@ function instantiate(asset, pos = [0, 0, 0], rotY = 0, { lift = 0 } = {}) {
 
 // 全屋陈列：一套“剖开的公寓”——后墙和左墙是墙地门窗构件拼出来的（2m 模块），前面敞开；
 //   厨房（地柜 + 吊柜 + 岛台）→ 书房（窗下书桌）→ 门 → 客厅（书架、沙发、地毯）→ 卧室（护墙板墙、一对壁灯）
-//   → 浴室（浴室柜、马桶、淋浴间）；书房前面是餐厅，厨房和餐厅连成一片水磨石地面，餐边柜靠在厨房旁边的后墙上。
+//   → 浴室（浴室柜、马桶、淋浴间）；书房前面是餐厅，厨房和餐厅连成一片水磨石地面，餐边柜靠在厨房旁边的后墙上；
+//   客厅往前伸出一个阳台（户外地板、三面栏杆、一对户外椅夹着鼓凳，两角各一棵橄榄树）。
 // 地面：书房、客厅人字拼，厨房、餐厅水磨石，卧室宽板，浴室六角马赛克；地板模块按 2m 网格铺，接缝处的图案严丝合缝。
 // 摆件放在家具上：书在书架第二层，花瓶在茶几上，台灯在书桌上；地毯压在沙发前腿下。
 // 吊柜装在台面上方 55cm（地面以上 1.45m）：柜底的灯带照在墙砖上，光斑正好铺满台面到柜底这一段。
@@ -500,6 +501,8 @@ const ROOM = [
   ['floor_hex', [7, 0, 1], 0],
   ['floor_hex', [9, 0, -1], 0],
   ['floor_hex', [9, 0, 1], 0],
+  ['floor_deck', [-1, 0, 3], 0],
+  ['floor_deck', [1, 0, 3], 0],
   // —— 厨房 ——
   ['kitchen_base', [-8.78, 0, -1.7], 0],
   ['kitchen_wall', [-8.78, 1.45, -2.0], 0],
@@ -542,6 +545,16 @@ const ROOM = [
   ['vanity', [6.9, 0, -2.0], 0],
   ['toilet', [7.85, 0, -2.0], 0],
   ['shower', [9.3, 0, -2.0], 0],
+  // —— 阳台 ——（栏杆 2m 一个模块：前面两块，左右各一块转 90°）
+  ['railing', [-1, 0, 4], 0],
+  ['railing', [1, 0, 4], 0],
+  ['railing', [-2, 0, 3], Math.PI / 2],
+  ['railing', [2, 0, 3], Math.PI / 2],
+  ['lounge_chair', [-0.8, 0, 2.95], 0.32],
+  ['lounge_chair', [0.6, 0, 2.95], -0.32],
+  ['garden_stool', [-0.1, 0, 3.2], 0.4],
+  ['olive_tree', [1.52, 0, 3.52], 0.3],
+  ['olive_tree', [-1.52, 0, 3.52], 2.4],
 ];
 
 async function buildView(id) {
@@ -719,7 +732,9 @@ function frame(v, instant = false) {
   };
   let lo = 0.2, hi = 150; // 竖屏手机上看全屋（12m 宽）要退到五六十米外
   for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (fits(mid)) hi = mid; else lo = mid; }
-  const dist = hi * Number(params.get('dist') ?? hint.dist ?? 1);
+  // d：绝对距离（米）。全屋里的近景用它 —— 全屋再加一个区域，包围盒变了，近景的取景也不会跟着跑
+  const dist = params.get('d') ? Number(params.get('d')) : hi * Number(params.get('dist') ?? hint.dist ?? 1);
+  window.__camDist = dist;
   const pos = target.clone().addScaledVector(dir, dist);
   // 近裁剪面跟着取景距离走：看全屋时相机在十几米外，近裁剪面还是 5cm 的话，
   // 远处的深度精度只剩约 2mm，墙模块接缝处藏在墙里的封口面会断断续续地“透”出来
@@ -855,7 +870,8 @@ $('items').innerHTML = `
   + group('灯具', mf.items.filter((s) => s.category === 'lighting'))
   + group('墙地门窗', mf.items.filter((s) => s.category === 'architecture'))
   + group('厨房', mf.items.filter((s) => s.category === 'kitchen'))
-  + group('浴室', mf.items.filter((s) => s.category === 'bathroom'));
+  + group('浴室', mf.items.filter((s) => s.category === 'bathroom'))
+  + group('阳台', mf.items.filter((s) => s.category === 'balcony'));
 for (const b of document.querySelectorAll('.item')) b.onclick = () => select(b.dataset.id);
 const wanted = params.get('item') || location.hash.slice(1);
 const first = wanted === 'room' || mf.items.find((s) => s.id === wanted) ? wanted : mf.items[0].id;
