@@ -223,5 +223,50 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 厨房 ——
+Object.assign(MATERIALS, {
+  paint_green: {
+    label: '墨绿色缎面烤漆（橱柜）',
+    color: srgb(50, 72, 60), metallic: 0, roughness: 0.38,
+    clearcoat: { factor: 0.12, roughness: 0.35 },
+  },
+  marble_slab: {
+    label: '白色大理石台面（抛光）',
+    // 和“哑光大理石”共用一张贴图：台面长 2.4m，平铺尺寸放大到 1.3m，纹理不那么密；抛光靠清漆层
+    tex: 'marble', tile: [1.3, 1.3],
+    roughness: 1, metallic: 0, normalScale: 0.2,
+    clearcoat: { factor: 0.55, roughness: 0.06 },
+  },
+  zellige: {
+    label: '手工釉面砖（Zellige，自然白）',
+    // 贴图 50cm = 5 × 5 块砖，按台面对齐（noOffset）：最下面一排是整砖
+    tex: 'zellige', tile: [0.5, 0.5], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+  },
+  ceramic: {
+    label: '白色耐火黏土（釉面，水槽）',
+    color: srgb(244, 243, 239), metallic: 0, roughness: 0.14,
+    clearcoat: { factor: 0.8, roughness: 0.05 },
+  },
+  glass_black: {
+    label: '黑色微晶玻璃（电磁炉面板）',
+    color: srgb(13, 13, 15), metallic: 0, roughness: 0.1,
+    clearcoat: { factor: 1, roughness: 0.03 },
+  },
+  glass_print: {
+    label: '面板丝印（灰色）',
+    color: srgb(118, 118, 120), metallic: 0, roughness: 0.45,
+  },
+  stainless: {
+    label: '拉丝不锈钢',
+    color: srgb(204, 205, 206), metallic: 1, roughness: 0.34,
+  },
+  led: {
+    label: 'LED 灯带（乳白扩散罩）',
+    color: srgb(250, 246, 238), metallic: 0, roughness: 0.3,
+    emissive: [1.0, 0.88, 0.72], emissiveStrength: 3,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

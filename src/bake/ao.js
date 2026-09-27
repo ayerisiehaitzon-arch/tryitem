@@ -180,11 +180,19 @@ export async function bakeShadow(lod, { plane = 'floor', samples = 256, maxDist 
 //   · 发光体本身（灯泡、乳白玻璃）不挡光；
 //   · 贴花只覆盖光源附近 radius 的范围，边缘淡出 —— 放在小床头柜上也不会伸出桌边。
 // 结果是一张只有 alpha 的贴图，颜色由材质给（暖白），预览器里用加法混合叠在表面上。
-export async function bakeGlow(lod, { plane = 'floor', light, lightRadius = 0.02, radius = 0.3, center = null, transmit = {}, density = 200, samples = 64, strength = 0.7, gamma = 0.8 } = {}) {
+//
+// 灯带这种长条光源用 lights：[{ a, b, power }]，每段从 a 到 b 均匀分层取样（a = b 就是一个点光源），
+// 采样数按 power 分配；光斑范围用 rect = { u0, u1, v0, v1 }（安装面坐标）给一个长方形，
+// fade = [左, 右, 下, 上] 是四条边各自的淡出距离（米）—— 贴着柜底的那条边藏在柜子后面，不需要淡出。
+export async function bakeGlow(lod, { plane = 'floor', light, lightRadius = 0.02, lights = null, radius = 0.3, rect = null, fade = null, center = null, transmit = {}, density = 200, samples = 64, strength = 0.7, gamma = 0.8 } = {}) {
   const M = MOUNTS[plane];
-  const cu = center ? center[0] : light[M.u], cv = center ? center[1] : light[M.v];
-  const u0 = cu - radius, u1 = cu + radius, v0 = cv - radius, v1 = cv + radius;
-  const W = pot(2 * radius * density), H = W;
+  let u0, u1, v0, v1;
+  if (rect) ({ u0, u1, v0, v1 } = rect);
+  else {
+    const cu = center ? center[0] : light[M.u], cv = center ? center[1] : light[M.v];
+    u0 = cu - radius; u1 = cu + radius; v0 = cv - radius; v1 = cv + radius;
+  }
+  const W = pot((u1 - u0) * density), H = pot((v1 - v0) * density);
   const tOf = (mat) => (MATERIALS[mat]?.emissive && transmit[mat] === undefined ? 1 : transmit[mat] ?? 0);
   const opaque = buildBVH(gatherTris(lod, (mat) => tOf(mat) === 0));
   const layers = [...new Set(lod.prims.map((pr) => tOf(pr.mat)).filter((t) => t > 0 && t < 1))]
@@ -195,7 +203,17 @@ export async function bakeGlow(lod, { plane = 'floor', light, lightRadius = 0.02
   const pts = [];
   let seed = 12345;
   const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
-  while (pts.length < samples) {
+  if (lights) {
+    const total = lights.reduce((a, L) => a + (L.power ?? 1), 0);
+    for (const L of lights) {
+      const n = Math.max(1, Math.round((samples * (L.power ?? 1)) / total));
+      for (let i = 0; i < n; i++) {
+        const t = (i + rnd()) / n;
+        pts.push(L.a.map((c, k) => c + (L.b[k] - c) * t));
+      }
+    }
+  }
+  while (!lights && pts.length < samples) {
     const q = [rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1];
     if (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] <= 1) pts.push(q.map((c, k) => light[k] + c * lightRadius));
   }
@@ -221,11 +239,19 @@ export async function bakeGlow(lod, { plane = 'floor', light, lightRadius = 0.02
     E[i] = e / pts.length;
     peak = Math.max(peak, E[i]);
   }
+  const fade4 = rect ? fade ?? [0.1, 0.1, 0.1, 0.1] : null;
   const rgba = new Uint8Array(W * H * 4);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x;
-    const du = (x + 0.5) / W - 0.5, dv = (y + 0.5) / H - 0.5;
-    const fade = smooth(Math.min(1, Math.max(0, (0.5 - Math.hypot(du, dv)) / 0.16)));
+    let fade;
+    if (fade4) {
+      const pu = ((x + 0.5) / W) * (u1 - u0), pv = ((y + 0.5) / H) * (v1 - v0);
+      const f = (d, w) => (w > 0 ? smooth(Math.min(1, Math.max(0, d / w))) : 1);
+      fade = f(pu, fade4[0]) * f(u1 - u0 - pu, fade4[1]) * f(pv, fade4[2]) * f(v1 - v0 - pv, fade4[3]);
+    } else {
+      const du = (x + 0.5) / W - 0.5, dv = (y + 0.5) / H - 0.5;
+      fade = smooth(Math.min(1, Math.max(0, (0.5 - Math.hypot(du, dv)) / 0.16)));
+    }
     const a = E[i] < 0 ? 0 : strength * Math.pow(E[i] / (peak || 1), gamma) * fade;
     rgba.set([255, 255, 255, Math.round(255 * Math.max(0, Math.min(1, a)))], i * 4);
   }

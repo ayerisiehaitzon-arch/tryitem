@@ -45,7 +45,9 @@ export function assembleDoc(def, { lods, layout }, { textures = null, ao = null,
   }
   if (glow) {
     const color = def.glow?.color ?? srgb(255, 214, 162);
-    root.addChild(doc.createNode(`${def.id}_Glow`).setMesh(addDecal(ctx, `${def.id}_Glow`, glow, { color, lift: 0.002 })));
+    // lift：光斑离安装面的高度。吊柜的灯带照在墙上，但墙前面还贴着 1cm 厚的瓷砖，光斑要抬到砖面之前
+    const lift = def.glow?.lift ?? 0.002;
+    root.addChild(doc.createNode(`${def.id}_Glow`).setMesh(addDecal(ctx, `${def.id}_Glow`, glow, { color, lift })));
   }
   const b = lods[0].bounds;
   const stats = {

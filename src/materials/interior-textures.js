@@ -309,4 +309,96 @@ export const INTERIOR = {
     seed: 341, cells: 8, pair: 0.25, diag: 0.104, tone: 0.08,
     strand: rgb(224, 192, 138), hole: rgb(58, 42, 28),
   }),
+  zellige: (S) => zellige(S, {
+    seed: 351, period: 0.5, tiles: 5, joint: 0.0022, bevel: 0.0028, depth: 1.4, wobble: 0.001,
+    wave: 0.8, waveFreq: 38, tilt: 0.05, tone: 0.05, pool: 0.07, cloud: 0.03, hue: 0.035, edgeLight: 0.04, rimDark: 0.05,
+    chipChance: 0.14, chipR: 0.005, roughGlaze: 0.08, pinholes: 0.0025,
+    // 三窑釉色：暖白为主，少量冷白和奶油色（色相差得很小，主要是深浅）
+    batches: [
+      { p: 0.45, c: rgb(242, 240, 234) }, { p: 0.33, c: rgb(236, 237, 235) }, { p: 0.22, c: rgb(241, 236, 226) },
+    ],
+    grout: rgb(208, 204, 194), body: rgb(204, 162, 134),
+  }),
 };
+
+// ——————————————————————— 手工釉面砖（Zellige）———————————————————————
+// 10cm 见方的摩洛哥手工砖，贴图 50cm 见方 = 5 × 5 块。每块砖是“一块真的砖”：
+//   · 砖的四边各自随机内缩：手工砖尺寸不齐，砖缝宽窄不匀；
+//   · 釉色分几窑（暖白 / 冷白 / 奶油），每块砖再有自己的深浅；釉面起伏（积釉处颜色更深、更亮），
+//     整块砖还略微歪一点 —— 反光一块一块跳，这是 zellige 最迷人的地方；
+//   · 砖边圆起来落进缝里；少数砖崩了一个角，露出陶胎。
+// 高度单位是毫米：法线强度 = 高度范围 / 像素尺寸，斜率就是真实的
+export function zellige(S, P) {
+  const N = P.tiles, T = P.period / N; // 每块砖的边长（米）
+  const rnd = mulberry(P.seed);
+  const nG = perlin(P.seed + 1), nC = perlin(P.seed + 2), nF = perlin(P.seed + 3), pins = worley(P.seed + 4);
+  const tiles = Array.from({ length: N * N }, () => {
+    let r = rnd(), batch = 0;
+    while (batch < P.batches.length - 1 && r > P.batches[batch].p) r -= P.batches[batch++].p;
+    return {
+      inset: [0, 1, 2, 3].map(() => P.joint * (0.3 + 0.4 * rnd())), // 左 右 下 上
+      glaze: P.batches[batch].c,
+      tone: 1 + (rnd() - 0.5) * P.tone,
+      ox: rnd() * 60, oy: rnd() * 60,
+      tilt: [(rnd() - 0.5) * P.tilt, (rnd() - 0.5) * P.tilt],
+      chip: rnd() < P.chipChance ? Math.floor(rnd() * 4) : -1,
+      chipR: P.chipR * (0.6 + 0.8 * rnd()),
+    };
+  });
+  const out = alloc(S);
+  const px = P.period / S; // 一个像素（米）
+  for (let py = 0; py < S; py++) {
+    const y = ((py + 0.5) / S) * P.period;
+    const j = Math.min(N - 1, Math.floor(y / T)), ly = y - j * T;
+    for (let pxi = 0; pxi < S; pxi++) {
+      const x = ((pxi + 0.5) / S) * P.period;
+      const i = Math.min(N - 1, Math.floor(x / T)), lx = x - i * T;
+      const t = tiles[j * N + i];
+      const [eL, eR, eB, eT] = t.inset;
+      // 手工切的砖边不是直线：每条边沿着边长方向有 ±0.4mm 的起伏
+      const wob = (a, b) => fbm2(nF, a * 70 + t.ox, b + t.oy, 2) * P.wobble;
+      const d = Math.min(lx - eL + wob(ly, 1), T - eR - lx + wob(ly, 2), ly - eB + wob(lx, 3), T - eT - ly + wob(lx, 4)); // 到砖边的距离（米），缝里为负
+      const inside = sstep(-px, px, d);
+      // 砖边：圆起来落进缝里（圆角半径 bevel）
+      const e = clamp01(d / P.bevel);
+      const edge = Math.sqrt(1 - (1 - e) * (1 - e));
+      // 釉面起伏（毫米）+ 整块砖的倾斜
+      const cx = lx - T / 2, cy = ly - T / 2;
+      const wave = fbm2(nG, (lx + t.ox) * P.waveFreq, (ly + t.oy) * P.waveFreq, 3) * P.wave;
+      const tilt = (t.tilt[0] * cx + t.tilt[1] * cy) * 1000; // 米 → 毫米
+      let h = (edge - 1) * P.depth + (wave + tilt) * edge;
+      // 积釉：低处釉层厚，颜色更深；釉在砖边堆起一圈（离边 2~8mm 略深），最边上一线釉薄、透出一点亮
+      const pool = -wave / P.wave;
+      const cloud = fbm2(nC, (lx + t.ox) * 18, (ly + t.oy) * 18, 3);
+      const rim = sstep(0.0005, 0.003, d) * (1 - sstep(0.004, 0.011, d));
+      const k = t.tone * (1 + pool * P.pool + cloud * P.cloud + (1 - edge) * P.edgeLight - rim * P.rimDark);
+      let c = t.glaze.map((m) => m * k);
+      // 釉色带一点冷暖漂移（同一块砖里也不是一个颜色）
+      c = [c[0] * (1 + cloud * P.hue), c[1], c[2] * (1 - cloud * P.hue)];
+      let rough = P.roughGlaze * (1 + 0.5 * fbm2(nF, lx * 90 + t.ox, ly * 90 + t.oy, 2)) + (1 - edge) * 0.05;
+      // 釉面针孔：零星的小坑，坑里发暗
+      const pin = pins(lx * 350 + t.ox, ly * 350 + t.oy, 4096, 4096);
+      if (fract(pin.id * 5.7) < P.pinholes) {
+        const m = 1 - sstep(0.12, 0.3, pin.f1);
+        c = c.map((v) => v * (1 - 0.18 * m));
+        h -= m * 0.25;
+      }
+      // 崩角：离某个角 chipR 以内露出陶胎
+      if (t.chip >= 0) {
+        const kx = t.chip & 1 ? T - eR : eL, ky = t.chip & 2 ? T - eT : eB;
+        const dc = Math.hypot(lx - kx, ly - ky) + fbm2(nF, lx * 400, ly * 400, 2) * 0.0008;
+        const m = 1 - sstep(t.chipR - px, t.chipR + px, dc);
+        c = mix3(c, P.body, m);
+        h -= m * 0.5;
+        rough = mix(rough, 0.8, m);
+      }
+      // 砖缝：填缝剂比砖面低 depth
+      const grout = P.grout.map((m) => m * (1 + fbm2(nF, x * 300, y * 300, 2) * 0.04));
+      c = mix3(grout, c, inside);
+      h = mix(-P.depth, h, inside);
+      rough = mix(0.92, rough, inside);
+      put(out, py * S + pxi, c, h, rough);
+    }
+  }
+  return out;
+}

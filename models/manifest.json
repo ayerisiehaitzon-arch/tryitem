@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T14:33:33.075Z",
+  "generated": "2026-09-27T16:41:57.542Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1184,6 +1184,140 @@
         "az": 24
       },
       "fileKB": 432
+    },
+    {
+      "id": "kitchen_base",
+      "name": "橱柜",
+      "nameEn": "Shaker Kitchen Base Run",
+      "category": "kitchen",
+      "mount": "floor",
+      "size": [
+        2430,
+        1450,
+        620
+      ],
+      "lods": [
+        {
+          "tris": 2236,
+          "verts": 2266,
+          "drawCalls": 9
+        },
+        {
+          "tris": 1210,
+          "verts": 1395,
+          "drawCalls": 6
+        },
+        {
+          "tris": 562,
+          "verts": 716,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "墨绿色缎面烤漆（橱柜）",
+        "拉丝黄铜",
+        "白色耐火黏土（釉面，水槽）",
+        "拉丝不锈钢",
+        "黑色粉末喷涂钢",
+        "白色大理石台面（抛光）",
+        "黑色微晶玻璃（电磁炉面板）",
+        "面板丝印（灰色）",
+        "手工釉面砖（Zellige，自然白）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 137,
+      "lodDistances": null,
+      "view": {
+        "el": 18,
+        "az": 24
+      },
+      "fileKB": 513
+    },
+    {
+      "id": "kitchen_wall",
+      "name": "吊柜",
+      "nameEn": "Shaker Wall Cabinets & Hood",
+      "category": "kitchen",
+      "mount": "wall",
+      "size": [
+        2430,
+        769,
+        423
+      ],
+      "lods": [
+        {
+          "tris": 626,
+          "verts": 679,
+          "drawCalls": 5
+        },
+        {
+          "tris": 496,
+          "verts": 633,
+          "drawCalls": 5
+        },
+        {
+          "tris": 198,
+          "verts": 308,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "墨绿色缎面烤漆（橱柜）",
+        "拉丝黄铜",
+        "LED 灯带（乳白扩散罩）",
+        "拉丝不锈钢",
+        "黑色粉末喷涂钢"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 169,
+      "lodDistances": null,
+      "view": {
+        "el": 8,
+        "az": 26
+      },
+      "fileKB": 162
+    },
+    {
+      "id": "kitchen_island",
+      "name": "岛台",
+      "nameEn": "Reeded Oak Kitchen Island",
+      "category": "kitchen",
+      "mount": "floor",
+      "size": [
+        1800,
+        900,
+        961
+      ],
+      "lods": [
+        {
+          "tris": 782,
+          "verts": 984,
+          "drawCalls": 3
+        },
+        {
+          "tris": 494,
+          "verts": 632,
+          "drawCalls": 3
+        },
+        {
+          "tris": 190,
+          "verts": 344,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "白色大理石台面（抛光）",
+        "橡木（木蜡油）",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 172,
+      "lodDistances": null,
+      "view": {
+        "el": 18,
+        "az": 32
+      },
+      "fileKB": 600
     }
   ]
 }

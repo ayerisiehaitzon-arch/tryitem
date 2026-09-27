@@ -8,6 +8,9 @@
 //   docs/previews/lighting-detail.jpg 灯具特写：台灯开灯 / 关灯、纸灯笼、壁灯
 //   docs/previews/architecture.jpg    墙地门窗一览
 //   docs/previews/architecture-detail.jpg 墙地门窗特写：人字拼、门执手与合页、护墙板线条、钢窗与窗台
+//   docs/previews/kitchen.jpg         厨房三件：橱柜、吊柜、岛台
+//   docs/previews/kitchen-detail.jpg  厨房特写：陶瓷水槽与鹅颈龙头、手工釉面砖和灯带光斑、钟形烟机罩、岛台凸条板
+//   docs/previews/kitchen-room.jpg    全屋陈列里的厨房
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -27,7 +30,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -90,6 +93,21 @@ ad.push(...await shoot({ items: ['wall_door'], views: ['&target=0.22:1:0.06&dist
 ad.push(...await shoot({ items: ['wall_wainscot'], views: ['&target=-0.5:0.9:0.06&dist=0.28&el=10&az=30'], size: [800, 600], outDir: tmp, name: () => 'b2.png' }));
 ad.push(...await shoot({ items: ['wall_window'], views: ['&target=0.1:1.2:0.05&dist=0.3&el=14&az=30'], size: [800, 600], outDir: tmp, name: () => 'b3.png' }));
 await grid(ad, 2, [600, 450], path.join(out, 'architecture-detail.jpg'));
+
+const kitchen = await shoot({ items: kitchenIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `k_${id}.png` });
+await grid(kitchen, 3, [480, 360], path.join(out, 'kitchen.jpg'));
+
+// 厨房特写：水槽与龙头、墙砖与灯带光斑（在全屋里拍：吊柜装在台面上方）、烟机罩、岛台凸条板
+const kd = [];
+kd.push(...await shoot({ items: ['kitchen_base'], views: ['&target=-0.15:0.95:0&dist=0.26&el=26&az=24'], size: [800, 600], outDir: tmp, name: () => 'c0.png' }));
+kd.push(...await shoot({ items: ['room'], views: ['&target=-9.2:1.2:-1.95&dist=0.07&el=4&az=16'], size: [800, 600], outDir: tmp, name: () => 'c1.png' }));
+kd.push(...await shoot({ items: ['kitchen_wall'], views: ['&target=0.62:1.74:0.2&dist=0.46&el=10&az=-28'], size: [800, 600], outDir: tmp, name: () => 'c2.png' }));
+kd.push(...await shoot({ items: ['kitchen_island'], views: ['&target=0.45:0.62:0.3&dist=0.42&el=16&az=38'], size: [800, 600], outDir: tmp, name: () => 'c3.png' }));
+await grid(kd, 2, [600, 450], path.join(out, 'kitchen-detail.jpg'));
+
+const kroom = await shoot({ items: ['room'], views: ['&target=-8.3:0.9:-0.7&dist=0.24&el=22&az=24'], size: [1600, 900], outDir: tmp, name: () => 'kitchen-room.png' });
+await sharp(kroom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'kitchen-room.jpg'));
+console.log('→ docs/previews/kitchen-room.jpg');
 
 const room = await shoot({ items: ['room'], views: ['&el=32&az=24&dist=0.9'], size: [1600, 900], outDir: tmp, name: () => 'room.png' });
 await sharp(room[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'room.jpg'));

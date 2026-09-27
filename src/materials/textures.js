@@ -305,6 +305,8 @@ export const TEXTURES = {
   plaster: { size: 512, normalStrength: 1.2, v: 1, gen: INTERIOR.plaster },
   // —— 新家具 ——
   cane: { size: 512, normalStrength: 3, v: 2, gen: INTERIOR.cane },
+  // —— 厨房 ——（高度以毫米计：法线强度 ≈ 高度范围 / 像素尺寸，釉面起伏的斜率就是真实的）
+  zellige: { size: 1024, detail: 0.5, normalStrength: 9, v: 3, gen: INTERIOR.zellige },
 };
 
 function alloc(S) {
