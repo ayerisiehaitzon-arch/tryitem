@@ -1,7 +1,7 @@
 import { ItemBuilder } from './core/item.js';
 import { packCharts } from './core/pack.js';
 import { finalizeItem } from './core/finalize.js';
-import { MATERIALS, tileOf } from './materials/library.js';
+import { MATERIALS, tileOf, noOffsetOf } from './materials/library.js';
 import { createDoc, createMaterial, addMesh, addShadowDecal } from './export/gltf.js';
 
 export const LODS = [0, 1, 2];
@@ -14,7 +14,7 @@ export function buildGeometry(def) {
   const lods = LODS.map((lod) => {
     const k = new ItemBuilder({ lod, layout, name: def.id });
     def.build(k);
-    return finalizeItem(k, { layout, tileOf });
+    return finalizeItem(k, { layout, tileOf, noOffset: noOffsetOf });
   });
   return { layout, lods };
 }
@@ -47,6 +47,7 @@ export function assembleDoc(def, { lods, layout }, { textures = null, ao = null,
     id: def.id,
     name: def.name,
     nameEn: def.nameEn,
+    category: def.category ?? 'furniture',
     size: [b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]].map((v) => Math.round(v * 1000)),
     lods: lods.map((l) => ({ tris: l.tris, verts: l.verts, drawCalls: l.prims.length })),
     materials: matNames.map((m) => MATERIALS[m].label),

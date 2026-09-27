@@ -47,8 +47,13 @@ export class ItemBuilder {
   // 长条图块切成几段（LOD 间保持一致：低 LOD 直接沿用 LOD0 的段数）
   pieces(prefix, length, maxLen = 0.9) {
     if (this.layout) {
+      // 取最大的段号（某一段可能没有分到任何线段而没生成图块，段号不一定连续）
       let n = 0;
-      while (this.layout.rects[`${prefix}.${n}`]) n++;
+      for (const id of Object.keys(this.layout.rects)) {
+        if (!id.startsWith(`${prefix}.`)) continue;
+        const i = Number(id.slice(prefix.length + 1));
+        if (Number.isInteger(i)) n = Math.max(n, i + 1);
+      }
       if (n === 0) throw new Error(`[${this.name}] 找不到图块组 ${prefix}`);
       return n;
     }

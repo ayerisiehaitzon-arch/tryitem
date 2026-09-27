@@ -8,6 +8,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { perlin, fbm, worley, mulberry } from './noise.js';
+import * as decor from './decor-textures.js';
 
 const VERSION = 8;
 
@@ -284,6 +285,15 @@ export const TEXTURES = {
       seed: 71, base: rgb(240, 238, 234), cloud: rgb(212, 211, 208), vein: rgb(122, 124, 130), vein2: rgb(168, 169, 172),
     }),
   },
+  // —— 摆件 ——（v 是单张贴图自己的版本号，改参数时只让这一张重新生成）
+  // 图集里有细线和小字：颜色图不做色度抽样（4:4:4），金线不会糊成一片
+  books: { size: 512, normalStrength: 1.5, v: 3, chroma444: true, gen: decor.books },
+  ceramics: { size: 1024, normalStrength: 3, v: 2, gen: decor.ceramics },
+  foliage: { size: 1024, detail: 0.5, normalStrength: 2, v: 1, gen: decor.foliage },
+  // 地毯：颜色是整幅图案（2m × 1.4m 一张图）；法线另用一小块可平铺的羊毛绒面（0.25m 见方），
+  // 材质里用 KHR_texture_transform 重复 8 × 5.6 次 —— 整幅图案 + 毫米级绒面细节，贴图总量不变
+  rug: { size: 1024, detail: 0.5, v: 4, gen: decor.rug, normalTile: { size: 512, strength: 2.5, gen: decor.woolPile } },
+  fringe: { size: 512, normalStrength: 2, v: 4, alpha: true, gen: decor.fringe },
 };
 
 function alloc(S) {
@@ -309,27 +319,38 @@ function heightToNormal(h, S, strength) {
   return out;
 }
 
-async function encode(name, S, field, strength, detail = 1) {
-  const col = new Uint8Array(S * S * 3);
-  for (let i = 0; i < S * S * 3; i++) col[i] = Math.round(clamp01(field.color[i]) * 255);
+async function encode(name, S, field, strength, detail = 1, { chroma444 = false } = {}) {
+  // 带透明度的贴图（流苏）存成 RGBA PNG；其余存 JPEG
+  const ch = field.alpha ? 4 : 3;
+  const col = new Uint8Array(S * S * ch);
+  for (let i = 0; i < S * S; i++) {
+    for (let c = 0; c < 3; c++) col[i * ch + c] = Math.round(clamp01(field.color[i * 3 + c]) * 255);
+    if (field.alpha) col[i * ch + 3] = Math.round(clamp01(field.alpha[i]) * 255);
+  }
   const rough = new Uint8Array(S * S * 3);
   for (let i = 0; i < S * S; i++) {
     rough[i * 3] = 255;
     rough[i * 3 + 1] = Math.round(clamp01(field.rough[i]) * 255);
-    rough[i * 3 + 2] = 0;
+    rough[i * 3 + 2] = field.metal ? Math.round(clamp01(field.metal[i]) * 255) : 0; // glTF：B = 金属度
   }
   // 高度图归一化到单位幅度，strength 控制凹凸
+  const nt = field.normalTile; // 独立的可平铺细节法线（有的话）
+  const H = nt ? nt.height : field.height, HS = nt ? nt.S : S;
   let mn = Infinity, mx = -Infinity;
-  for (const v of field.height) { mn = Math.min(mn, v); mx = Math.max(mx, v); }
-  const hn = field.height.map((v) => (v - mn) / (mx - mn + 1e-9));
-  const nrm = heightToNormal(hn, S, strength);
+  for (const v of H) { mn = Math.min(mn, v); mx = Math.max(mx, v); }
+  const hn = H.map((v) => (v - mn) / (mx - mn + 1e-9));
+  const nrm = heightToNormal(hn, HS, nt ? nt.strength : strength);
   const raw = { raw: { width: S, height: S, channels: 3 } };
   // 法线 / 粗糙度可以用半分辨率（detail < 1）：细节主要靠颜色图，省一半以上体积
   const D = Math.round(S * detail);
   const sized = (buf) => (D === S ? sharp(Buffer.from(buf), raw) : sharp(Buffer.from(buf), raw).resize(D, D, { kernel: 'lanczos3' }));
+  const normalImg = nt ? sharp(Buffer.from(nrm), { raw: { width: HS, height: HS, channels: 3 } }) : sized(nrm);
+  const colorImg = field.alpha
+    ? { data: await sharp(Buffer.from(col), { raw: { width: S, height: S, channels: 4 } }).png({ compressionLevel: 9 }).toBuffer(), mime: 'image/png' }
+    : { data: await sharp(Buffer.from(col), raw).jpeg({ quality: 90, mozjpeg: true, ...(chroma444 ? { chromaSubsampling: '4:4:4' } : {}) }).toBuffer(), mime: 'image/jpeg' };
   return {
-    color: { data: await sharp(Buffer.from(col), raw).jpeg({ quality: 90, mozjpeg: true }).toBuffer(), mime: 'image/jpeg' },
-    normal: { data: await sized(nrm).jpeg({ quality: 90, mozjpeg: true, chromaSubsampling: '4:4:4' }).toBuffer(), mime: 'image/jpeg' },
+    color: colorImg,
+    normal: { data: await normalImg.jpeg({ quality: 90, mozjpeg: true, chromaSubsampling: '4:4:4' }).toBuffer(), mime: 'image/jpeg' },
     rough: { data: await sized(rough).jpeg({ quality: 88, mozjpeg: true }).toBuffer(), mime: 'image/jpeg' },
   };
 }
@@ -339,17 +360,25 @@ export async function buildTextures({ scale = 1, cacheDir = null, only = null } 
   for (const [name, def] of Object.entries(TEXTURES)) {
     if (only && !only.includes(name)) continue;
     const S = Math.max(64, Math.round(def.size * scale));
-    const key = `${name}_${S}_v${VERSION}`;
-    const files = ['color', 'normal', 'rough'].map((m) => cacheDir && path.join(cacheDir, `${key}_${m}.jpg`));
+    const key = def.v ? `${name}_${S}_d${def.v}` : `${name}_${S}_v${VERSION}`;
+    const colorExt = def.alpha ? 'png' : 'jpg';
+    const files = ['color', 'normal', 'rough'].map((m) => cacheDir && path.join(cacheDir, `${key}_${m}.${m === 'color' ? colorExt : 'jpg'}`));
     if (cacheDir) {
       try {
         const bufs = await Promise.all(files.map((f) => fs.readFile(f)));
-        out[name] = { color: { data: bufs[0], mime: 'image/jpeg' }, normal: { data: bufs[1], mime: 'image/jpeg' }, rough: { data: bufs[2], mime: 'image/jpeg' } };
+        out[name] = {
+          color: { data: bufs[0], mime: def.alpha ? 'image/png' : 'image/jpeg' },
+          normal: { data: bufs[1], mime: 'image/jpeg' }, rough: { data: bufs[2], mime: 'image/jpeg' },
+        };
         continue;
       } catch {}
     }
     const field = def.gen(S);
-    out[name] = await encode(name, S, field, def.normalStrength, def.detail ?? 1);
+    if (def.normalTile) {
+      const NS = Math.max(64, Math.round(def.normalTile.size * scale));
+      field.normalTile = { S: NS, height: def.normalTile.gen(NS), strength: def.normalTile.strength };
+    }
+    out[name] = await encode(name, S, field, def.normalStrength, def.detail ?? 1, def);
     if (cacheDir) {
       await fs.mkdir(cacheDir, { recursive: true });
       await Promise.all(['color', 'normal', 'rough'].map((m, i) => fs.writeFile(files[i], out[name][m].data)));

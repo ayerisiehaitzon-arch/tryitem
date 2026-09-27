@@ -11,6 +11,13 @@ import barStool from './bar-stool.js';
 import wardrobe from './wardrobe.js';
 import desk from './desk.js';
 import officeChair from './office-chair.js';
+import books from '../decor/books.js';
+import vases from '../decor/vases.js';
+import { fiddleFig, snakePlant } from '../decor/plants.js';
+import rug from '../decor/rug.js';
 
-// 家具清单（顺序即展示顺序）
-export const FURNITURE = [chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, floorLamp, barStool, wardrobe, desk, officeChair];
+// 清单（顺序即展示顺序）：家具在前，摆件（category: 'decor'）在后
+export const FURNITURE = [
+  chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, floorLamp, barStool, wardrobe, desk, officeChair,
+  books, vases, fiddleFig, snakePlant, rug,
+];

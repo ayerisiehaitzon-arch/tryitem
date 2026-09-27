@@ -1,5 +1,5 @@
 import { Document, NodeIO } from '@gltf-transform/core';
-import { KHRMaterialsSheen, KHRMaterialsClearcoat, KHRMaterialsUnlit, KHRMaterialsEmissiveStrength } from '@gltf-transform/extensions';
+import { KHRMaterialsSheen, KHRMaterialsClearcoat, KHRMaterialsUnlit, KHRMaterialsEmissiveStrength, KHRTextureTransform } from '@gltf-transform/extensions';
 
 // 用 glTF-Transform 组装 .glb：
 //   <item>            根节点（extras 里带预算信息）
@@ -14,12 +14,16 @@ import { KHRMaterialsSheen, KHRMaterialsClearcoat, KHRMaterialsUnlit, KHRMateria
 export function createDoc() {
   const doc = new Document();
   doc.createBuffer();
-  const ext = {
-    sheen: doc.createExtension(KHRMaterialsSheen),
-    clearcoat: doc.createExtension(KHRMaterialsClearcoat),
-    unlit: doc.createExtension(KHRMaterialsUnlit),
-    emissive: doc.createExtension(KHRMaterialsEmissiveStrength),
+  // 扩展按需创建：只有真正用到的扩展才写进 extensionsUsed
+  const ext = {};
+  const kinds = {
+    sheen: KHRMaterialsSheen, clearcoat: KHRMaterialsClearcoat, unlit: KHRMaterialsUnlit,
+    emissive: KHRMaterialsEmissiveStrength, transform: KHRTextureTransform,
   };
+  for (const [key, Cls] of Object.entries(kinds)) {
+    let e = null;
+    Object.defineProperty(ext, key, { get: () => (e ??= doc.createExtension(Cls)) });
+  }
   return { doc, ext, textures: new Map() };
 }
 
@@ -38,10 +42,15 @@ export function createMaterial(ctx, name, def, tex, ao) {
     .setMetallicFactor(def.metallic ?? 0)
     .setRoughnessFactor(def.roughness ?? 0.5)
     .setDoubleSided(!!def.doubleSided);
+  if (def.alphaMode === 'MASK') m.setAlphaMode('MASK').setAlphaCutoff(def.alphaCutoff ?? 0.5);
   if (tex?.color) m.setBaseColorTexture(texture(ctx, `${def.key}_color`, tex.color));
   if (tex?.normal) {
     m.setNormalTexture(texture(ctx, `${def.key}_normal`, tex.normal));
     m.setNormalScale(def.normalScale ?? 1);
+    // 细节法线：一小块可平铺的法线图按 normalRepeat 重复（颜色图仍然整幅铺满）
+    if (def.normalRepeat) {
+      m.getNormalTextureInfo().setExtension('KHR_texture_transform', ext.transform.createTransform().setScale(def.normalRepeat));
+    }
   }
   if (tex?.rough) m.setMetallicRoughnessTexture(texture(ctx, `${def.key}_rough`, tex.rough));
   if (ao) {
@@ -117,6 +126,6 @@ export function addShadowDecal(ctx, name, shadow) {
 }
 
 export async function writeGLB(doc, path) {
-  const io = new NodeIO().registerExtensions([KHRMaterialsSheen, KHRMaterialsClearcoat, KHRMaterialsUnlit, KHRMaterialsEmissiveStrength]);
+  const io = new NodeIO().registerExtensions([KHRMaterialsSheen, KHRMaterialsClearcoat, KHRMaterialsUnlit, KHRMaterialsEmissiveStrength, KHRTextureTransform]);
   await io.write(path, doc);
 }

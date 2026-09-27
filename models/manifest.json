@@ -1,10 +1,11 @@
 {
-  "generated": "2026-09-27T08:06:11.864Z",
+  "generated": "2026-09-27T09:30:06.224Z",
   "items": [
     {
       "id": "dining_chair",
       "name": "餐椅",
       "nameEn": "Oslo Dining Chair",
+      "category": "furniture",
       "size": [
         466,
         804,
@@ -40,6 +41,7 @@
       "id": "dining_table",
       "name": "餐桌",
       "nameEn": "Oslo Dining Table",
+      "category": "furniture",
       "size": [
         1600,
         740,
@@ -74,6 +76,7 @@
       "id": "sofa",
       "name": "三人沙发",
       "nameEn": "Cumulus 3-Seat Sofa",
+      "category": "furniture",
       "size": [
         2108,
         880,
@@ -109,6 +112,7 @@
       "id": "armchair",
       "name": "皮扶手椅",
       "nameEn": "Hygge Lounge Chair",
+      "category": "furniture",
       "size": [
         755,
         852,
@@ -144,6 +148,7 @@
       "id": "coffee_table",
       "name": "圆茶几",
       "nameEn": "Lune Coffee Table",
+      "category": "furniture",
       "size": [
         800,
         422,
@@ -179,6 +184,7 @@
       "id": "bookshelf",
       "name": "书架",
       "nameEn": "Grid Bookshelf",
+      "category": "furniture",
       "size": [
         900,
         1800,
@@ -214,6 +220,7 @@
       "id": "nightstand",
       "name": "床头柜",
       "nameEn": "Nordic Nightstand",
+      "category": "furniture",
       "size": [
         500,
         561,
@@ -249,6 +256,7 @@
       "id": "bed",
       "name": "双人床",
       "nameEn": "Fjord Double Bed",
+      "category": "furniture",
       "size": [
         1740,
         1027,
@@ -285,6 +293,7 @@
       "id": "floor_lamp",
       "name": "落地灯",
       "nameEn": "Halo Floor Lamp",
+      "category": "furniture",
       "size": [
         446,
         1505,
@@ -321,6 +330,7 @@
       "id": "bar_stool",
       "name": "吧台凳",
       "nameEn": "Perch Counter Stool",
+      "category": "furniture",
       "size": [
         406,
         662,
@@ -356,6 +366,7 @@
       "id": "wardrobe",
       "name": "衣柜",
       "nameEn": "Nordic Wardrobe",
+      "category": "furniture",
       "size": [
         1000,
         2001,
@@ -391,6 +402,7 @@
       "id": "desk",
       "name": "书桌",
       "nameEn": "Atelier Writing Desk",
+      "category": "furniture",
       "size": [
         1200,
         929,
@@ -426,6 +438,7 @@
       "id": "office_chair",
       "name": "办公椅",
       "nameEn": "Studio Task Chair",
+      "category": "furniture",
       "size": [
         624,
         1083,
@@ -457,6 +470,184 @@
       "aoDensity": 126,
       "lodDistances": null,
       "fileKB": 451
+    },
+    {
+      "id": "books",
+      "name": "书",
+      "nameEn": "Clothbound Books",
+      "category": "decor",
+      "size": [
+        640,
+        262,
+        197
+      ],
+      "lods": [
+        {
+          "tris": 474,
+          "verts": 726,
+          "drawCalls": 1
+        },
+        {
+          "tris": 318,
+          "verts": 522,
+          "drawCalls": 1
+        },
+        {
+          "tris": 102,
+          "verts": 252,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "布面精装书（调色板图集）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 172,
+      "lodDistances": null,
+      "fileKB": 221
+    },
+    {
+      "id": "vases",
+      "name": "花瓶",
+      "nameEn": "Stoneware Vases",
+      "category": "decor",
+      "size": [
+        373,
+        326,
+        276
+      ],
+      "lods": [
+        {
+          "tris": 1500,
+          "verts": 985,
+          "drawCalls": 1
+        },
+        {
+          "tris": 764,
+          "verts": 550,
+          "drawCalls": 1
+        },
+        {
+          "tris": 308,
+          "verts": 257,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "手工釉面炻器（图集）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 360,
+      "lodDistances": null,
+      "fileKB": 352
+    },
+    {
+      "id": "fiddle_fig",
+      "name": "琴叶榕",
+      "nameEn": "Fiddle-leaf Fig",
+      "category": "decor",
+      "size": [
+        788,
+        1753,
+        860
+      ],
+      "lods": [
+        {
+          "tris": 1662,
+          "verts": 1290,
+          "drawCalls": 2
+        },
+        {
+          "tris": 896,
+          "verts": 768,
+          "drawCalls": 2
+        },
+        {
+          "tris": 348,
+          "verts": 389,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "手工釉面炻器（图集）",
+        "植物（叶 / 树皮 / 盆土图集）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 137,
+      "lodDistances": null,
+      "fileKB": 654
+    },
+    {
+      "id": "snake_plant",
+      "name": "虎尾兰",
+      "nameEn": "Snake Plant",
+      "category": "decor",
+      "size": [
+        354,
+        813,
+        318
+      ],
+      "lods": [
+        {
+          "tris": 678,
+          "verts": 516,
+          "drawCalls": 2
+        },
+        {
+          "tris": 444,
+          "verts": 354,
+          "drawCalls": 2
+        },
+        {
+          "tris": 190,
+          "verts": 189,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "手工釉面炻器（图集）",
+        "植物（叶 / 树皮 / 盆土图集）"
+      ],
+      "aoAtlas": 128,
+      "aoDensity": 146,
+      "lodDistances": null,
+      "fileKB": 556
+    },
+    {
+      "id": "rug",
+      "name": "地毯",
+      "nameEn": "Wool Rug",
+      "category": "decor",
+      "size": [
+        2170,
+        20,
+        1400
+      ],
+      "lods": [
+        {
+          "tris": 150,
+          "verts": 124,
+          "drawCalls": 2
+        },
+        {
+          "tris": 90,
+          "verts": 88,
+          "drawCalls": 2
+        },
+        {
+          "tris": 22,
+          "verts": 40,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "手工羊毛地毯（Beni Ourain 菱格）",
+        "羊毛流苏（透明裁剪）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 124,
+      "lodDistances": null,
+      "fileKB": 497
     }
   ]
 }

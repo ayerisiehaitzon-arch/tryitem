@@ -4,7 +4,7 @@ import { atlasUV } from './pack.js';
 //   · UV0：米 → 贴图重复单位，按部件名给确定性的随机偏移（相同的腿木纹不雷同）
 //   · UV1：图块坐标 → AO 图集坐标
 //   · 焊接完全相同的顶点、剔除退化三角形
-export function finalizeItem(k, { layout, tileOf }) {
+export function finalizeItem(k, { layout, tileOf, noOffset = () => false }) {
   const byMat = new Map();
   for (const part of k.parts) {
     if (!byMat.has(part.mat)) byMat.set(part.mat, []);
@@ -14,11 +14,12 @@ export function finalizeItem(k, { layout, tileOf }) {
   let tris = 0, verts = 0;
   for (const [mat, parts] of byMat) {
     const tile = tileOf(mat);
+    const fixed = noOffset(mat); // 图集 / 整图映射的材质不能加随机偏移
     const P = [], N = [], T0 = [], T1 = [], I = [];
     const keyMap = new Map();
     for (const part of parts) {
       const rnd = k.rand(part.name);
-      const off = [rnd(), rnd()];
+      const off = fixed ? [0, 0] : [rnd(), rnd()];
       const remap = new Array(part.P.length);
       for (let i = 0; i < part.P.length; i++) {
         const p = part.P[i], n = part.N[i];

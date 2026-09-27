@@ -96,11 +96,6 @@ export const MATERIALS = {
     color: srgb(236, 234, 228), metallic: 0, roughness: 0.42,
     clearcoat: { factor: 0.2, roughness: 0.3 },
   },
-  ceramic: {
-    label: '釉面陶瓷（雾蓝）',
-    color: srgb(137, 158, 170), metallic: 0, roughness: 0.25,
-    clearcoat: { factor: 0.6, roughness: 0.08 },
-  },
   shade: {
     label: '亚麻灯罩（内侧发光）',
     tex: 'linen', tile: [0.12, 0.12], color: tint([232, 222, 200]),
@@ -112,6 +107,45 @@ export const MATERIALS = {
     color: srgb(255, 236, 205), metallic: 0, roughness: 0.2,
     emissive: [1.0, 0.85, 0.62], emissiveStrength: 6,
   },
+
+  // —— 摆件 ——
+  // 图集材质（noOffset）：UV 直接指向图集里的格子，不能加随机偏移，tile = [1, 1] 表示 UV 已经是 0~1 的贴图坐标
+  books: {
+    label: '布面精装书（调色板图集）',
+    tex: 'books', tile: [1, 1], noOffset: true,
+    // 粗糙度 / 金属度都由贴图给：布面粗糙、烫金是金属
+    roughness: 1, metallic: 1, normalScale: 0.6,
+  },
+  glaze: {
+    label: '手工釉面炻器（图集）',
+    // 釉色、露胎、流釉、铁点全画在图集里；粗糙度也由贴图给：釉面 0.1~0.3 有清晰的反光，露胎 0.84 哑光
+    tex: 'ceramics', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+  foliage: {
+    label: '植物（叶 / 树皮 / 盆土图集）',
+    // 叶片是单层几何，双面显示；背面的法线由渲染器自动翻转
+    tex: 'foliage', tile: [1, 1], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.7,
+  },
+  rug: {
+    label: '手工羊毛地毯（Beni Ourain 菱格）',
+    // 整幅图案一张贴图铺满（uvFit），羊毛绒面有 sheen
+    tex: 'rug', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    normalRepeat: [8, 5.6], // 绒面细节法线：0.25m 一块，重复铺满 2m × 1.4m
+    sheen: { color: [0.55, 0.52, 0.47], roughness: 0.7 },
+  },
+  fringe: {
+    label: '羊毛流苏（透明裁剪）',
+    // 一张平铺的卡片 + alpha 裁剪画出一束束流苏；不参与 AO / 阴影烘焙的遮挡
+    tex: 'fringe', tile: [0.2, 0.085], noOffset: true, doubleSided: true,
+    // 阈值取低一点：远处 mip 把细线的 alpha 平均掉以后，流苏也不会整片消失
+    alphaMode: 'MASK', alphaCutoff: 0.35,
+    roughness: 1, metallic: 0, normalScale: 0.6,
+    sheen: { color: [0.5, 0.48, 0.44], roughness: 0.7 },
+  },
 };
 
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
+export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

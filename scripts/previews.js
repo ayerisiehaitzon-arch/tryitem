@@ -1,6 +1,9 @@
 // 生成 README 用的预览图：node scripts/previews.js
 //   docs/previews/overview.jpg   全部家具一览
+//   docs/previews/decor.jpg      全部摆件一览
+//   docs/previews/decor-detail.jpg  摆件特写：书脊、釉面、叶片、流苏
 //   docs/previews/room.jpg       全屋陈列
+//   docs/previews/living.jpg     客厅一角（家具 + 摆件）
 //   docs/previews/normals.jpg    同一个沙发：平滑法线 / 平直着色 / 线框
 //   docs/previews/ao.jpg         扶手椅：有 / 无烘焙 AO
 import fs from 'node:fs/promises';
@@ -15,7 +18,8 @@ const out = path.join(root, 'docs', 'previews');
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
-const ids = manifest.items.map((i) => i.id);
+const ids = manifest.items.filter((i) => i.category !== 'decor').map((i) => i.id);
+const decorIds = manifest.items.filter((i) => i.category === 'decor').map((i) => i.id);
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -31,9 +35,25 @@ async function grid(files, cols, cell, dest) {
 const heroes = await shoot({ items: ids, views: ['hero'], size: [800, 600], outDir: tmp });
 await grid(heroes, 5, [400, 300], path.join(out, 'overview.jpg'));
 
-const room = await shoot({ items: ['room'], views: ['&el=30&az=24'], size: [1600, 900], outDir: tmp, name: () => 'room.png' });
+const decor = await shoot({ items: decorIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `d_${id}.png` });
+await grid(decor, 3, [480, 360], path.join(out, 'decor.jpg'));
+
+// 特写：书脊的烫金与书名、手工釉面、琴叶榕叶脉、地毯流苏
+const detail = await shoot({
+  items: ['books'], views: ['close'], size: [800, 600], outDir: tmp, name: () => 'x0.png',
+});
+detail.push(...await shoot({ items: ['vases'], views: ['close'], size: [800, 600], outDir: tmp, name: () => 'x1.png' }));
+detail.push(...await shoot({ items: ['fiddle_fig'], views: ['&target=0.05:1.05:0&dist=0.3&el=20&az=30'], size: [800, 600], outDir: tmp, name: () => 'x2.png' }));
+detail.push(...await shoot({ items: ['rug'], views: ['&target=0.95:0:0.3&dist=0.18&el=35&az=70'], size: [800, 600], outDir: tmp, name: () => 'x3.png' }));
+await grid(detail, 2, [600, 450], path.join(out, 'decor-detail.jpg'));
+
+const room = await shoot({ items: ['room'], views: ['&el=30&az=24&dist=0.84'], size: [1600, 900], outDir: tmp, name: () => 'room.png' });
 await sharp(room[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'room.jpg'));
 console.log('→ docs/previews/room.jpg');
+
+const living = await shoot({ items: ['room'], views: ['&target=-0.4:0.3:-0.7&dist=0.36&el=24&az=18'], size: [1600, 900], outDir: tmp, name: () => 'living.png' });
+await sharp(living[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'living.jpg'));
+console.log('→ docs/previews/living.jpg');
 
 let n = 0;
 const seq = (prefix) => () => `${prefix}_${n++}.png`;

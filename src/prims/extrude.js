@@ -23,6 +23,7 @@ export const AXIS = {
  *   center   是否沿挤出方向居中
  *   grain    木纹方向：'len' 沿挤出方向，'across' 沿截面周长，'auto' 自动
  *   capAngle 封口面上 UV0 的旋转（弧度）
+ *   uvFit    整张贴图正好铺满截面包围盒（地毯这类“整幅图案”）；侧面取边缘像素垂直拉伸
  *   density  { side, cap0, cap1 } AO 图集纹素密度倍率（看不见的面可以给低一点）
  *   xf       摆放变换
  */
@@ -30,7 +31,7 @@ export function extrude(k, o) {
   const {
     name, mat, shape: sh, depth,
     bevel = 0, bsegs = 1, caps = [true, true], taper = 1,
-    axis = 'z', center = false, grain = 'auto', capAngle = 0,
+    axis = 'z', center = false, grain = 'auto', capAngle = 0, uvFit = false,
     density = {}, xf = null, maxChart = 0.9,
   } = o;
   const part = k.part(mat, name);
@@ -50,7 +51,9 @@ export function extrude(k, o) {
   }
   const W = maxX - minX, H = maxY - minY;
   const ca = Math.cos(capAngle), sa = Math.sin(capAngle);
-  const capUV0 = (x, y) => [x * ca - y * sa, x * sa + y * ca];
+  const capUV0 = uvFit
+    ? (x, y) => [(x - minX) / W, (y - minY) / H]
+    : (x, y) => [x * ca - y * sa, x * sa + y * ca];
 
   // 锥形侧面的真实法线：(n2d, -σ'(p·n2d))
   const sideN = (p, n2) => [n2[0], n2[1], -dsig * (p[0] * n2[0] + p[1] * n2[1])];
@@ -76,7 +79,7 @@ export function extrude(k, o) {
         const vtx = (p2, n2, s, z) => {
           const sc = sig(z);
           const pos = [p2[0] * sc, p2[1] * sc, z];
-          const t = g === 'len' ? [z, s] : [s, z];
+          const t = uvFit ? capUV0(p2[0], p2[1]) : g === 'len' ? [z, s] : [s, z];
           return part.v(pos, sideN(p2, n2), t, ch, [(s - ps0) / (ps1 - ps0), z / depth]);
         };
         const a0 = vtx(sg.a, sg.na, sg.sa, z0);

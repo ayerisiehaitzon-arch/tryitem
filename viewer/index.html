@@ -152,6 +152,12 @@
   .item[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
   .item.room { background: var(--accent-soft); }
   .item[aria-pressed="true"] span { color: var(--accent); }
+  /* 分组标签：家具 / 摆件（整条高度的分隔线 + 竖排小字） */
+  .sep {
+    flex: none; align-self: stretch; display: flex; align-items: center;
+    padding-left: 8px; margin-left: 2px; border-left: 1px solid var(--line);
+  }
+  .sep i { writing-mode: vertical-rl; font: normal 600 12px/1 var(--sans); letter-spacing: 0.3em; color: var(--muted); }
 
   .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .seg {
@@ -208,7 +214,7 @@
   </div>
   <p class="caption" id="caption"></p>
   <nav class="dock">
-    <div class="items" id="items" role="toolbar" aria-label="家具"></div>
+    <div class="items" id="items" role="toolbar" aria-label="家具与摆件"></div>
     <div class="controls">
       <div class="seg" role="group" aria-label="显示">
         <button id="t-wire" aria-pressed="false">线框</button>
@@ -369,12 +375,14 @@ function shareTextures(mat) {
   for (const slot of SLOTS) {
     const t = mat[slot];
     if (!t || !t.name) continue;
-    const hit = sharedTex.get(t.name);
+    // 同名贴图但 UV 变换不同（KHR_texture_transform）时是两个纹理对象，共享同一张图片
+    const key = `${t.name}|${t.repeat.x},${t.repeat.y}|${t.offset.x},${t.offset.y}|${t.rotation}`;
+    const hit = sharedTex.get(key);
     if (hit && hit !== t) { mat[slot] = hit; t.dispose(); }
-    else sharedTex.set(t.name, t);
+    else sharedTex.set(key, t);
   }
 }
-const textureSets = () => [...sharedTex.keys()].filter((n) => n.endsWith('_color')).length;
+const textureSets = () => new Set([...sharedTex.values()].map((t) => t.name).filter((n) => n.endsWith('_color'))).size;
 
 // 取模型文件。除了 .glb，也接受“JSON + base64 二进制块”的 glTF（scripts/export-gltf-json.js 的产物），
 // 在内存里还原成 .glb 再解析，不需要对 data: 地址发请求。
@@ -402,11 +410,12 @@ async function fetchGLB(id) {
 }
 
 // 一个摆放实例：几何与材质都和模板共享，只复制节点
-function instantiate(asset, pos = [0, 0, 0], rotY = 0) {
+// lift：放在地毯上的家具，把接触阴影抬到地毯面上（否则贴花被 2cm 厚的地毯挡住）
+function instantiate(asset, pos = [0, 0, 0], rotY = 0, { lift = 0 } = {}) {
   const group = new THREE.Group();
   const levels = asset.levels.map((m) => { const c = m.clone(); group.add(c); return c; });
   const shadow = asset.shadow ? asset.shadow.clone() : null;
-  if (shadow) group.add(shadow);
+  if (shadow) { shadow.position.y += lift; group.add(shadow); }
   group.position.set(...pos);
   group.rotation.y = rotY;
   group.updateMatrixWorld(true);
@@ -416,15 +425,21 @@ function instantiate(asset, pos = [0, 0, 0], rotY = 0) {
   return { asset, group, levels, shadow, sphere, box, level: 0 };
 }
 
-// 全屋陈列：书房 + 客厅 + 餐厅 + 卧室，同一模型多次摆放（4 把餐椅、2 张吧台凳）
+// 全屋陈列：书房 + 客厅 + 餐厅 + 卧室，同一模型多次摆放（4 把餐椅、2 张吧台凳）；
+// 摆件放在家具上：书在书架第二层，花瓶在茶几上，地毯压在沙发前腿下
 const ROOM = [
+  ['rug', [0, 0, -0.22], 0],
   ['desk', [-3.75, 0, -1.45], 0],
   ['office_chair', [-3.75, 0, -0.78], Math.PI - 0.25],
-  ['sofa', [0, 0, -1.25], 0],
-  ['coffee_table', [0, 0, 0.05], 0],
+  ['snake_plant', [-2.95, 0, -1.62], 0.3],
+  ['sofa', [0, 0, -1.25], 0, { lift: 0.021 }],
+  ['coffee_table', [0, 0, 0.05], 0, { lift: 0.021 }],
+  ['vases', [0.02, 0.422, 0.06], 0.4],
   ['armchair', [1.5, 0, 0.12], -Math.PI / 2 + 0.3],
+  ['fiddle_fig', [1.62, 0, -1.55], 0.5],
   ['floor_lamp', [-1.42, 0, -1.5], 0],
   ['bookshelf', [-2.3, 0, -1.55], 0],
+  ['books', [-2.3, 0.451, -1.524], 0],
   ['dining_table', [-2.75, 0, 1.25], 0],
   ['dining_chair', [-3.15, 0, 1.86], Math.PI],
   ['dining_chair', [-2.35, 0, 1.86], Math.PI],
@@ -441,7 +456,7 @@ async function buildView(id) {
   if (views.has(id)) return views.get(id);
   let v;
   if (id === 'room') {
-    const list = await Promise.all(ROOM.map(async ([aid, pos, rot]) => instantiate(await loadAsset(aid), pos, rot)));
+    const list = await Promise.all(ROOM.map(async ([aid, pos, rot, opt]) => instantiate(await loadAsset(aid), pos, rot, opt)));
     const box = new THREE.Box3();
     list.forEach((i) => box.union(i.box));
     const ids = [...new Set(ROOM.map((r) => r[0]))];
@@ -449,7 +464,7 @@ async function buildView(id) {
       tris: list.reduce((a, i) => a + i.asset.stats.lods[l].tris, 0),
     }));
     const kb = ids.reduce((a, aid) => a + (state.items.find((s) => s.id === aid)?.fileKB ?? 0), 0);
-    v = { id, instances: list, box, room: true, stats: { name: '全屋陈列', nameEn: `Showroom · ${list.length} 个摆放 · ${ids.length} 种家具`, lods, kb, ids } };
+    v = { id, instances: list, box, room: true, stats: { name: '全屋陈列', nameEn: `Showroom · ${list.length} 个摆放 · ${ids.length} 种模型`, lods, kb, ids } };
   } else {
     const a = await loadAsset(id);
     const inst = instantiate(a);
@@ -681,6 +696,14 @@ async function select(id, instant = false) {
   scene.add(v.group);
   state.current = id;
   for (const b of document.querySelectorAll('.item')) b.setAttribute('aria-pressed', String(b.dataset.id === id));
+  // 选中项滚进可见范围（从链接直接打开某件摆件时，它可能在列表很后面）
+  const btn = document.querySelector(`.item[data-id="${id}"]`);
+  if (btn) {
+    const strip = $('items'), r = btn.getBoundingClientRect(), sr = strip.getBoundingClientRect();
+    if (r.left < sr.left || r.right > sr.right) {
+      strip.scrollTo({ left: strip.scrollLeft + r.left - sr.left - 16, behavior: instant ? 'auto' : 'smooth' });
+    }
+  }
   renderStats(v);
   frame(v, instant);
   applyView();
@@ -710,13 +733,17 @@ requestAnimationFrame(loop);
 const mf = await (await fetch(`${MODELS}manifest.json`)).json();
 state.items = mf.items;
 const roomTris = ROOM.reduce((a, [aid]) => a + (mf.items.find((s) => s.id === aid)?.lods[0].tris ?? 0), 0);
+const itemBtn = (s) => `
+  <button class="item" data-id="${s.id}" aria-pressed="false">
+    <b>${s.name}</b><span>${fmt(s.lods[0].tris)} △</span>
+  </button>`;
+const group = (label, list) => (list.length ? `<span class="sep" aria-hidden="true"><i>${label}</i></span>` + list.map(itemBtn).join('') : '');
 $('items').innerHTML = `
   <button class="item room" data-id="room" aria-pressed="false">
     <b>全屋陈列</b><span>${ROOM.length} 件 · ${fmt(roomTris)} △</span>
-  </button>` + mf.items.map((s) => `
-  <button class="item" data-id="${s.id}" aria-pressed="false">
-    <b>${s.name}</b><span>${fmt(s.lods[0].tris)} △</span>
-  </button>`).join('');
+  </button>`
+  + group('家具', mf.items.filter((s) => (s.category ?? 'furniture') !== 'decor'))
+  + group('摆件', mf.items.filter((s) => s.category === 'decor'));
 for (const b of document.querySelectorAll('.item')) b.onclick = () => select(b.dataset.id);
 const wanted = params.get('item') || location.hash.slice(1);
 const first = wanted === 'room' || mf.items.find((s) => s.id === wanted) ? wanted : mf.items[0].id;

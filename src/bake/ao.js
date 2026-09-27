@@ -6,16 +6,20 @@
 import os from 'node:os';
 import { Worker } from 'node:worker_threads';
 import sharp from 'sharp';
-import { buildBVH } from './bvh.js';
+import { buildBVH, intersect } from './bvh.js';
+import { MATERIALS } from '../materials/library.js';
 
 const WORKER = new URL('./ao-worker.js', import.meta.url);
 
+// 遮挡体：透明裁剪（alphaMode MASK）的面片不算 —— 流苏这种“一张卡片上画的细线”
+// 如果当成实心面去挡光，会在地毯边和地面上压出一整条黑影
 function gatherTris(lod) {
+  const prims = lod.prims.filter((pr) => MATERIALS[pr.mat]?.alphaMode !== 'MASK');
   let n = 0;
-  for (const pr of lod.prims) n += pr.index.length / 3;
+  for (const pr of prims) n += pr.index.length / 3;
   const tris = new Float32Array(n * 9);
   let o = 0;
-  for (const pr of lod.prims) {
+  for (const pr of prims) {
     const P = pr.position, I = pr.index;
     for (let i = 0; i < I.length; i++) {
       const v = I[i] * 3;
@@ -139,12 +143,16 @@ export async function bakeShadow(lod, { samples = 256, maxDist = 1.2, margin = n
   }
   const occ = await trace(bvh, jobs, { samples, maxDist, floor: false, mode: 'shadow' });
   const rgba = new Uint8Array(W * H * 4);
+  const stack = new Int32Array(256);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x;
     // 边缘淡出，保证贴花边界完全透明
     const ex = Math.min(x + 0.5, W - x - 0.5) / (W * 0.12), ey = Math.min(y + 0.5, H - y - 0.5) / (H * 0.12);
     const fade = smooth(Math.min(1, ex)) * smooth(Math.min(1, ey));
-    const a = strength * Math.pow(1 - occ[i], gamma) * fade;
+    // 物体自己贴地盖住的地方（正上方 4cm 内就是它的底面，比如地毯）根本看不见地面，贴花在这里完全透明；
+    // 否则远看时贴花会借着 polygonOffset 从薄薄的物体底下“透”上来
+    const covered = intersect(bvh, jobs[i * 9], 0.0005, jobs[i * 9 + 2], 1e-9, 1, 1e-9, 0.04, stack) < 0.04;
+    const a = covered ? 0 : strength * Math.pow(1 - occ[i], gamma) * fade;
     rgba[i * 4 + 3] = Math.round(255 * Math.max(0, Math.min(1, a)));
   }
   const data = await sharp(Buffer.from(rgba), { raw: { width: W, height: H, channels: 4 } }).png({ compressionLevel: 9 }).toBuffer();
