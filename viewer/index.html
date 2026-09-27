@@ -245,6 +245,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const MODELS = '../models/';
+const MODEL_EXT = '.glb';
 const params = new URLSearchParams(location.search);
 const SHOT = params.has('shot');
 if (SHOT) document.body.classList.add('shot');
@@ -318,7 +319,7 @@ const loader = new GLTFLoader();
 async function loadAsset(id) {
   if (assets.has(id)) return assets.get(id);
   const p = (async () => {
-    const buf = await (await fetch(`${MODELS}${id}.glb`)).arrayBuffer();
+    const buf = await fetchGLB(id);
     // 强制使用 <img> 解码贴图（兼容更严格的内容安全策略）
     const cib = window.createImageBitmap;
     try { window.createImageBitmap = undefined; } catch {}
@@ -374,6 +375,31 @@ function shareTextures(mat) {
   }
 }
 const textureSets = () => [...sharedTex.keys()].filter((n) => n.endsWith('_color')).length;
+
+// 取模型文件。除了 .glb，也接受“JSON + base64 二进制块”的 glTF（scripts/export-gltf-json.js 的产物），
+// 在内存里还原成 .glb 再解析，不需要对 data: 地址发请求。
+async function fetchGLB(id) {
+  const res = await fetch(`${MODELS}${id}${MODEL_EXT}`);
+  if (!res.ok) throw new Error(`${id}${MODEL_EXT} 载入失败（${res.status}）`);
+  const buf = await res.arrayBuffer();
+  if (new DataView(buf).getUint32(0, true) === 0x46546c67) return buf;
+  const json = JSON.parse(new TextDecoder().decode(buf));
+  const b64 = json.buffers[0].uri.slice(json.buffers[0].uri.indexOf(',') + 1);
+  const raw = atob(b64);
+  const bin = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bin[i] = raw.charCodeAt(i);
+  delete json.buffers[0].uri;
+  const js = new TextEncoder().encode(JSON.stringify(json));
+  const jl = (js.length + 3) & ~3, bl = (bin.length + 3) & ~3;
+  const out = new ArrayBuffer(28 + jl + bl);
+  const dv = new DataView(out), u8 = new Uint8Array(out);
+  dv.setUint32(0, 0x46546c67, true); dv.setUint32(4, 2, true); dv.setUint32(8, out.byteLength, true);
+  dv.setUint32(12, jl, true); dv.setUint32(16, 0x4e4f534a, true);
+  u8.set(js, 20); u8.fill(0x20, 20 + js.length, 20 + jl);
+  dv.setUint32(20 + jl, bl, true); dv.setUint32(24 + jl, 0x004e4942, true);
+  u8.set(bin, 28 + jl);
+  return out;
+}
 
 // 一个摆放实例：几何与材质都和模板共享，只复制节点
 function instantiate(asset, pos = [0, 0, 0], rotY = 0) {
@@ -636,8 +662,15 @@ function loop() {
 let token = 0;
 async function select(id, instant = false) {
   const my = ++token;
+  $('loading').textContent = 'LOADING';
   $('loading').hidden = false;
-  const v = await buildView(id);
+  let v;
+  try {
+    v = await buildView(id);
+  } catch (err) {
+    if (my === token) $('loading').textContent = `${err.message}。请刷新页面重试。`;
+    return;
+  }
   if (my !== token) return;
   $('loading').hidden = true;
   if (view) scene.remove(view.group);

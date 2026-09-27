@@ -105,6 +105,7 @@ npm run build -- --fast       # 低采样、低分辨率贴图，调试用
 npm run serve                 # 打开 http://localhost:8080/viewer/
 npm run inspect models/sofa.glb   # 查看节点、面数、材质、贴图
 npm run previews              # 重新生成 README 里的预览图（需要 Playwright 的 Chromium）
+node scripts/export-gltf-json.js out/   # 转成 JSON glTF（二进制内嵌），给只能托管文本的地方用
 ```
 
 ### 导入引擎
