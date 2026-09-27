@@ -1,0 +1,686 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tryitem 家具陈列室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --stage: #e3e2dd;
+    --floor: #dcdad4;
+    --panel: rgba(246, 245, 241, 0.84);
+    --panel-solid: #f6f5f1;
+    --ink: #1b1e21;
+    --muted: #62676c;
+    --line: #cbc9c2;
+    --accent: #2446a8;
+    --accent-soft: rgba(36, 70, 168, 0.12);
+    --on-accent: #ffffff;
+    --bar: #9aa0a6;
+    --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+    --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --stage: #17191c;
+      --floor: #1d2023;
+      --panel: rgba(31, 34, 38, 0.84);
+      --panel-solid: #1f2226;
+      --ink: #ebe9e4;
+      --muted: #9da2a8;
+      --line: #353a40;
+      --accent: #8ea6ff;
+      --accent-soft: rgba(142, 166, 255, 0.16);
+      --on-accent: #0d1430;
+      --bar: #5d636a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --stage: #17191c;
+    --floor: #1d2023;
+    --panel: rgba(31, 34, 38, 0.84);
+    --panel-solid: #1f2226;
+    --ink: #ebe9e4;
+    --muted: #9da2a8;
+    --line: #353a40;
+    --accent: #8ea6ff;
+    --accent-soft: rgba(142, 166, 255, 0.16);
+    --on-accent: #0d1430;
+    --bar: #5d636a;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--stage);
+    color: var(--ink);
+    font: 14px/1.5 var(--sans);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  .hud {
+    position: fixed; inset: 0; pointer-events: none;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+    gap: 12px;
+  }
+  .hud > * { pointer-events: auto; }
+  .top { grid-row: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; pointer-events: none; }
+  .top > * { pointer-events: auto; }
+
+  .spec { max-width: 32rem; }
+  .spec h1 {
+    margin: 0;
+    font: 600 clamp(26px, 4.2vw, 40px)/1.1 var(--serif);
+    letter-spacing: 0.02em;
+    text-wrap: balance;
+  }
+  .spec .en {
+    margin-top: 6px;
+    font: 500 11px/1.4 var(--mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .spec .mats { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip-mat {
+    font-size: 12px; color: var(--ink);
+    padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+
+  .budget {
+    background: var(--panel);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    min-width: 15rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .budget h2 {
+    margin: 0 0 8px; font: 600 11px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+  }
+  .lods { display: grid; gap: 0; }
+  .lodrow { display: grid; grid-template-columns: 3.2em 1fr 3.6em; align-items: center; gap: 8px; font: 12px/1.9 var(--mono); }
+  .lodrow .track { display: block; height: 6px; background: var(--accent-soft); border-radius: 3px; overflow: hidden; }
+  .lodrow .fill { display: block; height: 100%; background: var(--bar); border-radius: 3px; transition: width .4s ease; }
+  .lodrow.on .fill { background: var(--accent); }
+  .lodrow.on { color: var(--accent); }
+  .lodrow .n { text-align: right; }
+  .kv { margin-top: 8px; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 12px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; text-align: right; font-family: var(--mono); }
+
+  .caption {
+    grid-row: 2;
+    align-self: end; justify-self: center;
+    max-width: 38rem; text-align: center;
+    font-size: 12.5px; color: var(--muted);
+    padding: 0 8px;
+    pointer-events: none;
+    text-wrap: balance;
+  }
+
+  .dock { grid-row: 3; display: grid; gap: 10px; align-self: end; min-width: 0; }
+  .items {
+    display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+    padding: 2px; margin: -2px;
+    scroll-snap-type: x proximity;
+  }
+  .items::-webkit-scrollbar { display: none; }
+  .item {
+    flex: none; scroll-snap-align: start;
+    display: grid; gap: 1px; text-align: left;
+    padding: 8px 12px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: var(--ink); cursor: pointer; font: inherit;
+  }
+  .item b { font: 600 14px/1.3 var(--serif); }
+  .item span { font: 11px/1.3 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .item[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .item.room { background: var(--accent-soft); }
+  .item[aria-pressed="true"] span { color: var(--accent); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg {
+    display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden;
+    background: var(--panel); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .seg button {
+    font: 12.5px/1 var(--sans); color: var(--ink); background: transparent; border: 0;
+    padding: 9px 12px; cursor: pointer; white-space: nowrap;
+  }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+  .seg .lbl { font: 600 10.5px/1 var(--mono); letter-spacing: .12em; color: var(--muted); padding: 0 4px 0 10px; display: inline-flex; align-items: center; text-transform: uppercase; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .loading { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 12px var(--mono); color: var(--muted); letter-spacing: .12em; pointer-events: none; }
+
+  @media (max-width: 720px) {
+    .hud { gap: 10px; }
+    .top { flex-direction: column; gap: 10px; }
+    .spec h1 { font-size: 26px; }
+    .budget { min-width: 0; width: 100%; box-sizing: border-box; padding: 10px 12px; }
+    .budget h2 { display: none; }
+    /* 三个 LOD 并排成三列 */
+    .lods { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .lodrow { grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 2px 6px; line-height: 1.5; }
+    .lodrow .track { grid-column: 1 / -1; grid-row: 2; }
+    .kv { grid-template-columns: auto 1fr auto 1fr; gap: 2px 8px; }
+    .kv .wide { display: none; }
+    .caption { display: none; }
+    .seg button { padding: 9px 10px; }
+    .item { padding: 7px 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lodrow .fill { transition: none; }
+  }
+  body.shot .hud, body.shot .loading { display: none; }
+</style>
+
+<canvas id="stage" aria-label="三维家具预览，可拖动旋转、双指缩放"></canvas>
+<div class="loading" id="loading">LOADING</div>
+<div class="hud">
+  <div class="top">
+    <header class="spec">
+      <h1 id="name">—</h1>
+      <div class="en" id="en"></div>
+      <div class="mats" id="mats"></div>
+    </header>
+    <section class="budget" aria-label="性能预算">
+      <h2>三角面 / LOD</h2>
+      <div class="lods" id="lods"></div>
+      <dl class="kv" id="kv"></dl>
+    </section>
+  </div>
+  <p class="caption" id="caption"></p>
+  <nav class="dock">
+    <div class="items" id="items" role="toolbar" aria-label="家具"></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="显示">
+        <button id="t-wire" aria-pressed="false">线框</button>
+        <button id="t-flat" aria-pressed="false">平直着色</button>
+        <button id="t-ao" aria-pressed="true">AO</button>
+      </div>
+      <div class="seg" role="group" aria-label="LOD">
+        <span class="lbl">LOD</span>
+        <button data-lod="auto" aria-pressed="true">自动</button>
+        <button data-lod="0" aria-pressed="false">0</button>
+        <button data-lod="1" aria-pressed="false">1</button>
+        <button data-lod="2" aria-pressed="false">2</button>
+      </div>
+      <div class="seg" role="group" aria-label="阴影">
+        <button data-shadow="baked" aria-pressed="true">烘焙阴影</button>
+        <button data-shadow="realtime" aria-pressed="false">实时阴影</button>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const MODELS = '../models/';
+const params = new URLSearchParams(location.search);
+const SHOT = params.has('shot');
+if (SHOT) document.body.classList.add('shot');
+
+const $ = (id) => document.getElementById(id);
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+// —— 渲染器 / 场景 ——
+const canvas = $('stage');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: SHOT });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, SHOT ? 1 : 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.8;
+
+const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 60);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.495;
+controls.minDistance = 0.3;
+controls.maxDistance = 14;
+
+const key = new THREE.DirectionalLight(0xfff1e0, 1.7);
+key.position.set(-2.6, 4.2, 3.2);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.bias = -0.0004;
+key.shadow.normalBias = 0.02;
+key.shadow.radius = 4;
+scene.add(key, key.target);
+
+// 无缝影棚：地面不受光照、与背景同色，只靠烘焙的接触阴影“落地”
+const floor = new THREE.Mesh(new THREE.CircleGeometry(30, 64), new THREE.MeshBasicMaterial({ toneMapped: false }));
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+const shadowCatcher = new THREE.Mesh(new THREE.CircleGeometry(12, 64), new THREE.ShadowMaterial({ opacity: 0.22 }));
+shadowCatcher.rotation.x = -Math.PI / 2;
+shadowCatcher.position.y = 0.0005;
+shadowCatcher.receiveShadow = true;
+scene.add(shadowCatcher);
+
+function applyTheme() {
+  const stage = new THREE.Color(css('--stage'));
+  scene.background = stage;
+  floor.material.color.copy(stage);
+  wireMat.color.set(css('--accent'));
+  requestRender();
+}
+
+// —— 状态 ——
+const state = {
+  items: [], current: null,
+  wire: params.get('wire') === '1', flat: params.get('flat') === '1', ao: params.get('ao') !== '0',
+  lod: params.get('lod') ?? 'auto', shadow: params.get('shadow') ?? 'baked',
+};
+const assets = new Map();    // id → 载入的模板
+const views = new Map();     // 视图 id → { instances, box, stats }
+let view = null;
+const wireMat = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.55, depthWrite: false });
+
+// —— 载入 ——
+const loader = new GLTFLoader();
+async function loadAsset(id) {
+  if (assets.has(id)) return assets.get(id);
+  const p = (async () => {
+    const buf = await (await fetch(`${MODELS}${id}.glb`)).arrayBuffer();
+    // 强制使用 <img> 解码贴图（兼容更严格的内容安全策略）
+    const cib = window.createImageBitmap;
+    try { window.createImageBitmap = undefined; } catch {}
+    const gltf = await new Promise((res, rej) => {
+      try { loader.parse(buf, MODELS, res, rej); } finally { try { window.createImageBitmap = cib; } catch {} }
+    });
+    const root = gltf.scene;
+    const levels = [0, 1, 2].map((i) => root.getObjectByName(`${id}_LOD${i}`));
+    const shadow = root.getObjectByName(`${id}_Shadow`);
+    const materials = new Set();
+    levels.forEach((m) => {
+      m.parent.remove(m);
+      m.traverse((o) => {
+        if (!o.isMesh) return;
+        o.receiveShadow = true;
+        o.material.userData.ao = o.material.aoMapIntensity ?? 1;
+        shareTextures(o.material);
+        materials.add(o.material);
+        const wire = new THREE.LineSegments(new THREE.WireframeGeometry(o.geometry), wireMat);
+        wire.visible = false;
+        wire.name = '__wire';
+        o.add(wire);
+      });
+    });
+    if (shadow) {
+      shadow.parent.remove(shadow);
+      shadow.traverse((o) => {
+        if (!o.isMesh) return;
+        Object.assign(o.material, { depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+        o.renderOrder = 1;
+      });
+    }
+    let stats = null;
+    root.traverse((o) => { if (!stats && o.userData?.stats) stats = o.userData.stats; });
+    const box = new THREE.Box3().setFromObject(levels[0]);
+    return { id, levels, shadow, materials, box, sphere: box.getBoundingSphere(new THREE.Sphere()), stats };
+  })();
+  assets.set(id, p);
+  return p;
+}
+
+// 材质贴图（木纹、布纹……）在所有家具之间共享：按贴图名去重，同一张图只上传一次显存。
+// 每件家具独有的 AO 图名字不同，不会被合并。
+const sharedTex = new Map();
+const SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap'];
+function shareTextures(mat) {
+  for (const slot of SLOTS) {
+    const t = mat[slot];
+    if (!t || !t.name) continue;
+    const hit = sharedTex.get(t.name);
+    if (hit && hit !== t) { mat[slot] = hit; t.dispose(); }
+    else sharedTex.set(t.name, t);
+  }
+}
+const textureSets = () => [...sharedTex.keys()].filter((n) => n.endsWith('_color')).length;
+
+// 一个摆放实例：几何与材质都和模板共享，只复制节点
+function instantiate(asset, pos = [0, 0, 0], rotY = 0) {
+  const group = new THREE.Group();
+  const levels = asset.levels.map((m) => { const c = m.clone(); group.add(c); return c; });
+  const shadow = asset.shadow ? asset.shadow.clone() : null;
+  if (shadow) group.add(shadow);
+  group.position.set(...pos);
+  group.rotation.y = rotY;
+  group.updateMatrixWorld(true);
+  const sphere = asset.sphere.clone().applyMatrix4(group.matrixWorld);
+  const box = asset.box.clone().applyMatrix4(group.matrixWorld);
+  return { asset, group, levels, shadow, sphere, box, level: 0 };
+}
+
+// 全屋陈列：客厅 + 餐厅 + 卧室，同一模型多次摆放（4 把餐椅、2 张吧台凳）
+const ROOM = [
+  ['sofa', [0, 0, -1.25], 0],
+  ['coffee_table', [0, 0, 0.05], 0],
+  ['armchair', [1.5, 0, 0.12], -Math.PI / 2 + 0.3],
+  ['floor_lamp', [-1.42, 0, -1.5], 0],
+  ['bookshelf', [-2.3, 0, -1.55], 0],
+  ['dining_table', [-2.75, 0, 1.25], 0],
+  ['dining_chair', [-3.15, 0, 1.86], Math.PI],
+  ['dining_chair', [-2.35, 0, 1.86], Math.PI],
+  ['dining_chair', [-3.15, 0, 0.64], 0],
+  ['dining_chair', [-2.35, 0, 0.64], 0],
+  ['bed', [3.55, 0, -0.55], 0],
+  ['nightstand', [2.4, 0, -1.4], 0],
+  ['bar_stool', [0.85, 0, 1.75], 0.3],
+  ['bar_stool', [1.4, 0, 1.75], -0.2],
+];
+
+async function buildView(id) {
+  if (views.has(id)) return views.get(id);
+  let v;
+  if (id === 'room') {
+    const list = await Promise.all(ROOM.map(async ([aid, pos, rot]) => instantiate(await loadAsset(aid), pos, rot)));
+    const box = new THREE.Box3();
+    list.forEach((i) => box.union(i.box));
+    const ids = [...new Set(ROOM.map((r) => r[0]))];
+    const lods = [0, 1, 2].map((l) => ({
+      tris: list.reduce((a, i) => a + i.asset.stats.lods[l].tris, 0),
+    }));
+    const kb = ids.reduce((a, aid) => a + (state.items.find((s) => s.id === aid)?.fileKB ?? 0), 0);
+    v = { id, instances: list, box, room: true, stats: { name: '全屋陈列', nameEn: `Showroom · ${list.length} 个摆放 · ${ids.length} 种家具`, lods, kb, ids } };
+  } else {
+    const a = await loadAsset(id);
+    const inst = instantiate(a);
+    v = { id, instances: [inst], box: inst.box, stats: { ...a.stats, ...(state.items.find((s) => s.id === id) || {}) } };
+  }
+  const g = new THREE.Group();
+  v.instances.forEach((i) => g.add(i.group));
+  v.group = g;
+  views.set(id, v);
+  return v;
+}
+
+// —— 视图应用 ——
+// 按“屏幕尺寸”选 LOD（和 Unreal 的 Screen Size 思路一样）：
+// 包围球投影到屏幕上的半径（CSS 像素）≥ 110 用 LOD0，≥ 45 用 LOD1，否则 LOD2
+const LOD_SCREEN = [110, 45];
+function autoLevel(inst) {
+  const d = Math.max(0.01, camera.position.distanceTo(inst.sphere.center));
+  const px = (inst.sphere.radius / (d * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2))) * (canvas.clientHeight / 2);
+  return px >= LOD_SCREEN[0] ? 0 : px >= LOD_SCREEN[1] ? 1 : 2;
+}
+function updateLevels() {
+  if (!view) return;
+  for (const inst of view.instances) {
+    const level = state.lod === 'auto' ? autoLevel(inst) : Number(state.lod);
+    if (level === inst.level && inst.levels[level].visible) continue;
+    inst.levels.forEach((m, i) => (m.visible = i === level));
+    inst.level = level;
+  }
+}
+
+function applyView() {
+  if (!view) return;
+  const realtime = state.shadow === 'realtime';
+  for (const inst of view.instances) {
+    inst.levels.forEach((m) => m.traverse((o) => {
+      if (o.name === '__wire') o.visible = state.wire;
+      else if (o.isMesh) o.castShadow = realtime;
+    }));
+    if (inst.shadow) inst.shadow.visible = !realtime;
+    for (const mat of inst.asset.materials) {
+      if (mat.flatShading !== state.flat) { mat.flatShading = state.flat; mat.needsUpdate = true; }
+      mat.aoMapIntensity = state.ao ? mat.userData.ao : 0;
+      mat.polygonOffset = state.wire;
+      mat.polygonOffsetFactor = 1;
+      mat.polygonOffsetUnits = 1;
+    }
+  }
+  updateLevels();
+  shadowCatcher.visible = realtime;
+  key.castShadow = realtime;
+  const ext = view.room ? 6 : 2;
+  Object.assign(key.shadow.camera, { left: -ext, right: ext, top: ext, bottom: -ext });
+  key.shadow.camera.updateProjectionMatrix();
+  for (const b of document.querySelectorAll('[data-lod]')) b.setAttribute('aria-pressed', String(b.dataset.lod === String(state.lod)));
+  for (const b of document.querySelectorAll('[data-shadow]')) b.setAttribute('aria-pressed', String(b.dataset.shadow === state.shadow));
+  $('t-wire').setAttribute('aria-pressed', String(state.wire));
+  $('t-flat').setAttribute('aria-pressed', String(state.flat));
+  $('t-ao').setAttribute('aria-pressed', String(state.ao));
+  $('caption').textContent = captionText();
+  requestRender();
+}
+
+function captionText() {
+  if (state.flat) return '平直着色：去掉自定义法线后的真实面数。平时看到的圆润感，几乎全部来自法线，而不是多边形。';
+  if (state.wire) return '线框：面只花在轮廓上。平整的大面只用两个三角形，倒角只有一条窄带。';
+  if (!state.ao) return 'AO 已关闭：少了烘焙的环境光遮蔽，接缝和底部失去了体积感。';
+  if (state.shadow === 'realtime') return '实时阴影：需要额外一遍阴影贴图渲染。烘焙阴影只要 2 个三角形和一张小贴图。';
+  if (view?.room) return '全屋按屏幕尺寸自动切换 LOD：离得远的家具自动用更少的面。';
+  return '拖动旋转，双指或滚轮缩放。切换到“平直着色”看看真实的面数。';
+}
+
+const fmt = (n) => n.toLocaleString('en-US');
+function renderStats(v) {
+  const s = v.stats;
+  $('name').textContent = s.name;
+  $('mats').innerHTML = '';
+  if (v.room) {
+    $('en').textContent = s.nameEn;
+    const c = document.createElement('span');
+    c.className = 'chip-mat';
+    c.textContent = `${textureSets()} 套材质贴图全屋共用`;
+    $('mats').append(c);
+  } else {
+    $('en').textContent = `${s.nameEn} · ${s.size.join(' × ')} mm`;
+    for (const m of s.materials) {
+      const c = document.createElement('span');
+      c.className = 'chip-mat';
+      c.textContent = m;
+      $('mats').append(c);
+    }
+  }
+  const max = s.lods[0].tris;
+  $('lods').innerHTML = s.lods.map((l, i) => `
+    <div class="lodrow" data-row="${i}">
+      <span>LOD${i}</span>
+      <span class="track"><span class="fill" style="width:${((l.tris / max) * 100).toFixed(1)}%"></span></span>
+      <span class="n">${fmt(l.tris)}</span>
+    </div>`).join('');
+  if (v.room) {
+    $('kv').innerHTML = `
+      <dt>当前三角面</dt><dd id="live-tris">—</dd>
+      <dt>Draw call</dt><dd id="live-calls">—</dd>
+      <dt>摆放</dt><dd>${v.instances.length}</dd>
+      <dt>文件</dt><dd>${fmt(s.kb)} KB</dd>`;
+  } else {
+    $('kv').innerHTML = `
+      <dt>顶点</dt><dd>${fmt(s.lods[0].verts)}</dd>
+      <dt>Draw call</dt><dd>${s.lods[0].drawCalls} + 1</dd>
+      <dt>AO 图集</dt><dd>${s.aoAtlas}²<span class="wide"> · ${s.aoDensity} px/m</span></dd>
+      <dt>文件</dt><dd>${s.fileKB ?? '—'} KB</dd>`;
+  }
+}
+
+function highlightLod() {
+  if (!view) return;
+  const used = new Set(view.instances.map((i) => i.level));
+  for (const row of document.querySelectorAll('.lodrow')) row.classList.toggle('on', used.has(Number(row.dataset.row)));
+}
+
+// —— 相机 ——
+// 按包围盒的 8 个角精确取景（比包围球更紧凑），并给上下的界面留出空间
+let tween = null;
+function frame(v, instant = false) {
+  const box = v.box;
+  const az = THREE.MathUtils.degToRad(Number(params.get('az') ?? (v.room ? 24 : 36)));
+  const el = THREE.MathUtils.degToRad(Number(params.get('el') ?? (v.room ? 34 : 18)));
+  const center = box.getCenter(new THREE.Vector3());
+  const target = new THREE.Vector3(center.x, center.y * (v.room ? 0.5 : 0.9), center.z);
+  const dir = new THREE.Vector3(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az));
+  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+  const tanH = tanV * camera.aspect;
+  const narrow = camera.aspect < 0.9;
+  // 可用区域比例（去掉顶部标题和底部面板）
+  const fillH = SHOT ? 0.84 : narrow ? 0.86 : 0.62, fillV = SHOT ? 0.8 : narrow ? 0.46 : 0.62;
+  const corners = [];
+  for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) corners.push(new THREE.Vector3(x, y, z));
+  const fits = (dist) => {
+    const pos = target.clone().addScaledVector(dir, dist);
+    const m = new THREE.Matrix4().lookAt(pos, target, new THREE.Vector3(0, 1, 0));
+    const mv = new THREE.Matrix4().makeTranslation(-pos.x, -pos.y, -pos.z).premultiply(m.clone().invert());
+    for (const c of corners) {
+      const p = c.clone().applyMatrix4(mv);
+      const z = -p.z;
+      if (z <= 0.05) return false;
+      if (Math.abs(p.x) / z > tanH * fillH || Math.abs(p.y) / z > tanV * fillV) return false;
+    }
+    return true;
+  };
+  let lo = 0.2, hi = 40;
+  for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (fits(mid)) hi = mid; else lo = mid; }
+  const dist = hi * Number(params.get('dist') ?? 1);
+  const pos = target.clone().addScaledVector(dir, dist);
+  key.target.position.copy(target);
+  key.position.set(target.x - 2.6, 4.2, target.z + 3.2);
+  controls.minDistance = dist * 0.2;
+  controls.maxDistance = Math.max(8, dist * 3);
+  if (instant || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    camera.position.copy(pos);
+    controls.target.copy(target);
+    controls.update();
+    requestRender();
+    return;
+  }
+  tween = { t: 0, p0: camera.position.clone(), p1: pos, q0: controls.target.clone(), q1: target };
+}
+
+// —— 渲染循环（按需渲染：画面不动就不渲染，省电）——
+let dirty = true;
+function requestRender() { dirty = true; }
+controls.addEventListener('change', requestRender);
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  // 手机竖屏：顶部标题占得多，把画面中心略往下移
+  if (!SHOT && w / h < 0.9) camera.setViewOffset(w, h, 0, -h * 0.04, w, h);
+  else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+  requestRender();
+}
+window.addEventListener('resize', resize);
+let lastLevels = '';
+function loop() {
+  requestAnimationFrame(loop);
+  if (tween) {
+    tween.t = Math.min(1, tween.t + 1 / 36);
+    const k = 1 - Math.pow(1 - tween.t, 3);
+    camera.position.lerpVectors(tween.p0, tween.p1, k);
+    controls.target.lerpVectors(tween.q0, tween.q1, k);
+    if (tween.t >= 1) tween = null;
+    dirty = true;
+  }
+  controls.update();
+  if (!dirty) return;
+  dirty = false;
+  updateLevels();
+  renderer.render(scene, camera);
+  if (view) {
+    const lv = view.instances.map((i) => i.level).join();
+    if (lv !== lastLevels) { lastLevels = lv; highlightLod(); }
+    if (view.room) {
+      const info = renderer.info.render;
+      const t = $('live-tris'), c = $('live-calls');
+      if (t) t.textContent = fmt(info.triangles);
+      if (c) c.textContent = fmt(info.calls);
+    }
+  }
+}
+
+// —— 切换 ——
+let token = 0;
+async function select(id, instant = false) {
+  const my = ++token;
+  $('loading').hidden = false;
+  const v = await buildView(id);
+  if (my !== token) return;
+  $('loading').hidden = true;
+  if (view) scene.remove(view.group);
+  view = v;
+  scene.add(v.group);
+  state.current = id;
+  for (const b of document.querySelectorAll('.item')) b.setAttribute('aria-pressed', String(b.dataset.id === id));
+  renderStats(v);
+  frame(v, instant);
+  applyView();
+  lastLevels = '';
+  if (!SHOT) try { history.replaceState(null, '', `#${id}`); } catch {}
+  if (SHOT) {
+    updateLevels();
+    renderer.render(scene, camera);
+    requestAnimationFrame(() => { renderer.render(scene, camera); window.__ready = true; });
+  }
+}
+
+// —— 控件 ——
+$('t-wire').onclick = () => { state.wire = !state.wire; applyView(); };
+$('t-flat').onclick = () => { state.flat = !state.flat; applyView(); };
+$('t-ao').onclick = () => { state.ao = !state.ao; applyView(); };
+for (const b of document.querySelectorAll('[data-lod]')) b.onclick = () => { state.lod = b.dataset.lod; applyView(); };
+for (const b of document.querySelectorAll('[data-shadow]')) b.onclick = () => { state.shadow = b.dataset.shadow; applyView(); };
+
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+// —— 启动 ——
+applyTheme();
+resize();
+requestAnimationFrame(loop);
+const mf = await (await fetch(`${MODELS}manifest.json`)).json();
+state.items = mf.items;
+const roomTris = ROOM.reduce((a, [aid]) => a + (mf.items.find((s) => s.id === aid)?.lods[0].tris ?? 0), 0);
+$('items').innerHTML = `
+  <button class="item room" data-id="room" aria-pressed="false">
+    <b>全屋陈列</b><span>${ROOM.length} 件 · ${fmt(roomTris)} △</span>
+  </button>` + mf.items.map((s) => `
+  <button class="item" data-id="${s.id}" aria-pressed="false">
+    <b>${s.name}</b><span>${fmt(s.lods[0].tris)} △</span>
+  </button>`).join('');
+for (const b of document.querySelectorAll('.item')) b.onclick = () => select(b.dataset.id);
+const wanted = params.get('item') || location.hash.slice(1);
+const first = wanted === 'room' || mf.items.find((s) => s.id === wanted) ? wanted : mf.items[0].id;
+select(first, true);
+</script>
