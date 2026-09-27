@@ -693,7 +693,7 @@ function frame(v, instant = false) {
     }
     return true;
   };
-  let lo = 0.2, hi = 40;
+  let lo = 0.2, hi = 150; // 竖屏手机上看全屋（12m 宽）要退到五六十米外
   for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (fits(mid)) hi = mid; else lo = mid; }
   const dist = hi * Number(params.get('dist') ?? hint.dist ?? 1);
   const pos = target.clone().addScaledVector(dir, dist);
