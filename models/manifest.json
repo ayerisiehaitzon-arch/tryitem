@@ -1,0 +1,356 @@
+{
+  "generated": "2026-09-27T07:41:46.010Z",
+  "items": [
+    {
+      "id": "dining_chair",
+      "name": "餐椅",
+      "nameEn": "Oslo Dining Chair",
+      "size": [
+        466,
+        804,
+        503
+      ],
+      "lods": [
+        {
+          "tris": 636,
+          "verts": 555,
+          "drawCalls": 2
+        },
+        {
+          "tris": 474,
+          "verts": 434,
+          "drawCalls": 2
+        },
+        {
+          "tris": 132,
+          "verts": 176,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "亚麻布（燕麦色）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 209,
+      "lodDistances": null,
+      "fileKB": 722
+    },
+    {
+      "id": "dining_table",
+      "name": "餐桌",
+      "nameEn": "Oslo Dining Table",
+      "size": [
+        1600,
+        740,
+        850
+      ],
+      "lods": [
+        {
+          "tris": 332,
+          "verts": 368,
+          "drawCalls": 1
+        },
+        {
+          "tris": 212,
+          "verts": 296,
+          "drawCalls": 1
+        },
+        {
+          "tris": 84,
+          "verts": 168,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 100,
+      "lodDistances": null,
+      "fileKB": 449
+    },
+    {
+      "id": "sofa",
+      "name": "三人沙发",
+      "nameEn": "Cumulus 3-Seat Sofa",
+      "size": [
+        2108,
+        880,
+        907
+      ],
+      "lods": [
+        {
+          "tris": 2018,
+          "verts": 1491,
+          "drawCalls": 2
+        },
+        {
+          "tris": 926,
+          "verts": 808,
+          "drawCalls": 2
+        },
+        {
+          "tris": 162,
+          "verts": 276,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "圈绒（奶白）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 129,
+      "lodDistances": null,
+      "fileKB": 870
+    },
+    {
+      "id": "armchair",
+      "name": "皮扶手椅",
+      "nameEn": "Hygge Lounge Chair",
+      "size": [
+        755,
+        852,
+        823
+      ],
+      "lods": [
+        {
+          "tris": 1050,
+          "verts": 935,
+          "drawCalls": 2
+        },
+        {
+          "tris": 664,
+          "verts": 696,
+          "drawCalls": 2
+        },
+        {
+          "tris": 176,
+          "verts": 336,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "植鞣皮（干邑色）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 96,
+      "lodDistances": null,
+      "fileKB": 765
+    },
+    {
+      "id": "coffee_table",
+      "name": "圆茶几",
+      "nameEn": "Lune Coffee Table",
+      "size": [
+        800,
+        422,
+        800
+      ],
+      "lods": [
+        {
+          "tris": 472,
+          "verts": 383,
+          "drawCalls": 2
+        },
+        {
+          "tris": 285,
+          "verts": 254,
+          "drawCalls": 2
+        },
+        {
+          "tris": 117,
+          "verts": 134,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "白色大理石（哑光）",
+        "胡桃木（哑光清漆）"
+      ],
+      "aoAtlas": 128,
+      "aoDensity": 95,
+      "lodDistances": null,
+      "fileKB": 359
+    },
+    {
+      "id": "bookshelf",
+      "name": "书架",
+      "nameEn": "Grid Bookshelf",
+      "size": [
+        900,
+        1800,
+        320
+      ],
+      "lods": [
+        {
+          "tris": 366,
+          "verts": 376,
+          "drawCalls": 2
+        },
+        {
+          "tris": 146,
+          "verts": 212,
+          "drawCalls": 2
+        },
+        {
+          "tris": 82,
+          "verts": 164,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "白色哑光烤漆",
+        "橡木（木蜡油）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 156,
+      "lodDistances": null,
+      "fileKB": 508
+    },
+    {
+      "id": "nightstand",
+      "name": "床头柜",
+      "nameEn": "Nordic Nightstand",
+      "size": [
+        500,
+        561,
+        434
+      ],
+      "lods": [
+        {
+          "tris": 428,
+          "verts": 386,
+          "drawCalls": 2
+        },
+        {
+          "tris": 332,
+          "verts": 314,
+          "drawCalls": 2
+        },
+        {
+          "tris": 92,
+          "verts": 136,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 200,
+      "lodDistances": null,
+      "fileKB": 319
+    },
+    {
+      "id": "bed",
+      "name": "双人床",
+      "nameEn": "Fjord Double Bed",
+      "size": [
+        1740,
+        1027,
+        2160
+      ],
+      "lods": [
+        {
+          "tris": 1530,
+          "verts": 1203,
+          "drawCalls": 3
+        },
+        {
+          "tris": 732,
+          "verts": 708,
+          "drawCalls": 3
+        },
+        {
+          "tris": 160,
+          "verts": 296,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "亚麻布（燕麦色）",
+        "亚麻布（米白）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 122,
+      "lodDistances": null,
+      "fileKB": 873
+    },
+    {
+      "id": "floor_lamp",
+      "name": "落地灯",
+      "nameEn": "Halo Floor Lamp",
+      "size": [
+        446,
+        1505,
+        446
+      ],
+      "lods": [
+        {
+          "tris": 550,
+          "verts": 514,
+          "drawCalls": 3
+        },
+        {
+          "tris": 276,
+          "verts": 265,
+          "drawCalls": 3
+        },
+        {
+          "tris": 136,
+          "verts": 150,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "拉丝黄铜",
+        "亚麻灯罩（内侧发光）",
+        "暖光灯泡"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 177,
+      "lodDistances": null,
+      "fileKB": 321
+    },
+    {
+      "id": "bar_stool",
+      "name": "吧台凳",
+      "nameEn": "Perch Counter Stool",
+      "size": [
+        406,
+        662,
+        406
+      ],
+      "lods": [
+        {
+          "tris": 616,
+          "verts": 497,
+          "drawCalls": 2
+        },
+        {
+          "tris": 424,
+          "verts": 359,
+          "drawCalls": 2
+        },
+        {
+          "tris": 200,
+          "verts": 213,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "黑色粉末喷涂钢"
+      ],
+      "aoAtlas": 128,
+      "aoDensity": 120,
+      "lodDistances": null,
+      "fileKB": 320
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import { rod } from './parts.js';
 
 // 吧台凳：胡桃木圆座 + 黑色钢管腿 + 脚踏圈
 //   · 座面顶部微微下凹（只多一个轮廓点），靠平滑法线表现出“坐感”
-//   · 脚踏圈是闭合路径扫掠：截面 6 边、路径 14 段就足够圆
+//   · 脚踏圈是闭合路径扫掠：截面 6 边、路径 16 段；拐点处截面做斜接放大，管子不会被“捏细”
 export default {
   id: 'bar_stool',
   name: '吧台凳',
@@ -12,7 +12,7 @@ export default {
     const q = (...v) => k.q(...v);
     const H = 0.66, R = 0.18;
     k.lathe({
-      name: 'seat', mat: 'walnut', segs: q(24, 18, 14),
+      name: 'seat', mat: 'walnut', segs: q(28, 20, 14), grain: 'planar',
       profile: profile([
         [0, H - 0.035],
         [R - 0.012, H - 0.035, { r: q(0.004, 0.004, 0), segs: 1 }],
@@ -37,7 +37,7 @@ export default {
     // 脚踏圈
     const ringY = 0.24;
     const rr = rb + (rt - rb) * (ringY / (H - 0.03)) + 0.006;
-    const n = q(14, 10, 8);
+    const n = q(16, 12, 8);
     const path = Array.from({ length: n }, (_, i) => {
       const a = (i / n) * Math.PI * 2;
       return [rr * Math.sin(a), ringY, rr * Math.cos(a)];

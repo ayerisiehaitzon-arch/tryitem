@@ -1,6 +1,9 @@
 import { rmFrames } from '../core/path.js';
 import { triangulate } from '../core/shape.js';
 
+const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const norm3 = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+
 /**
  * 截面沿 3D 路径扫掠 —— 弯管钢架、弧形靠背、灯臂、脚踏圈……
  *
@@ -25,8 +28,25 @@ export function sweep(k, o) {
   for (let i = 1; i < n; i++) S.push(S[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1], pts[i][2] - pts[i - 1][2]));
   const Ltot = S[n - 1];
   const sc = (i) => (scale ? scale(S[i] / Ltot) : 1);
+  // 拐点处截面沿弯折方向放大 1/cos(θ/2)（斜接），否则弯管在每个节点处会被“捏细”
+  const miter = pts.map((p, i) => {
+    const prev = i > 0 ? pts[i - 1] : closed ? pts[n - 2] : null;
+    const next = i < n - 1 ? pts[i + 1] : closed ? pts[1] : null;
+    if (!prev || !next) return null;
+    const a = norm3(sub3(p, prev)), b = norm3(sub3(next, p));
+    const c = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    if (c > 0.99999) return null;
+    const bend = norm3(sub3(b, a)); // 指向弯内侧
+    // 投影到截面坐标 (R, U)
+    const bx = bend[0] * F.R[i][0] + bend[1] * F.R[i][1] + bend[2] * F.R[i][2];
+    const by = bend[0] * F.U[i][0] + bend[1] * F.U[i][1] + bend[2] * F.U[i][2];
+    const l = Math.hypot(bx, by) || 1;
+    return { dx: bx / l, dy: by / l, k: 1 / Math.sqrt((1 + c) / 2) - 1 };
+  });
   const at = (i, x, y) => {
     const s = sc(i);
+    const m = miter[i];
+    if (m) { const d = (x * m.dx + y * m.dy) * m.k; x += m.dx * d; y += m.dy * d; }
     return [
       pts[i][0] + F.R[i][0] * x * s + F.U[i][0] * y * s,
       pts[i][1] + F.R[i][1] * x * s + F.U[i][1] * y * s,

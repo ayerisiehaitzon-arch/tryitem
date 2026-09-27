@@ -386,6 +386,7 @@ function instantiate(asset, pos = [0, 0, 0], rotY = 0) {
   group.updateMatrixWorld(true);
   const sphere = asset.sphere.clone().applyMatrix4(group.matrixWorld);
   const box = asset.box.clone().applyMatrix4(group.matrixWorld);
+  levels.forEach((m, i) => (m.visible = i === 0));
   return { asset, group, levels, shadow, sphere, box, level: 0 };
 }
 
@@ -445,7 +446,7 @@ function updateLevels() {
   if (!view) return;
   for (const inst of view.instances) {
     const level = state.lod === 'auto' ? autoLevel(inst) : Number(state.lod);
-    if (level === inst.level && inst.levels[level].visible) continue;
+    if (level === inst.level) continue;
     inst.levels.forEach((m, i) => (m.visible = i === level));
     inst.level = level;
   }
@@ -549,6 +550,7 @@ function frame(v, instant = false) {
   const el = THREE.MathUtils.degToRad(Number(params.get('el') ?? (v.room ? 34 : 18)));
   const center = box.getCenter(new THREE.Vector3());
   const target = new THREE.Vector3(center.x, center.y * (v.room ? 0.5 : 0.9), center.z);
+  if (params.get('target')) target.fromArray(params.get('target').split(':').map(Number));
   const dir = new THREE.Vector3(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az));
   const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
   const tanH = tanV * camera.aspect;

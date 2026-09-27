@@ -7,7 +7,8 @@ import { Xform } from '../core/vec.js';
  *   segs     圆周分段。低面数的要诀：分段只需保证“轮廓剪影”看起来圆，
  *            明暗的圆润全靠平滑法线，所以细腿 6~8 段就足够。
  *   phase    起始角（UV 接缝默认放在背面 -Z）
- *   grain    'profile' 纹理 u 沿轮廓（车木纹理）/ 'around' 沿圆周
+ *   grain    'profile' 纹理 u 沿轮廓（车木纹理）/ 'around' 沿圆周 /
+ *            'planar' 全部用顶视平面投影（石材、圆座面：顶面花纹自然延续到边缘上）
  *
  * 轮廓按拐角自动分成若干“环带”，近似水平的环带用平面投影图块（避免轴心处拉伸），
  * 其余用展开的圆柱图块。
@@ -76,9 +77,10 @@ export function lathe(k, o) {
           for (let j = c0; j <= c1; j++) {
             const t = ang(j);
             const arc = ((2 * Math.PI * j) / segs) * rmax;
-            const t0 = grain === 'profile' ? [s, arc] : [arc, s];
+            const px = pt[0] * Math.sin(t), pz = pt[0] * Math.cos(t);
+            const t0 = grain === 'planar' ? [px, pz] : grain === 'profile' ? [s, arc] : [arc, s];
             ids.push(part.v(
-              [pt[0] * Math.sin(t), pt[1], pt[0] * Math.cos(t)],
+              [px, pt[1], pz],
               [n2[0] * Math.sin(t), n2[1], n2[0] * Math.cos(t)],
               t0, ch, [(j - c0) / (c1 - c0), (s - s0) / L],
             ));

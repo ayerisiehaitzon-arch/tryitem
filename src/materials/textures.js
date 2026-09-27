@@ -9,7 +9,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { perlin, fbm, worley, mulberry } from './noise.js';
 
-const VERSION = 6;
+const VERSION = 8;
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
@@ -219,7 +219,7 @@ function marble(S, P) {
       const u = (x + 0.5) / S;
       const cloud = fbm(n5, u, v, 3, 3, 5);
       let c = mix3(P.base, P.cloud, clamp01(0.45 + cloud * 1.1) * 0.5);
-      let hgt = 0, rough = 0.09 + (cloud + 1) * 0.015;
+      let hgt = 0, rough = 0.24 + (cloud + 1) * 0.03;
       for (const L of layers) {
         const e = 0.5 / S;
         const t = tField(L, u, v);
@@ -276,7 +276,7 @@ export const TEXTURES = {
   },
   leather: {
     size: 512, normalStrength: 3,
-    gen: (S) => leather(S, { seed: 61, cells: 90, patina: 0.14, color: rgb(138, 82, 52) }),
+    gen: (S) => leather(S, { seed: 61, cells: 90, patina: 0.14, color: rgb(122, 72, 46) }),
   },
   marble: {
     size: 1024, detail: 0.5, normalStrength: 1,

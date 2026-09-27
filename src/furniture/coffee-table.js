@@ -4,7 +4,7 @@ import { roundLeg } from './parts.js';
 
 // 圆形茶几：Ø800 白色大理石台面 + 三条外撇的胡桃木锥腿
 //   · 台面是车削体：只有外缘需要分段，上下两个大圆面各只是一圈扇形
-//   · 下沿 1 段倒角（很少被看到），上沿 2 段圆角（高光主要在这里）
+//   · 上沿 2 段圆角（高光主要在这里），下沿不倒角（几乎看不到）
 export default {
   id: 'coffee_table',
   name: '圆茶几',
@@ -12,12 +12,14 @@ export default {
   build(k) {
     const q = (...v) => k.q(...v);
     const R = 0.4, y0 = 0.4, y1 = 0.42;
+    // Ø800 用 44 段，轮廓偏差只有 1mm；几乎看不到的下沿不做倒角，省下一整圈。
+    // 贴图用顶视投影：石纹从台面自然延续到边缘上。
     k.lathe({
-      name: 'top', mat: 'marble', segs: q(40, 28, 18),
+      name: 'top', mat: 'marble', segs: q(44, 30, 18), grain: 'planar',
       profile: profile([
         [0, y0],
-        [R, y0, { r: q(0.004, 0.004, 0), segs: 1 }],
-        [R, y1, { r: q(0.006, 0.006, 0), segs: q(2, 1, 1) }],
+        [R, y0],
+        [R, y1, { r: q(0.005, 0.005, 0), segs: q(2, 1, 1) }],
         [0, y1],
       ]),
       density: { 0: 0.4 },

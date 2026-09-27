@@ -32,6 +32,7 @@ export function box(k, o) {
     omit = [], grain = null, density = {}, xf = null,
   } = o;
   const part = k.part(mat, name);
+  const dv = Array.isArray(div) ? div : [div, div, div];
   const h = size.map((s) => s / 2);
   const r = segs > 0 ? Math.min(r0, ...h) : 0;
   const n = r > 0 ? segs : 0;
@@ -39,8 +40,8 @@ export function box(k, o) {
   const gAxis = grain ? AX.indexOf(grain) : size.indexOf(Math.max(...size));
   // 平面区域节点：整数 = 均分；数组 = 显式给出 [-1, 1] 内的相对位置（形变集中处加密）
   const nodes = inner.map((iv, a) => {
-    if (Array.isArray(div[a])) return div[a].map((f) => f * iv);
-    const d = Math.max(1, div[a]);
+    if (Array.isArray(dv[a])) return dv[a].map((f) => f * iv);
+    const d = Math.max(1, dv[a]);
     return Array.from({ length: d + 1 }, (_, i) => -iv + (2 * iv * i) / d);
   });
   const faceOn = FACES.map((F) => !omit.includes(F.id));

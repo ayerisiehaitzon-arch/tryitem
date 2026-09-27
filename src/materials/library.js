@@ -65,7 +65,7 @@ export const MATERIALS = {
     roughness: 1, metallic: 0, normalScale: 0.8,
   },
   marble: {
-    label: '白色大理石（抛光）',
+    label: '白色大理石（哑光）',
     tex: 'marble', tile: [0.8, 0.8],
     roughness: 1, metallic: 0, normalScale: 0.25,
   },
