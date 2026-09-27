@@ -15,7 +15,7 @@ import { reedProfile } from '../kitchen/cabinetry.js';
 const W = 1.0, D = 0.44;
 const Y0 = 0.42, Y1 = 0.84;
 const TOP = { t: 0.02, side: 0.01, front: 0.02 };
-const BASIN = { z: 0.25, r: 0.2 };
+const BASIN = { z: 0.25 }; // 台上盆中心离墙的距离（盆口直径 40cm）
 const MIRROR = { r: 0.3, y: 1.52 };
 const REED = { n: 28, base: 0.012, sag: 0.006, ends: true };
 
