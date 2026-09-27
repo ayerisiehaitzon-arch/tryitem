@@ -1,7 +1,9 @@
 import { atlasUV } from './pack.js';
 
 // 把一个 LOD 的所有部件合并成“每种材质一个图元”，并：
-//   · UV0：米 → 贴图重复单位，按部件名给确定性的随机偏移（相同的腿木纹不雷同）
+//   · UV0：米 → 贴图重复单位，按部件名给确定性的随机偏移（相同的腿木纹不雷同）；
+//     部件可以指定 uvKey（几块共用同一个偏移：对开门的“对花”、抽屉面板的连续木纹）
+//     和 uvShift（米，先平移再换算，让几块板的木纹像从同一块板上裁下来）
 //   · UV1：图块坐标 → AO 图集坐标
 //   · 焊接完全相同的顶点、剔除退化三角形
 export function finalizeItem(k, { layout, tileOf, noOffset = () => false }) {
@@ -18,12 +20,13 @@ export function finalizeItem(k, { layout, tileOf, noOffset = () => false }) {
     const P = [], N = [], T0 = [], T1 = [], I = [];
     const keyMap = new Map();
     for (const part of parts) {
-      const rnd = k.rand(part.name);
+      const rnd = k.rand(part.uvKey ?? part.name);
       const off = fixed ? [0, 0] : [rnd(), rnd()];
+      const sh = part.uvShift ?? [0, 0];
       const remap = new Array(part.P.length);
       for (let i = 0; i < part.P.length; i++) {
         const p = part.P[i], n = part.N[i];
-        const t = [part.T[i][0] / tile[0] + off[0], part.T[i][1] / tile[1] + off[1]];
+        const t = [(part.T[i][0] + sh[0]) / tile[0] + off[0], (part.T[i][1] + sh[1]) / tile[1] + off[1]];
         const ch = k.charts[part.C[i]];
         const rect = layout.rects[ch.id];
         if (!rect) throw new Error(`图块 ${ch.id} 不在图集里`);

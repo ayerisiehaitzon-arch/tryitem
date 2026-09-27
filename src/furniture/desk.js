@@ -5,7 +5,8 @@ import { roundLeg, knob } from './parts.js';
 // 书桌：橡木 1200 × 600 × 750
 //   · 桌面沿用餐桌的做法：上沿圆边 + 下沿“刀口”斜面（侧面只剩 12mm 厚）
 //   · 外撇圆锥腿藏进牵条框的四角；前牵条中间嵌一个铅笔抽屉，面板凸出 3mm、黄铜小把手
-//   · 桌面后沿一排小书架（两侧板 + 隔板 + 薄背板），格子里的深度全靠烘焙 AO
+//   · 桌面后沿一排小书架（两侧板 + 隔板 + 薄背板），左格里一个信件抽屉，格子里的深度全靠烘焙 AO
+//   · 腿脚套黄铜脚套，和两个黄铜小把手呼应
 //   · 藏在别的部件里的面一律不生成（侧牵条两端、书架侧板底面……）
 export default {
   id: 'desk',
@@ -52,7 +53,7 @@ export default {
       xf: xf({ pos: [0, topY - aH / 2, dz] }),
     });
     if (k.lod < 2) {
-      knob(k, { name: 'knob', mat: 'brass', d: 0.022, h: 0.02, segs: q(10, 6), pos: [0, topY - aH / 2, dz + dt / 2], rot: [Math.PI / 2, 0, 0] });
+      knob(k, { name: 'knob', mat: 'brass', d: 0.022, h: 0.02, segs: q(8, 6), pos: [0, topY - aH / 2, dz + dt / 2], rot: [Math.PI / 2, 0, 0] });
     }
 
     // 腿：顶端藏在牵条框四角，向外撇 6°
@@ -61,7 +62,7 @@ export default {
     const d = (L * Math.sin(tilt)) / Math.SQRT2;
     for (const [i, sx, sz] of [[0, 1, 1], [1, -1, 1], [2, -1, -1], [3, 1, -1]]) {
       roundLeg(k, {
-        name: `leg${i}`, mat: 'oak', r0: 0.013, r1: 0.02, h: L, segs: q(8, 6, 5),
+        name: `leg${i}`, mat: 'oak', r0: 0.013, r1: 0.02, h: L, segs: q(8, 6, 5), sabot: { mat: 'brass', h: 0.03 },
         pos: [sx * (fx - 0.06 + d), 0, sz * (fz - 0.06 + d)],
         rot: [-tilt, Math.atan2(sx, sz), 0],
       });
@@ -84,9 +85,21 @@ export default {
       name: 'riserShelf', mat: 'oak', size: [W - 0.08, st, sd], r: c, segs: q(1, 0, 0), grain: 'x',
       xf: xf({ pos: [0, H + sh + st / 2, sz0] }),
     });
-    k.box({
+    const back = k.box({
       name: 'riserBack', mat: 'oak', size: [W - 0.08 - 2 * st, sh, 0.008], segs: 0, omit: ['px', 'nx', 'py', 'ny'], grain: 'x',
       xf: xf({ pos: [0, H + sh / 2, -D / 2 + 0.004] }),
     });
+    back.uvKey = 'riserBack.2'; // 换一块木纹：避开正中间对称的“山纹”，背面看起来不像镜像贴图
+    // 左边小格里一个信件抽屉：面板凸出 2mm，黄铜小把手（和前面的铅笔抽屉一样）
+    const lx0 = -(W / 2 - 0.04 - st), lx1 = -0.18 - st / 2; // 左格内侧
+    const lw = lx1 - lx0 - 0.004, lh = sh - 0.004;
+    const lz = sz0 + sd / 2 - 0.004;
+    k.box({
+      name: 'letterDrawer', mat: 'oak', size: [lw, lh, 0.012], r: c, segs: cs, omit: ['nz'], grain: 'x',
+      xf: xf({ pos: [(lx0 + lx1) / 2, H + sh / 2, lz] }),
+    });
+    if (k.lod < 2) {
+      knob(k, { name: 'letterKnob', mat: 'brass', d: 0.018, h: 0.017, segs: q(8, 6), pos: [(lx0 + lx1) / 2, H + sh / 2, lz + 0.006], rot: [Math.PI / 2, 0, 0] });
+    }
   },
 };

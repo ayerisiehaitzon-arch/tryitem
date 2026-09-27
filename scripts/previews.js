@@ -1,5 +1,6 @@
 // 生成 README 用的预览图：node scripts/previews.js
 //   docs/previews/overview.jpg        全部家具一览
+//   docs/previews/furniture-detail.jpg 家具特写：衣柜门板对花、黄铜脚套、书桌信件抽屉、办公椅盾形靠背
 //   docs/previews/decor.jpg           全部摆件一览
 //   docs/previews/decor-detail.jpg    摆件特写：书脊、釉面、叶片、流苏
 //   docs/previews/lighting.jpg        全部灯具一览
@@ -37,6 +38,14 @@ async function grid(files, cols, cell, dest) {
 
 const heroes = await shoot({ items: ids, views: ['hero'], size: [800, 600], outDir: tmp });
 await grid(heroes, 5, [400, 300], path.join(out, 'overview.jpg'));
+
+// 家具特写：衣柜门板对花 + 抽屉木纹连贯、床头柜黄铜脚套、书桌信件抽屉、办公椅盾形靠背与外壳
+const fd = [];
+fd.push(...await shoot({ items: ['wardrobe'], views: ['&dist=0.5&el=6&az=20'], size: [800, 600], outDir: tmp, name: () => 'f0.png' }));
+fd.push(...await shoot({ items: ['nightstand'], views: ['&target=0.12:0.16:0.1&dist=0.45&el=8&az=30'], size: [800, 600], outDir: tmp, name: () => 'f1.png' }));
+fd.push(...await shoot({ items: ['desk'], views: ['&target=-0.3:0.72:-0.05&dist=0.4&el=18&az=25'], size: [800, 600], outDir: tmp, name: () => 'f2.png' }));
+fd.push(...await shoot({ items: ['office_chair'], views: ['&target=0:0.8:-0.15&dist=0.4&el=30&az=50'], size: [800, 600], outDir: tmp, name: () => 'f3.png' }));
+await grid(fd, 2, [600, 450], path.join(out, 'furniture-detail.jpg'));
 
 const decor = await shoot({ items: decorIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `d_${id}.png` });
 await grid(decor, 3, [480, 360], path.join(out, 'decor.jpg'));

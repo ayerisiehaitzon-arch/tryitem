@@ -32,12 +32,12 @@ export default {
         knob(k, { name: `knob${i}`, mat: 'brass', d: 0.026, h: 0.024, segs: q(10, 6), pos: [0, y, D / 2 + 0.01], rot: [Math.PI / 2, 0, 0] });
       }
     }
-    // 腿：向外撇 6°
+    // 腿：向外撇 6°，黄铜脚套（和衣柜一套）
     const tilt = (6 * Math.PI) / 180;
     for (const [i, sx, sz] of [[0, 1, 1], [1, -1, 1], [2, -1, -1], [3, 1, -1]]) {
       const th = Math.atan2(sx, sz);
       roundLeg(k, {
-        name: `leg${i}`, mat: 'walnut', r0: 0.011, r1: 0.017, h: legH / Math.cos(tilt) + 0.01, segs: q(8, 6, 5),
+        name: `leg${i}`, mat: 'walnut', r0: 0.011, r1: 0.017, h: legH / Math.cos(tilt) + 0.01, segs: q(8, 6, 5), sabot: { mat: 'brass', h: 0.03 },
         pos: [sx * (W / 2 - 0.05) + sx * 0.012, 0, sz * (D / 2 - 0.05) + sz * 0.012],
         rot: [-tilt, th, 0],
       });

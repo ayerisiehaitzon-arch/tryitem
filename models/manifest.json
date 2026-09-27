@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T10:01:55.533Z",
+  "generated": "2026-09-27T11:32:36.157Z",
   "items": [
     {
       "id": "dining_chair",
@@ -235,18 +235,18 @@
       ],
       "lods": [
         {
-          "tris": 428,
-          "verts": 386,
+          "tris": 460,
+          "verts": 454,
           "drawCalls": 2
         },
         {
-          "tris": 332,
-          "verts": 314,
+          "tris": 356,
+          "verts": 366,
           "drawCalls": 2
         },
         {
-          "tris": 92,
-          "verts": 136,
+          "tris": 152,
+          "verts": 200,
           "drawCalls": 1
         }
       ],
@@ -255,9 +255,9 @@
         "拉丝黄铜"
       ],
       "aoAtlas": 256,
-      "aoDensity": 200,
+      "aoDensity": 198,
       "lodDistances": null,
-      "fileKB": 319
+      "fileKB": 326
     },
     {
       "id": "bed",
@@ -347,18 +347,18 @@
       ],
       "lods": [
         {
-          "tris": 800,
-          "verts": 668,
+          "tris": 832,
+          "verts": 736,
           "drawCalls": 2
         },
         {
-          "tris": 576,
-          "verts": 524,
+          "tris": 600,
+          "verts": 576,
           "drawCalls": 2
         },
         {
-          "tris": 124,
-          "verts": 200,
+          "tris": 184,
+          "verts": 264,
           "drawCalls": 1
         }
       ],
@@ -369,7 +369,7 @@
       "aoAtlas": 512,
       "aoDensity": 159,
       "lodDistances": null,
-      "fileKB": 384
+      "fileKB": 392
     },
     {
       "id": "desk",
@@ -384,18 +384,18 @@
       ],
       "lods": [
         {
-          "tris": 672,
-          "verts": 679,
+          "tris": 788,
+          "verts": 826,
           "drawCalls": 2
         },
         {
-          "tris": 484,
-          "verts": 539,
+          "tris": 592,
+          "verts": 670,
           "drawCalls": 2
         },
         {
-          "tris": 166,
-          "verts": 284,
+          "tris": 236,
+          "verts": 368,
           "drawCalls": 1
         }
       ],
@@ -406,7 +406,7 @@
       "aoAtlas": 256,
       "aoDensity": 103,
       "lodDistances": null,
-      "fileKB": 481
+      "fileKB": 499
     },
     {
       "id": "office_chair",
@@ -415,19 +415,19 @@
       "category": "furniture",
       "mount": "floor",
       "size": [
-        624,
-        1083,
-        640
+        623,
+        1136,
+        647
       ],
       "lods": [
         {
-          "tris": 1917,
-          "verts": 1606,
+          "tris": 2013,
+          "verts": 1690,
           "drawCalls": 3
         },
         {
-          "tris": 1072,
-          "verts": 1079,
+          "tris": 1134,
+          "verts": 1118,
           "drawCalls": 3
         },
         {
@@ -442,9 +442,9 @@
         "亚麻布（炭灰）"
       ],
       "aoAtlas": 256,
-      "aoDensity": 126,
+      "aoDensity": 133,
       "lodDistances": null,
-      "fileKB": 451
+      "fileKB": 461
     },
     {
       "id": "books",

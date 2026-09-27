@@ -5,10 +5,24 @@ import { roundedPath } from '../core/path.js';
 
 // 车木锥形圆腿：底部小圆角，顶部不封口（插在别的部件里看不见）
 //   r0 底半径，r1 顶半径，h 高度，segs 圆周分段
-export function roundLeg(k, { name, mat, r0, r1, h, segs, foot = 0.002, topCap = false, pos = [0, 0, 0], rot = [0, 0, 0] }) {
+//   sabot = { mat, h }：腿脚套一截金属套（黄铜脚套），比木腿粗 0.8mm，顶上留一圈小台阶接住高光。
+//   各级 LOD 都拆成两段（图块一致）；LOD2 远看分不出脚套，就用木腿的材质，省一个 draw call
+export function roundLeg(k, { name, mat, r0, r1, h, segs, foot = 0.002, topCap = false, sabot = null, pos = [0, 0, 0], rot = [0, 0, 0] }) {
+  const place = xf({ pos, rot });
+  if (sabot) {
+    const e = 0.0008, hc = sabot.h, rc = r0 + ((r1 - r0) * hc) / h;
+    k.lathe({
+      name: `${name}Cap`, mat: k.lod < 2 ? sabot.mat : mat, segs,
+      // 贴地的底面看不见，不生成
+      profile: profile([[r0 + e, 0], [rc + e, hc], [rc, hc]]), xf: place,
+    });
+    const pts = [[rc, hc], [r1, h]];
+    if (topCap) pts.push([0, h]);
+    return k.lathe({ name, mat, profile: profile(pts), segs, xf: place });
+  }
   const pts = [[0, 0], [r0, 0, { r: k.q(foot, foot, 0), segs: 1 }], [r1, h]];
   if (topCap) pts.push([0, h]);
-  return k.lathe({ name, mat, profile: profile(pts), segs, xf: xf({ pos, rot }) });
+  return k.lathe({ name, mat, profile: profile(pts), segs, xf: place });
 }
 
 // 两点之间的圆管 / 圆棍（不封口）
