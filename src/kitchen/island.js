@@ -1,6 +1,6 @@
 import { rect } from '../core/shape.js';
 import { xf } from '../core/vec.js';
-import { cupPull } from './cabinetry.js';
+import { cupPull, reedProfile } from './cabinetry.js';
 
 // 岛台：1.8m × 0.94m 大理石台面 + 橡木柜身
 //   · 座位一侧（+z）台面探出 30cm，底下是一整面竖向凸条的橡木板（reeded）：
@@ -17,25 +17,6 @@ const PLINTH = 0.08;
 const BODY_Z = 0.3; // 柜体前后面
 const REED = { n: 40, base: 0.008, sag: 0.009 };
 const GAP = 0.003;
-
-// 凸条截面：开放轮廓（截面 x 取 -世界 x，y 离开柜体），每道凸条是一段圆弧（弦 = 条距，拱高 sag）
-function reedProfile(k, x0, x1, { n, base, sag }) {
-  const nr = k.q(3, 2, 1);
-  const p = (x1 - x0) / n, R = (p * p / 4 + sag * sag) / (2 * sag), al = Math.asin(p / 2 / R);
-  const segs = [];
-  let s = 0;
-  for (let j = 0; j < n; j++) {
-    const xc = x0 + (j + 0.5) * p;
-    const at = (th) => ({ p: [-(xc + R * Math.sin(th)), base + R * (Math.cos(th) - Math.cos(al))], n: [-Math.sin(th), Math.cos(th)] });
-    for (let i = 0; i < nr; i++) {
-      const A = at(-al + (2 * al * i) / nr), B = at(-al + (2 * al * (i + 1)) / nr);
-      const L = Math.hypot(B.p[0] - A.p[0], B.p[1] - A.p[1]);
-      segs.push({ a: A.p, b: B.p, na: A.n, nb: B.n, sa: s, sb: s + L, kind: 'edge', group: 0 });
-      s += L;
-    }
-  }
-  return { segs, closed: false, length: s };
-}
 
 export default {
   id: 'kitchen_island',

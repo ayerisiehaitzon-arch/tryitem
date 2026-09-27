@@ -4,6 +4,7 @@ import { extrude } from '../prims/extrude.js';
 import { lathe } from '../prims/lathe.js';
 import { sweep } from '../prims/sweep.js';
 import { box } from '../prims/box.js';
+import { loft } from '../prims/loft.js';
 
 // ItemBuilder：一件家具在某个 LOD 下的构建上下文。
 //
@@ -69,4 +70,5 @@ export class ItemBuilder {
   lathe(o) { return lathe(this, o); }
   sweep(o) { return sweep(this, o); }
   box(o) { return box(this, o); }
+  loft(o) { return loft(this, o); }
 }

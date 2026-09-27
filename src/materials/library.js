@@ -268,5 +268,26 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 浴室 ——
+const ZELLIGE_BASE = [238, 236, 230]; // 釉面砖贴图的平均色：绿色的砖用同一张图染出来，贴图只占一份
+Object.assign(MATERIALS, {
+  zellige_green: {
+    label: '手工釉面砖（Zellige，苔绿）',
+    tex: 'zellige', tile: [0.5, 0.5], noOffset: true, color: tint([54, 84, 70], ZELLIGE_BASE),
+    roughness: 1, metallic: 0, normalScale: 1,
+  },
+  floor_hex: {
+    label: '六角马赛克（白色大理石，深绿点缀）',
+    tex: 'hexmosaic', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    clearcoat: { factor: 0.2, roughness: 0.25 },
+  },
+  mirror: {
+    label: '银镜',
+    // 金属度 1、粗糙度极低：直接映出环境贴图；AO 只压一点（镜面贴着框的那一圈）
+    color: srgb(236, 238, 238), metallic: 1, roughness: 0.03, aoStrength: 0.35,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

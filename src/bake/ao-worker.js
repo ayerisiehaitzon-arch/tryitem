@@ -4,8 +4,9 @@ import { intersect } from './bvh.js';
 // 每个样本：位置 p、着色法线 n、几何法线 g。
 // surface 模式：返回 AO（1 = 完全不遮挡）；shadow 模式：返回“未遮挡比例”。
 const { bvh, jobs, opts, seed } = workerData;
-// plane：安装面（过原点、法线 plane 的平面，物体在法线一侧）也算遮挡 —— 地面、墙面或天花板
-const { samples, maxDist, plane } = opts;
+// planes：安装面（过原点、法线为 planes[i] 的平面，物体在法线一侧）也算遮挡 —— 地面、墙面或天花板；
+// 靠墙落地的东西（马桶、浴室柜）两个面都算
+const { samples, maxDist, planes } = opts;
 const count = jobs.length / 9;
 const out = new Float32Array(count);
 const stack = new Int32Array(256);
@@ -41,10 +42,10 @@ for (let j = 0; j < count; j++) {
     const dg = dx * gx + dy * gy + dz * gz;
     if (dg < 0) { dx -= 2 * dg * gx; dy -= 2 * dg * gy; dz -= 2 * dg * gz; }
     let t = intersect(bvh, ox, oy, oz, dx, dy, dz, maxDist, stack);
-    if (plane) {
-      const dn = dx * plane[0] + dy * plane[1] + dz * plane[2];
+    for (const pl of planes) {
+      const dn = dx * pl[0] + dy * pl[1] + dz * pl[2];
       if (dn < -1e-6) {
-        const tf = -(ox * plane[0] + oy * plane[1] + oz * plane[2]) / dn;
+        const tf = -(ox * pl[0] + oy * pl[1] + oz * pl[2]) / dn;
         if (tf > 0 && tf < t) t = tf;
       }
     }

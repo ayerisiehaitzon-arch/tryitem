@@ -36,11 +36,22 @@ for (const def of FURNITURE) {
   const geo = buildGeometry(def);
   let ao = null, shadow = null, glow = null;
   if (bake) {
-    // 安装面（地面 / 墙面 / 天花板）既是 AO 的遮挡面，也是阴影、光斑贴花所在的平面
+    // 安装面（地面 / 墙面 / 天花板）既是 AO 的遮挡面，也是阴影、光斑贴花所在的平面。
+    // planes：靠墙落地的东西（马桶、浴室柜、淋浴间）贴着两个面 —— 两个面都挡 AO，各烘一张接触阴影
     const plane = def.mount ?? 'floor';
+    const planes = def.planes ?? [plane];
     // ao: false —— 不需要 AO 的构件（地板这种一整块平面）不烘焙，也不带 AO 贴图
-    if (def.ao !== false) ao = await bake.bakeAO(geo.lods[0], geo.layout, { samples: fast ? 48 : 160, plane: MOUNTS[plane].n, ...(def.ao || {}) });
-    if (def.shadow !== false) shadow = await bake.bakeShadow(geo.lods[0], { plane, samples: fast ? 64 : 256, ...(def.shadow || {}) });
+    if (def.ao !== false) ao = await bake.bakeAO(geo.lods[0], geo.layout, { samples: fast ? 48 : 160, plane: planes.map((p) => MOUNTS[p].n), ...(def.ao || {}) });
+    if (def.shadow !== false) {
+      // shadow 可以按面分开给参数：{ floor: {...}, wall: {...} }（某个面给 false 就不烘）
+      const perPlane = def.shadow && planes.some((p) => p in def.shadow);
+      shadow = [];
+      for (const p of planes) {
+        const opt = perPlane ? def.shadow[p] : def.shadow;
+        if (opt === false) continue;
+        shadow.push(await bake.bakeShadow(geo.lods[0], { plane: p, samples: fast ? 64 : 256, ...(opt || {}) }));
+      }
+    }
     if (def.glow) glow = await bake.bakeGlow(geo.lods[0], { plane, samples: fast ? 16 : 64, ...def.glow });
   }
   const { doc, stats } = assembleDoc(def, geo, { textures, ao, shadow, glow });

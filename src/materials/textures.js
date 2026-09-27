@@ -307,6 +307,8 @@ export const TEXTURES = {
   cane: { size: 512, normalStrength: 3, v: 2, gen: INTERIOR.cane },
   // —— 厨房 ——（高度以毫米计：法线强度 ≈ 高度范围 / 像素尺寸，釉面起伏的斜率就是真实的）
   zellige: { size: 1024, detail: 0.5, normalStrength: 9, v: 3, gen: INTERIOR.zellige },
+  // —— 浴室 ——（六角马赛克周期 1m，整除 2m 的地板模块）
+  hexmosaic: { size: 2048, detail: 0.5, normalStrength: 2, v: 2, gen: INTERIOR.hexMosaic },
 };
 
 function alloc(S) {

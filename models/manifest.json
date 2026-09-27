@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T16:41:57.542Z",
+  "generated": "2026-09-27T17:17:14.799Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1186,6 +1186,46 @@
       "fileKB": 432
     },
     {
+      "id": "floor_hex",
+      "name": "六角马赛克地面",
+      "nameEn": "Hex Marble Mosaic Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "六角马赛克（白色大理石，深绿点缀）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 837
+    },
+    {
       "id": "kitchen_base",
       "name": "橱柜",
       "nameEn": "Shaker Kitchen Base Run",
@@ -1318,6 +1358,150 @@
         "az": 32
       },
       "fileKB": 600
+    },
+    {
+      "id": "vanity",
+      "name": "浴室柜",
+      "nameEn": "Floating Walnut Vanity & Mirror",
+      "category": "bathroom",
+      "mount": "wall",
+      "planes": [
+        "wall",
+        "floor"
+      ],
+      "size": [
+        1020,
+        1576,
+        489
+      ],
+      "lods": [
+        {
+          "tris": 1326,
+          "verts": 1265,
+          "drawCalls": 6
+        },
+        {
+          "tris": 924,
+          "verts": 941,
+          "drawCalls": 6
+        },
+        {
+          "tris": 425,
+          "verts": 511,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "拉丝黄铜",
+        "白色大理石台面（抛光）",
+        "白色耐火黏土（釉面，水槽）",
+        "银镜",
+        "植鞣皮（干邑色）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 253,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 28
+      },
+      "fileKB": 906
+    },
+    {
+      "id": "toilet",
+      "name": "马桶",
+      "nameEn": "Back-to-Wall Toilet",
+      "category": "bathroom",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        366,
+        799,
+        600
+      ],
+      "lods": [
+        {
+          "tris": 828,
+          "verts": 660,
+          "drawCalls": 2
+        },
+        {
+          "tris": 540,
+          "verts": 453,
+          "drawCalls": 2
+        },
+        {
+          "tris": 242,
+          "verts": 205,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "白色耐火黏土（釉面，水槽）",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 308,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 34
+      },
+      "fileKB": 130
+    },
+    {
+      "id": "shower",
+      "name": "淋浴间",
+      "nameEn": "Crittall Shower Enclosure",
+      "category": "bathroom",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        1300,
+        2100,
+        947
+      ],
+      "lods": [
+        {
+          "tris": 949,
+          "verts": 997,
+          "drawCalls": 7
+        },
+        {
+          "tris": 683,
+          "verts": 810,
+          "drawCalls": 7
+        },
+        {
+          "tris": 424,
+          "verts": 597,
+          "drawCalls": 7
+        }
+      ],
+      "materials": [
+        "白色大理石台面（抛光）",
+        "拉丝不锈钢",
+        "黑色粉末喷涂钢",
+        "乳胶漆（暖白）",
+        "手工釉面砖（Zellige，苔绿）",
+        "透明玻璃",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 134,
+      "lodDistances": null,
+      "view": {
+        "el": 14,
+        "az": 30
+      },
+      "fileKB": 530
     }
   ]
 }

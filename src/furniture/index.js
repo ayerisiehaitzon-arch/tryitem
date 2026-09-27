@@ -24,18 +24,22 @@ import wallLamp from '../lighting/wall-lamp.js';
 import { wall, wallWainscot } from '../architecture/walls.js';
 import { wallDoor } from '../architecture/door.js';
 import { wallWindow } from '../architecture/window.js';
-import { floorHerringbone, floorPlank, floorTerrazzo } from '../architecture/floors.js';
+import { floorHerringbone, floorPlank, floorTerrazzo, floorHex } from '../architecture/floors.js';
 import kitchenBase from '../kitchen/base.js';
 import kitchenWall from '../kitchen/wall.js';
 import kitchenIsland from '../kitchen/island.js';
+import toilet from '../bathroom/toilet.js';
+import vanity from '../bathroom/vanity.js';
+import shower from '../bathroom/shower.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
-// 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）
+// 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
   books, vases, fiddleFig, snakePlant, rug,
   floorLamp, tableLamp, pendant, wallLamp,
-  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo,
+  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex,
   kitchenBase, kitchenWall, kitchenIsland,
+  vanity, toilet, shower,
 ];

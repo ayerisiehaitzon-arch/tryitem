@@ -11,6 +11,9 @@
 //   docs/previews/kitchen.jpg         厨房三件：橱柜、吊柜、岛台
 //   docs/previews/kitchen-detail.jpg  厨房特写：陶瓷水槽与鹅颈龙头、手工釉面砖和灯带光斑、钟形烟机罩、岛台凸条板
 //   docs/previews/kitchen-room.jpg    全屋陈列里的厨房
+//   docs/previews/bathroom.jpg        浴室三件：浴室柜、马桶、淋浴间
+//   docs/previews/bathroom-detail.jpg 浴室特写：台上盆与入墙龙头、马桶盖、淋浴间的釉面砖和混水阀、六角马赛克
+//   docs/previews/bathroom-room.jpg   全屋陈列里的浴室
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -30,7 +33,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -108,6 +111,21 @@ await grid(kd, 2, [600, 450], path.join(out, 'kitchen-detail.jpg'));
 const kroom = await shoot({ items: ['room'], views: ['&target=-8.3:0.9:-0.7&dist=0.24&el=22&az=24'], size: [1600, 900], outDir: tmp, name: () => 'kitchen-room.png' });
 await sharp(kroom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'kitchen-room.jpg'));
 console.log('→ docs/previews/kitchen-room.jpg');
+
+const bath = await shoot({ items: bathIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `w_${id}.png` });
+await grid(bath, 3, [480, 360], path.join(out, 'bathroom.jpg'));
+
+// 浴室特写：台上盆与入墙龙头、马桶盖和合页、淋浴间的釉面砖和恒温混水阀、六角马赛克
+const bd = [];
+bd.push(...await shoot({ items: ['vanity'], views: ['&target=0:0.95:0.25&dist=0.42&el=24&az=26'], size: [800, 600], outDir: tmp, name: () => 'e0.png' }));
+bd.push(...await shoot({ items: ['toilet'], views: ['&target=0:0.45:0.3&dist=0.55&el=22&az=40'], size: [800, 600], outDir: tmp, name: () => 'e1.png' }));
+bd.push(...await shoot({ items: ['shower'], views: ['&target=0:1.25:0.2&dist=0.36&el=8&az=24'], size: [800, 600], outDir: tmp, name: () => 'e2.png' }));
+bd.push(...await shoot({ items: ['floor_hex'], views: ['&target=0:0:0.3&dist=0.3&el=30&az=20'], size: [800, 600], outDir: tmp, name: () => 'e3.png' }));
+await grid(bd, 2, [600, 450], path.join(out, 'bathroom-detail.jpg'));
+
+const broom = await shoot({ items: ['room'], views: ['&target=8.1:0.95:-0.9&dist=0.26&el=18&az=20'], size: [1600, 900], outDir: tmp, name: () => 'bathroom-room.png' });
+await sharp(broom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'bathroom-room.jpg'));
+console.log('→ docs/previews/bathroom-room.jpg');
 
 const room = await shoot({ items: ['room'], views: ['&el=32&az=24&dist=0.9'], size: [1600, 900], outDir: tmp, name: () => 'room.png' });
 await sharp(room[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'room.jpg'));

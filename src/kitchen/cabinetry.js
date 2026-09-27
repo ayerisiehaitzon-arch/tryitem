@@ -80,6 +80,30 @@ export function shakerFront(k, { name, mat, x0, x1, y0, y1, z, t = 0.02, fw = 0.
   });
 }
 
+// 竖向凸条（reeded）截面：开放轮廓，截面 x 取 -世界 x（沿竖直路径、up = +z 扫掠时标架的 R 朝 -x），y 离开柜面。
+// 每道凸条是一段圆弧（弦 = 条距，拱高 sag），每段的法线取圆弧的解析法线：凸条之间的缝是真正的折线，3 段就很圆；
+// LOD2 每道只剩一段弦，法线仍是 ±α 的圆弧法线 —— 几何是平的，明暗里还看得出一道道凸条。
+// ends：两头各加一段竖边（从柜面到条根），抽屉面板这种两头露在外面的板要封起来
+export function reedProfile(k, x0, x1, { n, base, sag, ends = false }) {
+  const nr = k.q(3, 2, 1);
+  const p = (x1 - x0) / n, R = (p * p / 4 + sag * sag) / (2 * sag), al = Math.asin(p / 2 / R);
+  const segs = [];
+  let s = 0;
+  const push = (A, B) => {
+    const L = Math.hypot(B.p[0] - A.p[0], B.p[1] - A.p[1]);
+    segs.push({ a: A.p, b: B.p, na: A.n, nb: B.n, sa: s, sb: s + L, kind: 'edge', group: 0 });
+    s += L;
+  };
+  if (ends) push({ p: [-x0, 0], n: [1, 0] }, { p: [-x0, base], n: [1, 0] });
+  for (let j = 0; j < n; j++) {
+    const xc = x0 + (j + 0.5) * p;
+    const at = (th) => ({ p: [-(xc + R * Math.sin(th)), base + R * (Math.cos(th) - Math.cos(al))], n: [-Math.sin(th), Math.cos(th)] });
+    for (let i = 0; i < nr; i++) push(at(-al + (2 * al * i) / nr), at(-al + (2 * al * (i + 1)) / nr));
+  }
+  if (ends) push({ p: [-x1, base], n: [-1, 0] }, { p: [-x1, 0], n: [-1, 0] });
+  return { segs, closed: false, length: s };
+}
+
 // 黄铜杯形拉手（bin pull）：一片四分之一椭圆的壳，口朝下，两头各一块挡板。
 // 原点在拉手上沿中点（贴在面板上），壳向 +z 伸出 d、向下 h；rotY 转到别的朝向（岛台背面的抽屉朝 -z）
 export function cupPull(k, { name, mat = 'brass', pos, w = 0.086, h = 0.03, d = 0.021, t = 0.0022, rotY = 0 }) {

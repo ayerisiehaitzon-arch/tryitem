@@ -7,7 +7,7 @@ import { MOUNTS, onPlane } from '../core/mount.js';
 //   ├─ <item>_LOD0    每个 LOD 一个网格，每种材质一个图元（= 一次 draw call）
 //   ├─ <item>_LOD1
 //   ├─ <item>_LOD2
-//   ├─ <item>_Shadow  2 个三角形的烘焙接触阴影贴花（unlit + alpha blend）
+//   ├─ <item>_Shadow  2 个三角形的烘焙接触阴影贴花（unlit + alpha blend；靠墙落地的东西地面、墙面各一张）
 //   └─ <item>_Glow    灯具才有：烘焙的光斑贴花（暖白色，建议加法混合）
 //
 // 材质贴图（木纹、布纹……）按“物理尺寸”平铺在 TEXCOORD_0；
@@ -102,9 +102,10 @@ export function addMesh(ctx, name, lod, materials) {
   return mesh;
 }
 
-// 贴花：安装面上的一个四边形 + 一张 alpha 贴图（接触阴影是黑色，灯具光斑是暖白色）
+// 贴花：安装面上的一个四边形 + 一张 alpha 贴图（接触阴影是黑色，灯具光斑是暖白色）。
+// 传入 mesh 时作为一个新图元加进这个网格（靠墙落地的东西：地面、墙面两张接触阴影放在同一个节点下）
 
-export function addDecal(ctx, name, decal, { color = [0, 0, 0, 1], lift = 0.0015 } = {}) {
+export function addDecal(ctx, name, decal, { color = [0, 0, 0, 1], lift = 0.0015 } = {}, mesh = null) {
   const { doc, ext } = ctx;
   const buf = doc.getRoot().listBuffers()[0];
   const M = MOUNTS[decal.plane ?? 'floor'];
@@ -133,7 +134,7 @@ export function addDecal(ctx, name, decal, { color = [0, 0, 0, 1], lift = 0.0015
     .setAttribute('TEXCOORD_0', acc(uv, 'VEC2'))
     .setIndices(acc(idx, 'SCALAR'))
     .setMaterial(mat);
-  return doc.createMesh(name).addPrimitive(prim);
+  return (mesh ?? doc.createMesh(name)).addPrimitive(prim);
 }
 
 export async function writeGLB(doc, path) {

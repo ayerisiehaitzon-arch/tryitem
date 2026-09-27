@@ -40,8 +40,12 @@ export function assembleDoc(def, { lods, layout }, { textures = null, ao = null,
     const node = doc.createNode(`${def.id}_LOD${i}`).setMesh(addMesh(ctx, `${def.id}_LOD${i}`, lod, materials));
     root.addChild(node);
   });
-  if (shadow) {
-    root.addChild(doc.createNode(`${def.id}_Shadow`).setMesh(addDecal(ctx, `${def.id}_Shadow`, shadow)));
+  // 接触阴影：每个安装面一张贴花，合成一个网格（每张一个图元）挂在同一个节点下
+  const shadows = shadow ? [].concat(shadow) : [];
+  if (shadows.length) {
+    const mesh = addDecal(ctx, `${def.id}_Shadow`, shadows[0]);
+    shadows.slice(1).forEach((s, i) => addDecal(ctx, `${def.id}_Shadow${i + 1}`, s, {}, mesh));
+    root.addChild(doc.createNode(`${def.id}_Shadow`).setMesh(mesh));
   }
   if (glow) {
     const color = def.glow?.color ?? srgb(255, 214, 162);
@@ -56,6 +60,8 @@ export function assembleDoc(def, { lods, layout }, { textures = null, ao = null,
     nameEn: def.nameEn,
     category: def.category ?? 'furniture',
     mount: def.mount ?? 'floor',
+    // 贴着的面（靠墙落地的东西有两个）：预览器据此决定要不要立一面“墙”
+    ...(def.planes ? { planes: def.planes } : {}),
     size: [b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]].map((v) => Math.round(v * 1000)),
     lods: lods.map((l) => ({ tris: l.tris, verts: l.verts, drawCalls: l.prims.length })),
     materials: matNames.map((m) => MATERIALS[m].label),

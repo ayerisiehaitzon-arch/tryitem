@@ -319,6 +319,12 @@ export const INTERIOR = {
     ],
     grout: rgb(208, 204, 194), body: rgb(204, 162, 134),
   }),
+  hexMosaic: (S) => hexMosaic(S, {
+    seed: 361, period: 1, cols: 21, rows: 24, joint: 0.0018, bevel: 0.0012, depth: 1,
+    tone: 0.06, cloud: 0.03, rough: 0.34, accent: 0.03,
+    white: rgb(240, 239, 235), veinColor: rgb(150, 152, 156), grout: rgb(204, 202, 196),
+    accentColor: rgb(58, 84, 72), accentVein: rgb(150, 172, 160),
+  }),
 };
 
 // ——————————————————————— 手工釉面砖（Zellige）———————————————————————
@@ -397,6 +403,83 @@ export function zellige(S, P) {
       c = mix3(grout, c, inside);
       h = mix(-P.depth, h, inside);
       rough = mix(0.92, rough, inside);
+      put(out, py * S + pxi, c, h, rough);
+    }
+  }
+  return out;
+}
+
+// ——————————————————————— 六角马赛克（大理石）———————————————————————
+// 尖顶六边形，对边约 4.8cm；贴图 1m 见方 = 21 列 × 24 行（周期整除 2m 模块，横向比正六边形窄 1%，看不出来）。
+// 周期取 1m 而不是更小：深绿色的点缀砖是随机撒的，周期太短远看就成了一排排规则的点阵。
+// 每个像素找最近的格点 —— 六边形格子的 Voronoi 单元就是六边形；到单元边界的距离 =
+// 到各个相邻格点连线中垂线的距离取最小（(|p-c|² - |p-c₁|²) / 2|c-c₁|），砖缝和砖边的圆角都按这个距离画。
+// 每块砖是一小块白色大理石：自己的底色深浅、一两道灰色细纹；少数砖是深绿色大理石的点缀。
+export function hexMosaic(S, P) {
+  const { cols, rows, period } = P; // rows 必须是偶数：奇数行错开半格，两行一个周期
+  const w = period / cols, rh = period / rows;
+  const rnd = mulberry(P.seed);
+  const nV = perlin(P.seed + 1), nC = perlin(P.seed + 2), nF = perlin(P.seed + 3);
+  const tiles = Array.from({ length: cols * rows }, () => {
+    const accent = rnd() < P.accent;
+    return {
+      accent,
+      tone: 1 + (rnd() - 0.5) * P.tone,
+      warm: (rnd() - 0.5) * 0.02,
+      ox: rnd() * 80, oy: rnd() * 80, rot: rnd() * Math.PI,
+      vein: accent ? 0.5 + 0.5 * rnd() : rnd() < 0.55 ? 0.3 + 0.7 * rnd() : 0.08 * rnd(),
+      rough: P.rough * (0.85 + 0.3 * rnd()),
+    };
+  });
+  const out = alloc(S);
+  const px = period / S;
+  const cand = [];
+  for (let py = 0; py < S; py++) {
+    const y = ((py + 0.5) / S) * period;
+    const j0 = Math.floor(y / rh - 0.5);
+    for (let pxi = 0; pxi < S; pxi++) {
+      const x = ((pxi + 0.5) / S) * period;
+      // 候选格点：附近三行，每行附近三个
+      cand.length = 0;
+      let b = -1, bd = Infinity;
+      for (let dj = -1; dj <= 2; dj++) {
+        const j = j0 + dj, off = mod(j, 2) * (w / 2), cy = (j + 0.5) * rh;
+        const i0 = Math.floor((x - off) / w);
+        for (let di = -1; di <= 1; di++) {
+          const cx = (i0 + di + 0.5) * w + off;
+          const d2 = (x - cx) ** 2 + (y - cy) ** 2;
+          cand.push([cx, cy, d2, i0 + di, j]);
+          if (d2 < bd) { bd = d2; b = cand.length - 1; }
+        }
+      }
+      const [cx, cy, , ci, cj] = cand[b];
+      let e = Infinity;
+      for (let k = 0; k < cand.length; k++) {
+        if (k === b) continue;
+        const c = cand[k], L = Math.hypot(c[0] - cx, c[1] - cy);
+        e = Math.min(e, (c[2] - bd) / (2 * L));
+      }
+      e -= P.joint / 2; // 到砖边的距离（米），缝里为负
+      const t = tiles[mod(cj, rows) * cols + mod(ci, cols)];
+      const inside = sstep(-px, px, e);
+      const edge = Math.sqrt(1 - (1 - clamp01(e / P.bevel)) ** 2);
+      // 砖内坐标（每块砖旋转、平移到石材的不同位置）
+      const lx = x - cx, ly = y - cy, cr = Math.cos(t.rot), sr = Math.sin(t.rot);
+      const ux = (lx * cr - ly * sr) + t.ox, uy = (lx * sr + ly * cr) + t.oy;
+      // 纹路：沿一个方向拉长的噪声等值线（石材的纹路有走向），两个倍频就够，不会碎成一圈圈
+      const n = fbm2(nV, ux * 11, uy * 30, 2);
+      const vein = Math.exp(-((n / 0.045) ** 2)) * t.vein;
+      const cloud = fbm2(nC, ux * 9, uy * 9, 3);
+      const base = t.accent ? P.accentColor : P.white;
+      const vc = t.accent ? P.accentVein : P.veinColor;
+      let c = mix3(base.map((m) => m * t.tone * (1 + cloud * P.cloud)), vc, vein * 0.6);
+      c = [c[0] * (1 + t.warm), c[1], c[2] * (1 - t.warm)];
+      let h = (edge - 1) * P.depth - vein * 0.05 + fbm2(nF, x * 400, y * 400, 2) * 0.02;
+      let rough = t.rough + vein * 0.05;
+      const grout = P.grout.map((m) => m * (1 + fbm2(nF, x * 300, y * 300, 2) * 0.05));
+      c = mix3(grout, c, inside);
+      h = mix(-P.depth, h, inside);
+      rough = mix(0.9, rough, inside);
       put(out, py * S + pxi, c, h, rough);
     }
   }

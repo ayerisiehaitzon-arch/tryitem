@@ -48,8 +48,10 @@ async function trace(bvh, jobs, opts) {
   return out;
 }
 
-// plane：安装面的法线（地面 [0,1,0]、墙面 [0,0,1]、天花板 [0,-1,0]），null 表示不算安装面的遮挡
+// plane：安装面的法线（地面 [0,1,0]、墙面 [0,0,1]、天花板 [0,-1,0]），也可以是几个法线的数组（靠墙落地），
+// null 表示不算安装面的遮挡
 export async function bakeAO(lod, layout, { samples = 160, maxDist = 0.32, plane = [0, 1, 0], power = 1.0, blur = 1 } = {}) {
+  const planes = !plane ? [] : Array.isArray(plane[0]) ? plane : [plane];
   const S = layout.size;
   const bvh = buildBVH(gatherTris(lod));
   // 每个纹素属于哪个图块（图块矩形含 padding，互不重叠）
@@ -115,7 +117,7 @@ export async function bakeAO(lod, layout, { samples = 160, maxDist = 0.32, plane
     const l = Math.hypot(nx, ny, nz) || 1;
     jobs.set([pos[idx * 3], pos[idx * 3 + 1], pos[idx * 3 + 2], nx / l, ny / l, nz / l, gn[idx * 3], gn[idx * 3 + 1], gn[idx * 3 + 2]], j * 9);
   });
-  const ao = await trace(bvh, jobs, { samples, maxDist, plane, mode: 'surface' });
+  const ao = await trace(bvh, jobs, { samples, maxDist, planes, mode: 'surface' });
 
   // —— 写入图像、按图块掩码模糊、膨胀 ——
   let img = new Float32Array(S * S).fill(-1);
@@ -144,7 +146,7 @@ export async function bakeShadow(lod, { plane = 'floor', samples = 256, maxDist 
     const p = onPlane(M, u0 + ((x + 0.5) / W) * (u1 - u0), v0 + ((y + 0.5) / H) * (v1 - v0), 0.0005);
     jobs.set([...p, ...M.n, ...M.n], (y * W + x) * 9);
   }
-  const occ = await trace(bvh, jobs, { samples, maxDist, plane: null, mode: 'shadow' });
+  const occ = await trace(bvh, jobs, { samples, maxDist, planes: [], mode: 'shadow' });
   const rgba = new Uint8Array(W * H * 4);
   const stack = new Int32Array(256);
   const [nx, ny, nz] = M.n.map((c) => c || 1e-9);
