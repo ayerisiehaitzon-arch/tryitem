@@ -1,20 +1,21 @@
 // AO 烘焙：把环境光遮蔽烘焙进每件家具独有的 UV1 图集；
-// 再烘焙一张贴地的软阴影（接触阴影贴花）。
+// 再烘焙贴在安装面上的两张贴花：软阴影（接触阴影）和灯具的光斑（从灯泡位置算直射光）。
 //
 // 流程：UV1 空间保守光栅化 → 每个纹素算出世界坐标/法线 → worker 并行发射余弦分布射线
 //      → 距离衰减的遮蔽 → 按图块做掩码模糊 → 向外膨胀填充 padding（防止 mip 接缝）
 import os from 'node:os';
 import { Worker } from 'node:worker_threads';
 import sharp from 'sharp';
-import { buildBVH, intersect } from './bvh.js';
+import { buildBVH, intersect, lastFront } from './bvh.js';
 import { MATERIALS } from '../materials/library.js';
+import { MOUNTS, onPlane } from '../core/mount.js';
 
 const WORKER = new URL('./ao-worker.js', import.meta.url);
 
 // 遮挡体：透明裁剪（alphaMode MASK）的面片不算 —— 流苏这种“一张卡片上画的细线”
 // 如果当成实心面去挡光，会在地毯边和地面上压出一整条黑影
-function gatherTris(lod) {
-  const prims = lod.prims.filter((pr) => MATERIALS[pr.mat]?.alphaMode !== 'MASK');
+function gatherTris(lod, keep = () => true) {
+  const prims = lod.prims.filter((pr) => MATERIALS[pr.mat]?.alphaMode !== 'MASK' && keep(pr.mat));
   let n = 0;
   for (const pr of prims) n += pr.index.length / 3;
   const tris = new Float32Array(n * 9);
@@ -47,7 +48,8 @@ async function trace(bvh, jobs, opts) {
   return out;
 }
 
-export async function bakeAO(lod, layout, { samples = 160, maxDist = 0.32, floor = true, power = 1.0, blur = 1 } = {}) {
+// plane：安装面的法线（地面 [0,1,0]、墙面 [0,0,1]、天花板 [0,-1,0]），null 表示不算安装面的遮挡
+export async function bakeAO(lod, layout, { samples = 160, maxDist = 0.32, plane = [0, 1, 0], power = 1.0, blur = 1 } = {}) {
   const S = layout.size;
   const bvh = buildBVH(gatherTris(lod));
   // 每个纹素属于哪个图块（图块矩形含 padding，互不重叠）
@@ -113,7 +115,7 @@ export async function bakeAO(lod, layout, { samples = 160, maxDist = 0.32, floor
     const l = Math.hypot(nx, ny, nz) || 1;
     jobs.set([pos[idx * 3], pos[idx * 3 + 1], pos[idx * 3 + 2], nx / l, ny / l, nz / l, gn[idx * 3], gn[idx * 3 + 1], gn[idx * 3 + 2]], j * 9);
   });
-  const ao = await trace(bvh, jobs, { samples, maxDist, floor, mode: 'surface' });
+  const ao = await trace(bvh, jobs, { samples, maxDist, plane, mode: 'surface' });
 
   // —— 写入图像、按图块掩码模糊、膨胀 ——
   let img = new Float32Array(S * S).fill(-1);
@@ -126,37 +128,109 @@ export async function bakeAO(lod, layout, { samples = 160, maxDist = 0.32, floor
   return { data, mime: 'image/png', size: S };
 }
 
-// 贴地软阴影：物体投影范围外扩一圈，纹素向上半球发射射线
-export async function bakeShadow(lod, { samples = 256, maxDist = 1.2, margin = null, density = 90, strength = 0.9, gamma = 0.9 } = {}) {
+// 安装面上的软阴影：物体投影范围外扩一圈，纹素向物体一侧的半球发射射线
+const pot = (v) => Math.min(256, Math.max(32, 2 ** Math.round(Math.log2(v))));
+
+export async function bakeShadow(lod, { plane = 'floor', samples = 256, maxDist = 1.2, margin = null, density = 90, strength = 0.9, gamma = 0.9, fade: fadeW = 0.12 } = {}) {
+  const M = MOUNTS[plane];
   const { min, max } = lod.bounds;
-  const size = Math.max(max[0] - min[0], max[2] - min[2]);
+  const size = Math.max(max[M.u] - min[M.u], max[M.v] - min[M.v]);
   const m = margin ?? Math.max(0.18, 0.22 * size);
-  const x0 = min[0] - m, x1 = max[0] + m, z0 = min[2] - m, z1 = max[2] + m;
-  const pot = (v) => Math.min(256, Math.max(32, 2 ** Math.round(Math.log2(v))));
-  const W = pot((x1 - x0) * density), H = pot((z1 - z0) * density);
+  const u0 = min[M.u] - m, u1 = max[M.u] + m, v0 = min[M.v] - m, v1 = max[M.v] + m;
+  const W = pot((u1 - u0) * density), H = pot((v1 - v0) * density);
   const bvh = buildBVH(gatherTris(lod));
   const jobs = new Float32Array(W * H * 9);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const i = y * W + x;
-    const wx = x0 + ((x + 0.5) / W) * (x1 - x0), wz = z0 + ((y + 0.5) / H) * (z1 - z0);
-    jobs.set([wx, 0.0005, wz, 0, 1, 0, 0, 1, 0], i * 9);
+    const p = onPlane(M, u0 + ((x + 0.5) / W) * (u1 - u0), v0 + ((y + 0.5) / H) * (v1 - v0), 0.0005);
+    jobs.set([...p, ...M.n, ...M.n], (y * W + x) * 9);
   }
-  const occ = await trace(bvh, jobs, { samples, maxDist, floor: false, mode: 'shadow' });
+  const occ = await trace(bvh, jobs, { samples, maxDist, plane: null, mode: 'shadow' });
   const rgba = new Uint8Array(W * H * 4);
   const stack = new Int32Array(256);
+  const [nx, ny, nz] = M.n.map((c) => c || 1e-9);
+  // 物体自己贴着安装面盖住的地方（法线方向 4cm 内是它的“里面”，比如地毯）根本看不见，贴花在这里完全透明，
+  // 否则远看时贴花会借着 polygonOffset 从薄薄的物体底下“透”上来。只认背面命中：
+  // 花瓶、灯座那种外翻的圈足，底下是朝下的正面，那一圈依然是最暗的接触阴影。
+  // 掩码再向里收 2 个纹素：物体边缘那一圈纹素保留阴影，不会在轮廓外露出一圈锯齿状的亮缝
+  const cov = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) {
+    cov[i] = intersect(bvh, jobs[i * 9], jobs[i * 9 + 1], jobs[i * 9 + 2], nx, ny, nz, 0.04, stack) < 0.04 && !lastFront ? 1 : 0;
+  }
+  const covered = (x, y) => {
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= W || yy >= H || !cov[yy * W + xx]) return false;
+    }
+    return true;
+  };
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x;
     // 边缘淡出，保证贴花边界完全透明
-    const ex = Math.min(x + 0.5, W - x - 0.5) / (W * 0.12), ey = Math.min(y + 0.5, H - y - 0.5) / (H * 0.12);
+    const ex = Math.min(x + 0.5, W - x - 0.5) / (W * fadeW), ey = Math.min(y + 0.5, H - y - 0.5) / (H * fadeW);
     const fade = smooth(Math.min(1, ex)) * smooth(Math.min(1, ey));
-    // 物体自己贴地盖住的地方（正上方 4cm 内就是它的底面，比如地毯）根本看不见地面，贴花在这里完全透明；
-    // 否则远看时贴花会借着 polygonOffset 从薄薄的物体底下“透”上来
-    const covered = intersect(bvh, jobs[i * 9], 0.0005, jobs[i * 9 + 2], 1e-9, 1, 1e-9, 0.04, stack) < 0.04;
-    const a = covered ? 0 : strength * Math.pow(1 - occ[i], gamma) * fade;
+    const a = covered(x, y) ? 0 : strength * Math.pow(1 - occ[i], gamma) * fade;
     rgba[i * 4 + 3] = Math.round(255 * Math.max(0, Math.min(1, a)));
   }
   const data = await sharp(Buffer.from(rgba), { raw: { width: W, height: H, channels: 4 } }).png({ compressionLevel: 9 }).toBuffer();
-  return { rect: { x0, x1, z0, z1 }, img: { data, mime: 'image/png' }, size: [W, H] };
+  return { plane, rect: { u0, u1, v0, v1 }, img: { data, mime: 'image/png' }, size: [W, H] };
+}
+
+// 灯具的光斑：把灯泡当作一个小球光源，算它照在安装面（桌面 / 墙面 / 地面）上的直射光。
+//   · 不透光的部件（灯座、金属臂）挡住光，留下影子；灯罩这类半透明材质按 transmit 打折（亚麻约 0.3）；
+//   · 发光体本身（灯泡、乳白玻璃）不挡光；
+//   · 贴花只覆盖光源附近 radius 的范围，边缘淡出 —— 放在小床头柜上也不会伸出桌边。
+// 结果是一张只有 alpha 的贴图，颜色由材质给（暖白），预览器里用加法混合叠在表面上。
+export async function bakeGlow(lod, { plane = 'floor', light, lightRadius = 0.02, radius = 0.3, center = null, transmit = {}, density = 200, samples = 64, strength = 0.7, gamma = 0.8 } = {}) {
+  const M = MOUNTS[plane];
+  const cu = center ? center[0] : light[M.u], cv = center ? center[1] : light[M.v];
+  const u0 = cu - radius, u1 = cu + radius, v0 = cv - radius, v1 = cv + radius;
+  const W = pot(2 * radius * density), H = W;
+  const tOf = (mat) => (MATERIALS[mat]?.emissive && transmit[mat] === undefined ? 1 : transmit[mat] ?? 0);
+  const opaque = buildBVH(gatherTris(lod, (mat) => tOf(mat) === 0));
+  const layers = [...new Set(lod.prims.map((pr) => tOf(pr.mat)).filter((t) => t > 0 && t < 1))]
+    .map((t) => ({ t, bvh: buildBVH(gatherTris(lod, (mat) => tOf(mat) === t)) }));
+  const stack = new Int32Array(256);
+  const [nx, ny, nz] = M.n.map((c) => c || 1e-9);
+  // 光源上的采样点（球内均匀，固定序列 → 每次构建结果一致）
+  const pts = [];
+  let seed = 12345;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
+  while (pts.length < samples) {
+    const q = [rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1];
+    if (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] <= 1) pts.push(q.map((c, k) => light[k] + c * lightRadius));
+  }
+  const E = new Float32Array(W * H);
+  let peak = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    const p = onPlane(M, u0 + ((x + 0.5) / W) * (u1 - u0), v0 + ((y + 0.5) / H) * (v1 - v0), 0.0005);
+    // 正上方（沿法线）是不透光的部件 → 这里在灯座底下或它的正下方，一律算暗（灯座是空心的，不能让光从里面漏下来）
+    if (intersect(opaque, p[0], p[1], p[2], nx, ny, nz, 10, stack) < 10) { E[i] = -1; continue; }
+    let e = 0;
+    for (const L of pts) {
+      let dx = L[0] - p[0], dy = L[1] - p[1], dz = L[2] - p[2];
+      const d = Math.hypot(dx, dy, dz);
+      dx /= d; dy /= d; dz /= d;
+      const cos = dx * M.n[0] + dy * M.n[1] + dz * M.n[2];
+      if (cos <= 0) continue;
+      if (intersect(opaque, p[0], p[1], p[2], dx || 1e-9, dy || 1e-9, dz || 1e-9, d, stack) < d) continue;
+      let vis = 1;
+      for (const g of layers) if (intersect(g.bvh, p[0], p[1], p[2], dx || 1e-9, dy || 1e-9, dz || 1e-9, d, stack) < d) vis *= g.t;
+      e += (cos * vis) / (d * d);
+    }
+    E[i] = e / pts.length;
+    peak = Math.max(peak, E[i]);
+  }
+  const rgba = new Uint8Array(W * H * 4);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    const du = (x + 0.5) / W - 0.5, dv = (y + 0.5) / H - 0.5;
+    const fade = smooth(Math.min(1, Math.max(0, (0.5 - Math.hypot(du, dv)) / 0.16)));
+    const a = E[i] < 0 ? 0 : strength * Math.pow(E[i] / (peak || 1), gamma) * fade;
+    rgba.set([255, 255, 255, Math.round(255 * Math.max(0, Math.min(1, a)))], i * 4);
+  }
+  const data = await sharp(Buffer.from(rgba), { raw: { width: W, height: H, channels: 4 } }).png({ compressionLevel: 9 }).toBuffer();
+  return { plane, rect: { u0, u1, v0, v1 }, img: { data, mime: 'image/png' }, size: [W, H] };
 }
 
 const smooth = (t) => t * t * (3 - 2 * t);

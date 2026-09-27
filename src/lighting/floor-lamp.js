@@ -1,14 +1,17 @@
 import { profile, circle } from '../core/shape.js';
 import { xf } from '../core/vec.js';
-import { rod } from './parts.js';
+import { rod } from '../furniture/parts.js';
 
-// 落地灯：黄铜底座 + 细灯杆 + 亚麻灯罩（双面材质，内侧自发光）
+// 落地灯：黄铜底座 + 细灯杆 + 亚麻灯罩（双面材质，内侧自发光），地上带一圈烘焙的光斑
 //   · 灯罩就是一圈没有厚度的车削面 + doubleSided，从下往上看也不会穿帮
 //   · 灯罩上下两道黄铜细边只在 LOD0 出现
 export default {
   id: 'floor_lamp',
   name: '落地灯',
   nameEn: 'Halo Floor Lamp',
+  category: 'lighting',
+  // 地上的光斑：灯罩下口当作 8cm 的光源，底座挡出中间一小块影子，灯罩按 30% 透光
+  glow: { light: [0, 1.29, 0], lightRadius: 0.08, radius: 0.8, transmit: { shade: 0.3 }, density: 90, strength: 0.6 },
   build(k) {
     const q = (...v) => k.q(...v);
     const shadeB = 1.18, shadeT = 1.5, rB = 0.22, rT = 0.2;

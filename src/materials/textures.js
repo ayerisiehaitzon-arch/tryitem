@@ -9,6 +9,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { perlin, fbm, worley, mulberry } from './noise.js';
 import * as decor from './decor-textures.js';
+import * as lamp from './lamp-textures.js';
 
 const VERSION = 8;
 
@@ -294,6 +295,8 @@ export const TEXTURES = {
   // 材质里用 KHR_texture_transform 重复 8 × 5.6 次 —— 整幅图案 + 毫米级绒面细节，贴图总量不变
   rug: { size: 1024, detail: 0.5, v: 4, gen: decor.rug, normalTile: { size: 512, strength: 2.5, gen: decor.woolPile } },
   fringe: { size: 512, normalStrength: 2, v: 4, alpha: true, gen: decor.fringe },
+  // —— 灯具 ——
+  paper: { size: 1024, detail: 0.5, normalStrength: 2.5, v: 4, emit: true, gen: lamp.paper },
 };
 
 function alloc(S) {
@@ -348,11 +351,18 @@ async function encode(name, S, field, strength, detail = 1, { chroma444 = false 
   const colorImg = field.alpha
     ? { data: await sharp(Buffer.from(col), { raw: { width: S, height: S, channels: 4 } }).png({ compressionLevel: 9 }).toBuffer(), mime: 'image/png' }
     : { data: await sharp(Buffer.from(col), raw).jpeg({ quality: 90, mozjpeg: true, ...(chroma444 ? { chromaSubsampling: '4:4:4' } : {}) }).toBuffer(), mime: 'image/jpeg' };
-  return {
+  const res = {
     color: colorImg,
     normal: { data: await normalImg.jpeg({ quality: 90, mozjpeg: true, chromaSubsampling: '4:4:4' }).toBuffer(), mime: 'image/jpeg' },
     rough: { data: await sized(rough).jpeg({ quality: 88, mozjpeg: true }).toBuffer(), mime: 'image/jpeg' },
   };
+  // 独立的自发光贴图（纸灯笼：点亮时竹骨和接缝的影子比白天明显得多）
+  if (field.emit) {
+    const em = new Uint8Array(S * S * 3);
+    for (let i = 0; i < S * S * 3; i++) em[i] = Math.round(clamp01(field.emit[i]) * 255);
+    res.emit = { data: await sharp(Buffer.from(em), raw).jpeg({ quality: 88, mozjpeg: true }).toBuffer(), mime: 'image/jpeg' };
+  }
+  return res;
 }
 
 export async function buildTextures({ scale = 1, cacheDir = null, only = null } = {}) {
@@ -362,7 +372,8 @@ export async function buildTextures({ scale = 1, cacheDir = null, only = null } 
     const S = Math.max(64, Math.round(def.size * scale));
     const key = def.v ? `${name}_${S}_d${def.v}` : `${name}_${S}_v${VERSION}`;
     const colorExt = def.alpha ? 'png' : 'jpg';
-    const files = ['color', 'normal', 'rough'].map((m) => cacheDir && path.join(cacheDir, `${key}_${m}.${m === 'color' ? colorExt : 'jpg'}`));
+    const maps = def.emit ? ['color', 'normal', 'rough', 'emit'] : ['color', 'normal', 'rough'];
+    const files = maps.map((m) => cacheDir && path.join(cacheDir, `${key}_${m}.${m === 'color' ? colorExt : 'jpg'}`));
     if (cacheDir) {
       try {
         const bufs = await Promise.all(files.map((f) => fs.readFile(f)));
@@ -370,6 +381,7 @@ export async function buildTextures({ scale = 1, cacheDir = null, only = null } 
           color: { data: bufs[0], mime: def.alpha ? 'image/png' : 'image/jpeg' },
           normal: { data: bufs[1], mime: 'image/jpeg' }, rough: { data: bufs[2], mime: 'image/jpeg' },
         };
+        if (def.emit) out[name].emit = { data: bufs[3], mime: 'image/jpeg' };
         continue;
       } catch {}
     }
@@ -381,7 +393,7 @@ export async function buildTextures({ scale = 1, cacheDir = null, only = null } 
     out[name] = await encode(name, S, field, def.normalStrength, def.detail ?? 1, def);
     if (cacheDir) {
       await fs.mkdir(cacheDir, { recursive: true });
-      await Promise.all(['color', 'normal', 'rough'].map((m, i) => fs.writeFile(files[i], out[name][m].data)));
+      await Promise.all(maps.map((m, i) => fs.writeFile(files[i], out[name][m].data)));
     }
   }
   return out;

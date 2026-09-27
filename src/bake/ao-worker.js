@@ -4,7 +4,8 @@ import { intersect } from './bvh.js';
 // 每个样本：位置 p、着色法线 n、几何法线 g。
 // surface 模式：返回 AO（1 = 完全不遮挡）；shadow 模式：返回“未遮挡比例”。
 const { bvh, jobs, opts, seed } = workerData;
-const { samples, maxDist, floor } = opts;
+// plane：安装面（过原点、法线 plane 的平面，物体在法线一侧）也算遮挡 —— 地面、墙面或天花板
+const { samples, maxDist, plane } = opts;
 const count = jobs.length / 9;
 const out = new Float32Array(count);
 const stack = new Int32Array(256);
@@ -40,9 +41,12 @@ for (let j = 0; j < count; j++) {
     const dg = dx * gx + dy * gy + dz * gz;
     if (dg < 0) { dx -= 2 * dg * gx; dy -= 2 * dg * gy; dz -= 2 * dg * gz; }
     let t = intersect(bvh, ox, oy, oz, dx, dy, dz, maxDist, stack);
-    if (floor && dy < -1e-6) {
-      const tf = -oy / dy;
-      if (tf > 0 && tf < t) t = tf;
+    if (plane) {
+      const dn = dx * plane[0] + dy * plane[1] + dz * plane[2];
+      if (dn < -1e-6) {
+        const tf = -(ox * plane[0] + oy * plane[1] + oz * plane[2]) / dn;
+        if (tf > 0 && tf < t) t = tf;
+      }
     }
     if (t < maxDist) {
       const k = t / maxDist;

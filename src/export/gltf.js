@@ -1,12 +1,14 @@
 import { Document, NodeIO } from '@gltf-transform/core';
 import { KHRMaterialsSheen, KHRMaterialsClearcoat, KHRMaterialsUnlit, KHRMaterialsEmissiveStrength, KHRTextureTransform } from '@gltf-transform/extensions';
+import { MOUNTS, onPlane } from '../core/mount.js';
 
 // 用 glTF-Transform 组装 .glb：
 //   <item>            根节点（extras 里带预算信息）
 //   ├─ <item>_LOD0    每个 LOD 一个网格，每种材质一个图元（= 一次 draw call）
 //   ├─ <item>_LOD1
 //   ├─ <item>_LOD2
-//   └─ <item>_Shadow  2 个三角形的烘焙接触阴影贴花（unlit + alpha blend）
+//   ├─ <item>_Shadow  2 个三角形的烘焙接触阴影贴花（unlit + alpha blend）
+//   └─ <item>_Glow    灯具才有：烘焙的光斑贴花（暖白色，建议加法混合）
 //
 // 材质贴图（木纹、布纹……）按“物理尺寸”平铺在 TEXCOORD_0；
 // 每件家具独有的 AO 在 TEXCOORD_1。同一件家具的所有材质共享这一张 AO 图。
@@ -60,7 +62,8 @@ export function createMaterial(ctx, name, def, tex, ao) {
   }
   if (def.emissive) {
     m.setEmissiveFactor(def.emissive);
-    if (tex?.color && def.emissiveTex) m.setEmissiveTexture(texture(ctx, `${def.key}_color`, tex.color));
+    if (tex?.emit) m.setEmissiveTexture(texture(ctx, `${def.key}_emit`, tex.emit));
+    else if (tex?.color && def.emissiveTex) m.setEmissiveTexture(texture(ctx, `${def.key}_color`, tex.color));
     if (def.emissiveStrength && def.emissiveStrength !== 1) {
       m.setExtension('KHR_materials_emissive_strength', ext.emissive.createEmissiveStrength().setEmissiveStrength(def.emissiveStrength));
     }
@@ -98,19 +101,26 @@ export function addMesh(ctx, name, lod, materials) {
   return mesh;
 }
 
-// 接触阴影贴花：一个贴地四边形
-export function addShadowDecal(ctx, name, shadow) {
+// 贴花：安装面上的一个四边形 + 一张 alpha 贴图（接触阴影是黑色，灯具光斑是暖白色）
+
+export function addDecal(ctx, name, decal, { color = [0, 0, 0, 1], lift = 0.0015 } = {}) {
   const { doc, ext } = ctx;
   const buf = doc.getRoot().listBuffers()[0];
-  const { x0, z0, x1, z1, y = 0.0015 } = shadow.rect;
-  const pos = new Float32Array([x0, y, z0, x1, y, z0, x1, y, z1, x0, y, z1]);
-  const nrm = new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]);
+  const M = MOUNTS[decal.plane ?? 'floor'];
+  const { u0, u1, v0, v1 } = decal.rect;
+  const corners = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(([u, v]) => onPlane(M, u, v, lift));
+  const pos = new Float32Array(corners.flat());
+  const nrm = new Float32Array([...M.n, ...M.n, ...M.n, ...M.n]);
   const uv = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
-  const idx = new Uint16Array([0, 2, 1, 0, 3, 2]);
+  // 绕序让正面朝向法线一侧
+  const c = corners, e1 = c[1].map((x, k) => x - c[0][k]), e2 = c[2].map((x, k) => x - c[0][k]);
+  const g = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+  const front = g[0] * M.n[0] + g[1] * M.n[1] + g[2] * M.n[2] > 0;
+  const idx = new Uint16Array(front ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]);
   const acc = (arr, type) => doc.createAccessor().setArray(arr).setType(type).setBuffer(buf);
   const mat = doc.createMaterial(`${name}_mat`)
-    .setBaseColorFactor([0, 0, 0, 1])
-    .setBaseColorTexture(texture(ctx, `${name}_tex`, shadow.img))
+    .setBaseColorFactor(color)
+    .setBaseColorTexture(texture(ctx, `${name}_tex`, decal.img))
     .setAlphaMode('BLEND')
     .setMetallicFactor(0)
     .setRoughnessFactor(1);

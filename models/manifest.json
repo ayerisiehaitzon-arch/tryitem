@@ -1,11 +1,12 @@
 {
-  "generated": "2026-09-27T09:30:06.224Z",
+  "generated": "2026-09-27T10:01:55.533Z",
   "items": [
     {
       "id": "dining_chair",
       "name": "餐椅",
       "nameEn": "Oslo Dining Chair",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         466,
         804,
@@ -42,6 +43,7 @@
       "name": "餐桌",
       "nameEn": "Oslo Dining Table",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         1600,
         740,
@@ -77,6 +79,7 @@
       "name": "三人沙发",
       "nameEn": "Cumulus 3-Seat Sofa",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         2108,
         880,
@@ -113,6 +116,7 @@
       "name": "皮扶手椅",
       "nameEn": "Hygge Lounge Chair",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         755,
         852,
@@ -149,6 +153,7 @@
       "name": "圆茶几",
       "nameEn": "Lune Coffee Table",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         800,
         422,
@@ -185,6 +190,7 @@
       "name": "书架",
       "nameEn": "Grid Bookshelf",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         900,
         1800,
@@ -221,6 +227,7 @@
       "name": "床头柜",
       "nameEn": "Nordic Nightstand",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         500,
         561,
@@ -257,6 +264,7 @@
       "name": "双人床",
       "nameEn": "Fjord Double Bed",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         1740,
         1027,
@@ -290,47 +298,11 @@
       "fileKB": 873
     },
     {
-      "id": "floor_lamp",
-      "name": "落地灯",
-      "nameEn": "Halo Floor Lamp",
-      "category": "furniture",
-      "size": [
-        446,
-        1505,
-        446
-      ],
-      "lods": [
-        {
-          "tris": 550,
-          "verts": 514,
-          "drawCalls": 3
-        },
-        {
-          "tris": 276,
-          "verts": 265,
-          "drawCalls": 3
-        },
-        {
-          "tris": 136,
-          "verts": 150,
-          "drawCalls": 3
-        }
-      ],
-      "materials": [
-        "拉丝黄铜",
-        "亚麻灯罩（内侧发光）",
-        "暖光灯泡"
-      ],
-      "aoAtlas": 256,
-      "aoDensity": 177,
-      "lodDistances": null,
-      "fileKB": 321
-    },
-    {
       "id": "bar_stool",
       "name": "吧台凳",
       "nameEn": "Perch Counter Stool",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         406,
         662,
@@ -367,6 +339,7 @@
       "name": "衣柜",
       "nameEn": "Nordic Wardrobe",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         1000,
         2001,
@@ -403,6 +376,7 @@
       "name": "书桌",
       "nameEn": "Atelier Writing Desk",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         1200,
         929,
@@ -439,6 +413,7 @@
       "name": "办公椅",
       "nameEn": "Studio Task Chair",
       "category": "furniture",
+      "mount": "floor",
       "size": [
         624,
         1083,
@@ -476,6 +451,7 @@
       "name": "书",
       "nameEn": "Clothbound Books",
       "category": "decor",
+      "mount": "floor",
       "size": [
         640,
         262,
@@ -504,13 +480,14 @@
       "aoAtlas": 256,
       "aoDensity": 172,
       "lodDistances": null,
-      "fileKB": 221
+      "fileKB": 222
     },
     {
       "id": "vases",
       "name": "花瓶",
       "nameEn": "Stoneware Vases",
       "category": "decor",
+      "mount": "floor",
       "size": [
         373,
         326,
@@ -539,13 +516,14 @@
       "aoAtlas": 256,
       "aoDensity": 360,
       "lodDistances": null,
-      "fileKB": 352
+      "fileKB": 353
     },
     {
       "id": "fiddle_fig",
       "name": "琴叶榕",
       "nameEn": "Fiddle-leaf Fig",
       "category": "decor",
+      "mount": "floor",
       "size": [
         788,
         1753,
@@ -582,6 +560,7 @@
       "name": "虎尾兰",
       "nameEn": "Snake Plant",
       "category": "decor",
+      "mount": "floor",
       "size": [
         354,
         813,
@@ -618,6 +597,7 @@
       "name": "地毯",
       "nameEn": "Wool Rug",
       "category": "decor",
+      "mount": "floor",
       "size": [
         2170,
         20,
@@ -648,6 +628,159 @@
       "aoDensity": 124,
       "lodDistances": null,
       "fileKB": 497
+    },
+    {
+      "id": "floor_lamp",
+      "name": "落地灯",
+      "nameEn": "Halo Floor Lamp",
+      "category": "lighting",
+      "mount": "floor",
+      "size": [
+        446,
+        1505,
+        446
+      ],
+      "lods": [
+        {
+          "tris": 550,
+          "verts": 514,
+          "drawCalls": 3
+        },
+        {
+          "tris": 276,
+          "verts": 265,
+          "drawCalls": 3
+        },
+        {
+          "tris": 136,
+          "verts": 150,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "拉丝黄铜",
+        "亚麻灯罩（内侧发光）",
+        "暖光灯泡"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 177,
+      "lodDistances": null,
+      "fileKB": 331
+    },
+    {
+      "id": "table_lamp",
+      "name": "台灯",
+      "nameEn": "Pleated Table Lamp",
+      "category": "lighting",
+      "mount": "floor",
+      "size": [
+        360,
+        622,
+        360
+      ],
+      "lods": [
+        {
+          "tris": 1074,
+          "verts": 954,
+          "drawCalls": 4
+        },
+        {
+          "tris": 498,
+          "verts": 512,
+          "drawCalls": 4
+        },
+        {
+          "tris": 260,
+          "verts": 228,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "牛血红釉陶瓷（高光）",
+        "拉丝黄铜",
+        "暖光灯泡",
+        "百褶亚麻灯罩（透光）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 274,
+      "lodDistances": null,
+      "fileKB": 386
+    },
+    {
+      "id": "pendant_lantern",
+      "name": "吊灯",
+      "nameEn": "Paper Lantern Pendant",
+      "category": "lighting",
+      "mount": "ceiling",
+      "size": [
+        465,
+        915,
+        468
+      ],
+      "lods": [
+        {
+          "tris": 956,
+          "verts": 634,
+          "drawCalls": 4
+        },
+        {
+          "tris": 474,
+          "verts": 346,
+          "drawCalls": 4
+        },
+        {
+          "tris": 308,
+          "verts": 243,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "白色哑光烤漆",
+        "黑色哑光塑料",
+        "楮皮纸（竹骨纸灯笼，透光）",
+        "暖光灯泡"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 169,
+      "lodDistances": null,
+      "fileKB": 461
+    },
+    {
+      "id": "wall_lamp",
+      "name": "壁灯",
+      "nameEn": "Opal Globe Sconce",
+      "category": "lighting",
+      "mount": "wall",
+      "size": [
+        148,
+        293,
+        205
+      ],
+      "lods": [
+        {
+          "tris": 806,
+          "verts": 545,
+          "drawCalls": 2
+        },
+        {
+          "tris": 406,
+          "verts": 301,
+          "drawCalls": 2
+        },
+        {
+          "tris": 200,
+          "verts": 169,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "拉丝黄铜",
+        "乳白玻璃（缎面，内置光源）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 526,
+      "lodDistances": null,
+      "fileKB": 89
     }
   ]
 }

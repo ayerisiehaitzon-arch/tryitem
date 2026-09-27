@@ -64,7 +64,10 @@ export function buildBVH(tris /* Float32Array, 9 floats per tri */) {
   return { bounds, meta, tris: pre };
 }
 
-// 最近交点距离（未命中返回 Infinity）。stack 由调用方提供以避免分配。
+// 最近一次 intersect 命中的是不是三角形正面（射线迎着法线打上去）。背面命中 = 射线是从物体“里面”打出去的
+export let lastFront = true;
+
+// 最近交点距离（未命中返回 tMax）。stack 由调用方提供以避免分配。
 export function intersect(bvh, ox, oy, oz, dx, dy, dz, tMax, stack) {
   const { bounds, meta, tris } = bvh;
   const ix = 1 / dx, iy = 1 / dy, iz = 1 / dz;
@@ -99,7 +102,7 @@ export function intersect(bvh, ox, oy, oz, dx, dy, dz, tMax, stack) {
         const v = (dx * qx + dy * qy + dz * qz) * inv;
         if (v < 0 || u + v > 1) continue;
         const t = (e2x * qx + e2y * qy + e2z * qz) * inv;
-        if (t > 1e-5 && t < best) best = t;
+        if (t > 1e-5 && t < best) { best = t; lastFront = det > 0; }
       }
     } else {
       stack[sp++] = meta[m];

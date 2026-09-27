@@ -2,7 +2,8 @@ import { ItemBuilder } from './core/item.js';
 import { packCharts } from './core/pack.js';
 import { finalizeItem } from './core/finalize.js';
 import { MATERIALS, tileOf, noOffsetOf } from './materials/library.js';
-import { createDoc, createMaterial, addMesh, addShadowDecal } from './export/gltf.js';
+import { createDoc, createMaterial, addMesh, addDecal } from './export/gltf.js';
+import { srgb } from './materials/library.js';
 
 export const LODS = [0, 1, 2];
 
@@ -20,7 +21,7 @@ export function buildGeometry(def) {
 }
 
 // 组装 glTF 文档
-export function assembleDoc(def, { lods, layout }, { textures = null, ao = null, shadow = null } = {}) {
+export function assembleDoc(def, { lods, layout }, { textures = null, ao = null, shadow = null, glow = null } = {}) {
   const ctx = createDoc();
   const { doc } = ctx;
   const scene = doc.createScene('Scene');
@@ -40,7 +41,11 @@ export function assembleDoc(def, { lods, layout }, { textures = null, ao = null,
     root.addChild(node);
   });
   if (shadow) {
-    root.addChild(doc.createNode(`${def.id}_Shadow`).setMesh(addShadowDecal(ctx, `${def.id}_Shadow`, shadow)));
+    root.addChild(doc.createNode(`${def.id}_Shadow`).setMesh(addDecal(ctx, `${def.id}_Shadow`, shadow)));
+  }
+  if (glow) {
+    const color = def.glow?.color ?? srgb(255, 214, 162);
+    root.addChild(doc.createNode(`${def.id}_Glow`).setMesh(addDecal(ctx, `${def.id}_Glow`, glow, { color, lift: 0.002 })));
   }
   const b = lods[0].bounds;
   const stats = {
@@ -48,6 +53,7 @@ export function assembleDoc(def, { lods, layout }, { textures = null, ao = null,
     name: def.name,
     nameEn: def.nameEn,
     category: def.category ?? 'furniture',
+    mount: def.mount ?? 'floor',
     size: [b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]].map((v) => Math.round(v * 1000)),
     lods: lods.map((l) => ({ tris: l.tris, verts: l.verts, drawCalls: l.prims.length })),
     materials: matNames.map((m) => MATERIALS[m].label),

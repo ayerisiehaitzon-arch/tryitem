@@ -102,6 +102,31 @@ export const MATERIALS = {
     roughness: 1, metallic: 0, normalScale: 0.6, doubleSided: true,
     emissive: [1.0, 0.78, 0.52], emissiveTex: true, emissiveStrength: 1.6,
   },
+  oxblood: {
+    label: '牛血红釉陶瓷（高光）',
+    color: srgb(122, 28, 30), metallic: 0, roughness: 0.16,
+    clearcoat: { factor: 1, roughness: 0.04 },
+  },
+  shade_pleat: {
+    label: '百褶亚麻灯罩（透光）',
+    // 自发光比落地灯的直筒灯罩弱一些：褶子的明暗要留在灯光下也看得见
+    tex: 'linen', tile: [0.12, 0.12], color: tint([236, 226, 206]),
+    roughness: 1, metallic: 0, normalScale: 0.7, doubleSided: true,
+    emissive: [1.0, 0.8, 0.56], emissiveTex: true, emissiveStrength: 0.8,
+  },
+  paper: {
+    label: '楮皮纸（竹骨纸灯笼，透光）',
+    // 整只灯笼一张贴图（竹骨螺旋、纸片接缝都画在曲线上的准确位置），点亮时自发光也用这张图
+    tex: 'paper', tile: [1, 1], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.6,
+    emissive: [1.0, 0.8, 0.56], emissiveTex: true, emissiveStrength: 0.8,
+  },
+  opal: {
+    label: '乳白玻璃（缎面，内置光源）',
+    // 缎面（酸蚀）玻璃：高光柔和，低面数的球也看不出棱
+    color: srgb(246, 244, 238), metallic: 0, roughness: 0.24,
+    emissive: [1.0, 0.87, 0.7], emissiveStrength: 1.1,
+  },
   bulb: {
     label: '暖光灯泡',
     color: srgb(255, 236, 205), metallic: 0, roughness: 0.2,

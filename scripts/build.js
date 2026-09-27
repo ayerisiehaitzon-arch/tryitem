@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { FURNITURE } from '../src/furniture/index.js';
 import { buildGeometry, assembleDoc } from '../src/pipeline.js';
 import { writeGLB } from '../src/export/gltf.js';
+import { MOUNTS } from '../src/core/mount.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'models');
@@ -33,12 +34,15 @@ for (const def of FURNITURE) {
   if (only.length && !only.includes(def.id)) continue;
   const t0 = Date.now();
   const geo = buildGeometry(def);
-  let ao = null, shadow = null;
+  let ao = null, shadow = null, glow = null;
   if (bake) {
-    ao = await bake.bakeAO(geo.lods[0], geo.layout, { samples: fast ? 48 : 160, ...(def.ao || {}) });
-    shadow = await bake.bakeShadow(geo.lods[0], { samples: fast ? 64 : 256, ...(def.shadow || {}) });
+    // 安装面（地面 / 墙面 / 天花板）既是 AO 的遮挡面，也是阴影、光斑贴花所在的平面
+    const plane = def.mount ?? 'floor';
+    ao = await bake.bakeAO(geo.lods[0], geo.layout, { samples: fast ? 48 : 160, plane: MOUNTS[plane].n, ...(def.ao || {}) });
+    if (def.shadow !== false) shadow = await bake.bakeShadow(geo.lods[0], { plane, samples: fast ? 64 : 256, ...(def.shadow || {}) });
+    if (def.glow) glow = await bake.bakeGlow(geo.lods[0], { plane, samples: fast ? 16 : 64, ...def.glow });
   }
-  const { doc, stats } = assembleDoc(def, geo, { textures, ao, shadow });
+  const { doc, stats } = assembleDoc(def, geo, { textures, ao, shadow, glow });
   const file = path.join(outDir, `${def.id}.glb`);
   await writeGLB(doc, file);
   const bytes = (await fs.stat(file)).size;

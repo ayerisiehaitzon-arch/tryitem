@@ -9,6 +9,7 @@
   :root {
     --stage: #e3e2dd;
     --floor: #dcdad4;
+    --wall: #d9d4cb;
     --panel: rgba(246, 245, 241, 0.84);
     --panel-solid: #f6f5f1;
     --ink: #1b1e21;
@@ -27,6 +28,7 @@
     :root:not([data-theme="light"]) {
       --stage: #17191c;
       --floor: #1d2023;
+      --wall: #34373b;
       --panel: rgba(31, 34, 38, 0.84);
       --panel-solid: #1f2226;
       --ink: #ebe9e4;
@@ -42,6 +44,7 @@
   :root[data-theme="dark"] {
     --stage: #17191c;
     --floor: #1d2023;
+    --wall: #34373b;
     --panel: rgba(31, 34, 38, 0.84);
     --panel-solid: #1f2226;
     --ink: #ebe9e4;
@@ -214,12 +217,13 @@
   </div>
   <p class="caption" id="caption"></p>
   <nav class="dock">
-    <div class="items" id="items" role="toolbar" aria-label="家具与摆件"></div>
+    <div class="items" id="items" role="toolbar" aria-label="家具、摆件与灯具"></div>
     <div class="controls">
       <div class="seg" role="group" aria-label="显示">
         <button id="t-wire" aria-pressed="false">线框</button>
         <button id="t-flat" aria-pressed="false">平直着色</button>
         <button id="t-ao" aria-pressed="true">AO</button>
+        <button id="t-light" aria-pressed="true">灯光</button>
       </div>
       <div class="seg" role="group" aria-label="LOD">
         <span class="lbl">LOD</span>
@@ -301,10 +305,27 @@ shadowCatcher.position.y = 0.0005;
 shadowCatcher.receiveShadow = true;
 scene.add(shadowCatcher);
 
+// 壁挂的灯具单独展示时，身后是一面和背景同色的“无缝墙”，阴影和光斑贴花落在它上面
+const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshBasicMaterial({ toneMapped: false }));
+backdrop.position.set(0, 10, 0);
+backdrop.visible = false;
+scene.add(backdrop);
+// 全屋陈列：卧室后面一段展示墙，壁灯挂在上面
+const stageWall = new THREE.Mesh(new THREE.BoxGeometry(3.7, 2.5, 0.08), new THREE.MeshStandardMaterial({ roughness: 0.95 }));
+stageWall.position.set(3.85, 1.25, -1.76);
+stageWall.receiveShadow = true;
+stageWall.visible = false;
+scene.add(stageWall);
+
+// 安装方式：吊灯挂在 2.45m 高的“天花板”下，壁灯装在 1.45m 高的墙上
+const MOUNT_AT = { floor: [0, 0, 0], ceiling: [0, 2.45, 0], wall: [0, 1.45, 0] };
+
 function applyTheme() {
   const stage = new THREE.Color(css('--stage'));
   scene.background = stage;
   floor.material.color.copy(stage);
+  backdrop.material.color.copy(stage);
+  stageWall.material.color.set(css('--wall'));
   wireMat.color.set(css('--accent'));
   requestRender();
 }
@@ -314,6 +335,7 @@ const state = {
   items: [], current: null,
   wire: params.get('wire') === '1', flat: params.get('flat') === '1', ao: params.get('ao') !== '0',
   lod: params.get('lod') ?? 'auto', shadow: params.get('shadow') ?? 'baked',
+  lights: params.get('lights') !== '0',
 };
 const assets = new Map();    // id → 载入的模板
 const views = new Map();     // 视图 id → { instances, box, stats }
@@ -335,6 +357,7 @@ async function loadAsset(id) {
     const root = gltf.scene;
     const levels = [0, 1, 2].map((i) => root.getObjectByName(`${id}_LOD${i}`));
     const shadow = root.getObjectByName(`${id}_Shadow`);
+    const glow = root.getObjectByName(`${id}_Glow`);
     const materials = new Set();
     levels.forEach((m) => {
       m.parent.remove(m);
@@ -342,6 +365,7 @@ async function loadAsset(id) {
         if (!o.isMesh) return;
         o.receiveShadow = true;
         o.material.userData.ao = o.material.aoMapIntensity ?? 1;
+        o.material.userData.glow = o.material.emissive && o.material.emissive.getHex() !== 0 ? o.material.emissiveIntensity : 0;
         shareTextures(o.material);
         materials.add(o.material);
         const wire = new THREE.LineSegments(new THREE.WireframeGeometry(o.geometry), wireMat);
@@ -358,10 +382,19 @@ async function loadAsset(id) {
         o.renderOrder = 1;
       });
     }
+    // 灯具的光斑贴花：加法混合（光是“加”上去的），画在阴影之后
+    if (glow) {
+      glow.parent.remove(glow);
+      glow.traverse((o) => {
+        if (!o.isMesh) return;
+        Object.assign(o.material, { depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, blending: THREE.AdditiveBlending, opacity: 0.5 });
+        o.renderOrder = 2;
+      });
+    }
     let stats = null;
     root.traverse((o) => { if (!stats && o.userData?.stats) stats = o.userData.stats; });
     const box = new THREE.Box3().setFromObject(levels[0]);
-    return { id, levels, shadow, materials, box, sphere: box.getBoundingSphere(new THREE.Sphere()), stats };
+    return { id, levels, shadow, glow, materials, box, sphere: box.getBoundingSphere(new THREE.Sphere()), stats };
   })();
   assets.set(id, p);
   return p;
@@ -416,20 +449,24 @@ function instantiate(asset, pos = [0, 0, 0], rotY = 0, { lift = 0 } = {}) {
   const levels = asset.levels.map((m) => { const c = m.clone(); group.add(c); return c; });
   const shadow = asset.shadow ? asset.shadow.clone() : null;
   if (shadow) { shadow.position.y += lift; group.add(shadow); }
+  const glow = asset.glow ? asset.glow.clone() : null;
+  if (glow) { glow.position.y += lift; group.add(glow); }
   group.position.set(...pos);
   group.rotation.y = rotY;
   group.updateMatrixWorld(true);
   const sphere = asset.sphere.clone().applyMatrix4(group.matrixWorld);
   const box = asset.box.clone().applyMatrix4(group.matrixWorld);
   levels.forEach((m, i) => (m.visible = i === 0));
-  return { asset, group, levels, shadow, sphere, box, level: 0 };
+  return { asset, group, levels, shadow, glow, sphere, box, level: 0 };
 }
 
-// 全屋陈列：书房 + 客厅 + 餐厅 + 卧室，同一模型多次摆放（4 把餐椅、2 张吧台凳）；
-// 摆件放在家具上：书在书架第二层，花瓶在茶几上，地毯压在沙发前腿下
+// 全屋陈列：书房 + 客厅 + 餐厅 + 卧室，同一模型多次摆放（4 把餐椅、2 张吧台凳、2 盏壁灯）；
+// 摆件放在家具上：书在书架第二层，花瓶在茶几上，地毯压在沙发前腿下；
+// 灯具：台灯在书桌上，纸灯笼吊在餐桌上方 2.45m 的“天花板”下，壁灯挂在卧室的展示墙上
 const ROOM = [
   ['rug', [0, 0, -0.22], 0],
   ['desk', [-3.75, 0, -1.45], 0],
+  ['table_lamp', [-4.05, 0.75, -1.45], 0],
   ['office_chair', [-3.75, 0, -0.78], Math.PI - 0.25],
   ['snake_plant', [-2.95, 0, -1.62], 0.3],
   ['sofa', [0, 0, -1.25], 0, { lift: 0.021 }],
@@ -441,11 +478,14 @@ const ROOM = [
   ['bookshelf', [-2.3, 0, -1.55], 0],
   ['books', [-2.3, 0.451, -1.524], 0],
   ['dining_table', [-2.75, 0, 1.25], 0],
+  ['pendant_lantern', [-2.75, 2.45, 1.25], 0],
   ['dining_chair', [-3.15, 0, 1.86], Math.PI],
   ['dining_chair', [-2.35, 0, 1.86], Math.PI],
   ['dining_chair', [-3.15, 0, 0.64], 0],
   ['dining_chair', [-2.35, 0, 0.64], 0],
   ['bed', [3.55, 0, -0.55], 0],
+  ['wall_lamp', [3.02, 1.42, -1.72], 0],
+  ['wall_lamp', [4.08, 1.42, -1.72], 0],
   ['nightstand', [2.4, 0, -1.4], 0],
   ['wardrobe', [5.05, 0, -1.4], 0],
   ['bar_stool', [0.85, 0, 1.75], 0.3],
@@ -459,6 +499,7 @@ async function buildView(id) {
     const list = await Promise.all(ROOM.map(async ([aid, pos, rot, opt]) => instantiate(await loadAsset(aid), pos, rot, opt)));
     const box = new THREE.Box3();
     list.forEach((i) => box.union(i.box));
+    box.union(new THREE.Box3().setFromObject(stageWall));
     const ids = [...new Set(ROOM.map((r) => r[0]))];
     const lods = [0, 1, 2].map((l) => ({
       tris: list.reduce((a, i) => a + i.asset.stats.lods[l].tris, 0),
@@ -467,8 +508,9 @@ async function buildView(id) {
     v = { id, instances: list, box, room: true, stats: { name: '全屋陈列', nameEn: `Showroom · ${list.length} 个摆放 · ${ids.length} 种模型`, lods, kb, ids } };
   } else {
     const a = await loadAsset(id);
-    const inst = instantiate(a);
-    v = { id, instances: [inst], box: inst.box, stats: { ...a.stats, ...(state.items.find((s) => s.id === id) || {}) } };
+    const mount = a.stats?.mount ?? 'floor';
+    const inst = instantiate(a, MOUNT_AT[mount] ?? [0, 0, 0]);
+    v = { id, mount, instances: [inst], box: inst.box, stats: { ...a.stats, ...(state.items.find((s) => s.id === id) || {}) } };
   }
   const g = new THREE.Group();
   v.instances.forEach((i) => g.add(i.group));
@@ -505,9 +547,11 @@ function applyView() {
       else if (o.isMesh) o.castShadow = realtime;
     }));
     if (inst.shadow) inst.shadow.visible = !realtime;
+    if (inst.glow) inst.glow.visible = state.lights;
     for (const mat of inst.asset.materials) {
       if (mat.flatShading !== state.flat) { mat.flatShading = state.flat; mat.needsUpdate = true; }
       mat.aoMapIntensity = state.ao ? mat.userData.ao : 0;
+      if (mat.userData.glow) mat.emissiveIntensity = state.lights ? mat.userData.glow : 0;
       mat.polygonOffset = state.wire;
       mat.polygonOffsetFactor = 1;
       mat.polygonOffsetUnits = 1;
@@ -524,6 +568,9 @@ function applyView() {
   $('t-wire').setAttribute('aria-pressed', String(state.wire));
   $('t-flat').setAttribute('aria-pressed', String(state.flat));
   $('t-ao').setAttribute('aria-pressed', String(state.ao));
+  $('t-light').setAttribute('aria-pressed', String(state.lights));
+  backdrop.visible = !view.room && view.mount === 'wall';
+  stageWall.visible = !!view.room;
   $('caption').textContent = captionText();
   requestRender();
 }
@@ -533,6 +580,7 @@ function captionText() {
   if (state.wire) return '线框：面只花在轮廓上。平整的大面只用两个三角形，倒角只有一条窄带。';
   if (!state.ao) return 'AO 已关闭：少了烘焙的环境光遮蔽，接缝和底部失去了体积感。';
   if (state.shadow === 'realtime') return '实时阴影：需要额外一遍阴影贴图渲染。烘焙阴影只要 2 个三角形和一张小贴图。';
+  if (!state.lights) return '灯光已关：自发光归零，烘焙的光斑贴花隐藏。灯具不用实时光源，开灯只多 2 个三角形。';
   if (view?.room) return '全屋按屏幕尺寸自动切换 LOD：离得远的家具自动用更少的面。';
   return '拖动旋转，双指或滚轮缩放。切换到“平直着色”看看真实的面数。';
 }
@@ -573,7 +621,7 @@ function renderStats(v) {
   } else {
     $('kv').innerHTML = `
       <dt>顶点</dt><dd>${fmt(s.lods[0].verts)}</dd>
-      <dt>Draw call</dt><dd>${s.lods[0].drawCalls} + 1</dd>
+      <dt>Draw call</dt><dd>${s.lods[0].drawCalls} + ${(v.instances[0].shadow ? 1 : 0) + (v.instances[0].glow ? 1 : 0)}</dd>
       <dt>AO 图集</dt><dd>${s.aoAtlas}²<span class="wide"> · ${s.aoDensity} px/m</span></dd>
       <dt>文件</dt><dd>${s.fileKB ?? '—'} KB</dd>`;
   }
@@ -593,7 +641,8 @@ function frame(v, instant = false) {
   const az = THREE.MathUtils.degToRad(Number(params.get('az') ?? (v.room ? 24 : 36)));
   const el = THREE.MathUtils.degToRad(Number(params.get('el') ?? (v.room ? 34 : 18)));
   const center = box.getCenter(new THREE.Vector3());
-  const target = new THREE.Vector3(center.x, center.y * (v.room ? 0.5 : 0.9), center.z);
+  // 落地的东西取景点略低（把地上的影子带进来）；吊灯、壁灯就对准它本身
+  const target = new THREE.Vector3(center.x, center.y * (v.room ? 0.5 : v.mount && v.mount !== 'floor' ? 1 : 0.9), center.z);
   if (params.get('target')) target.fromArray(params.get('target').split(':').map(Number));
   const dir = new THREE.Vector3(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az));
   const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
@@ -720,6 +769,7 @@ async function select(id, instant = false) {
 $('t-wire').onclick = () => { state.wire = !state.wire; applyView(); };
 $('t-flat').onclick = () => { state.flat = !state.flat; applyView(); };
 $('t-ao').onclick = () => { state.ao = !state.ao; applyView(); };
+$('t-light').onclick = () => { state.lights = !state.lights; applyView(); };
 for (const b of document.querySelectorAll('[data-lod]')) b.onclick = () => { state.lod = b.dataset.lod; applyView(); };
 for (const b of document.querySelectorAll('[data-shadow]')) b.onclick = () => { state.shadow = b.dataset.shadow; applyView(); };
 
@@ -742,8 +792,9 @@ $('items').innerHTML = `
   <button class="item room" data-id="room" aria-pressed="false">
     <b>全屋陈列</b><span>${ROOM.length} 件 · ${fmt(roomTris)} △</span>
   </button>`
-  + group('家具', mf.items.filter((s) => (s.category ?? 'furniture') !== 'decor'))
-  + group('摆件', mf.items.filter((s) => s.category === 'decor'));
+  + group('家具', mf.items.filter((s) => (s.category ?? 'furniture') === 'furniture'))
+  + group('摆件', mf.items.filter((s) => s.category === 'decor'))
+  + group('灯具', mf.items.filter((s) => s.category === 'lighting'));
 for (const b of document.querySelectorAll('.item')) b.onclick = () => select(b.dataset.id);
 const wanted = params.get('item') || location.hash.slice(1);
 const first = wanted === 'room' || mf.items.find((s) => s.id === wanted) ? wanted : mf.items[0].id;
