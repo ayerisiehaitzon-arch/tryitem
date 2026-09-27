@@ -4,7 +4,9 @@
 export function packCharts(charts, { pad = 3, minPx = 2, targetDensity = 120, sizes = [128, 256, 512, 1024] } = {}) {
   let best = null;
   for (const size of sizes) {
-    const res = packAtSize(charts, size, pad, minPx);
+    // 图块很多的时候（书架墙上百本书），小图集连最低密度都装不下：换下一档
+    let res = null;
+    try { res = packAtSize(charts, size, pad, minPx); } catch (e) { if (size === sizes[sizes.length - 1]) throw e; continue; }
     best = res;
     if (res && res.density >= targetDensity) break;
   }

@@ -327,5 +327,27 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 书房 ——
+Object.assign(MATERIALS, {
+  paint_navy: {
+    label: '墨蓝色缎面漆（书架墙）',
+    color: srgb(40, 52, 70), metallic: 0, roughness: 0.4,
+    clearcoat: { factor: 0.12, roughness: 0.35 },
+  },
+  velvet_rust: {
+    label: '丝绒（铁锈红）',
+    // 和墨绿丝绒同一个生成器、另一个颜色（染色做不出来：绿色贴图乘不出红色）
+    tex: 'velvet_rust', tile: [0.2, 0.2],
+    roughness: 1, metallic: 0, normalScale: 0.5,
+    sheen: { color: [0.5, 0.25, 0.17], roughness: 0.35 },
+  },
+  enamel: {
+    label: '白色搪瓷（灯罩内侧，受光）',
+    // 灯泡就在里面：内壁一直是亮的，用一点自发光代替实时光照
+    color: srgb(244, 240, 232), metallic: 0, roughness: 0.3,
+    emissive: [1.0, 0.86, 0.66], emissiveStrength: 0.9,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

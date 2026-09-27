@@ -35,10 +35,13 @@ import shower from '../bathroom/shower.js';
 import loungeChair from '../balcony/lounge-chair.js';
 import gardenStool from '../balcony/stool.js';
 import oliveTree from '../balcony/olive.js';
+import libraryWall from '../study/library.js';
+import readingChair from '../study/reading-chair.js';
+import readingLamp from '../study/reading-lamp.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
 // 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）、
-// 阳台（category: 'balcony'）
+// 阳台（category: 'balcony'）、书房（category: 'study'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
@@ -48,4 +51,5 @@ export const FURNITURE = [
   kitchenBase, kitchenWall, kitchenIsland,
   vanity, toilet, shower,
   loungeChair, gardenStool, oliveTree,
+  libraryWall, readingChair, readingLamp,
 ];

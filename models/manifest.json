@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T17:41:39.968Z",
+  "generated": "2026-09-27T23:06:11.793Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1707,6 +1707,138 @@
         "az": 30
       },
       "fileKB": 490
+    },
+    {
+      "id": "library_wall",
+      "name": "书架墙",
+      "nameEn": "Built-in Library Wall",
+      "category": "study",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        2094,
+        2600,
+        990
+      ],
+      "lods": [
+        {
+          "tris": 3571,
+          "verts": 4687,
+          "drawCalls": 5
+        },
+        {
+          "tris": 2145,
+          "verts": 3194,
+          "drawCalls": 5
+        },
+        {
+          "tris": 924,
+          "verts": 1512,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "墨蓝色缎面漆（书架墙）",
+        "拉丝黄铜",
+        "胡桃木（哑光清漆）",
+        "布面精装书（调色板图集）",
+        "手工釉面炻器（图集）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 177,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 26
+      },
+      "fileKB": 1577
+    },
+    {
+      "id": "reading_chair",
+      "name": "阅读椅",
+      "nameEn": "Velvet Wingback & Ottoman",
+      "category": "study",
+      "mount": "floor",
+      "size": [
+        820,
+        1069,
+        1545
+      ],
+      "lods": [
+        {
+          "tris": 2076,
+          "verts": 1616,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1218,
+          "verts": 1026,
+          "drawCalls": 3
+        },
+        {
+          "tris": 606,
+          "verts": 632,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "丝绒（铁锈红）",
+        "拉丝黄铜",
+        "胡桃木（哑光清漆）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 180,
+      "lodDistances": null,
+      "view": {
+        "el": 14,
+        "az": 38
+      },
+      "fileKB": 568
+    },
+    {
+      "id": "reading_lamp",
+      "name": "阅读落地灯",
+      "nameEn": "Brass Swing-Arm Reading Lamp",
+      "category": "study",
+      "mount": "floor",
+      "size": [
+        839,
+        1311,
+        290
+      ],
+      "lods": [
+        {
+          "tris": 952,
+          "verts": 727,
+          "drawCalls": 3
+        },
+        {
+          "tris": 664,
+          "verts": 526,
+          "drawCalls": 3
+        },
+        {
+          "tris": 398,
+          "verts": 327,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "拉丝黄铜",
+        "白色搪瓷（灯罩内侧，受光）",
+        "暖光灯泡"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 418,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 30
+      },
+      "fileKB": 133
     }
   ]
 }

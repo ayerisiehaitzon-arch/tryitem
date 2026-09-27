@@ -322,6 +322,8 @@ export const TEXTURES = {
   rope: { size: 256, normalStrength: 4, v: 1, gen: (S) => patio.rope(S, { seed: 661, color: rgb(168, 156, 136) }) },
   decking: { size: 2048, detail: 0.5, normalStrength: 3, v: 1, gen: INTERIOR.decking },
   patio: { size: 1024, detail: 0.5, normalStrength: 2.5, v: 2, gen: patio.patio },
+  // —— 书房 ——
+  velvet_rust: { size: 512, normalStrength: 1.2, v: 2, gen: (S) => velvet(S, { seed: 52, crush: 0.16, color: rgb(116, 44, 30) }) },
 };
 
 function alloc(S) {

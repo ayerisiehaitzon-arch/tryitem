@@ -186,7 +186,7 @@ export async function bakeShadow(lod, { plane = 'floor', samples = 256, maxDist 
 // 灯带这种长条光源用 lights：[{ a, b, power }]，每段从 a 到 b 均匀分层取样（a = b 就是一个点光源），
 // 采样数按 power 分配；光斑范围用 rect = { u0, u1, v0, v1 }（安装面坐标）给一个长方形，
 // fade = [左, 右, 下, 上] 是四条边各自的淡出距离（米）—— 贴着柜底的那条边藏在柜子后面，不需要淡出。
-export async function bakeGlow(lod, { plane = 'floor', light, lightRadius = 0.02, lights = null, radius = 0.3, rect = null, fade = null, center = null, transmit = {}, density = 200, samples = 64, strength = 0.7, gamma = 0.8 } = {}) {
+export async function bakeGlow(lod, { plane = 'floor', light, lightRadius = 0.02, lights = null, radius = 0.3, rect = null, fade = null, center = null, transmit = {}, density = 200, samples = 64, strength = 0.7, gamma = 0.8, above = 10 } = {}) {
   const M = MOUNTS[plane];
   let u0, u1, v0, v1;
   if (rect) ({ u0, u1, v0, v1 } = rect);
@@ -224,8 +224,9 @@ export async function bakeGlow(lod, { plane = 'floor', light, lightRadius = 0.02
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x;
     const p = onPlane(M, u0 + ((x + 0.5) / W) * (u1 - u0), v0 + ((y + 0.5) / H) * (v1 - v0), 0.0005);
-    // 正上方（沿法线）是不透光的部件 → 这里在灯座底下或它的正下方，一律算暗（灯座是空心的，不能让光从里面漏下来）
-    if (intersect(opaque, p[0], p[1], p[2], nx, ny, nz, 10, stack) < 10) { E[i] = -1; continue; }
+    // 正上方（沿法线）是不透光的部件 → 这里在灯座底下或它的正下方，一律算暗（灯座是空心的，不能让光从里面漏下来）。
+    // above 限定只看多高以内的部件：灯罩挂在一米多高、光从罩口往下照的灯，罩子正下方其实是亮的
+    if (intersect(opaque, p[0], p[1], p[2], nx, ny, nz, above, stack) < above) { E[i] = -1; continue; }
     let e = 0;
     for (const L of pts) {
       let dx = L[0] - p[0], dy = L[1] - p[1], dz = L[2] - p[2];

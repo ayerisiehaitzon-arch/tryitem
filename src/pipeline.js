@@ -12,6 +12,7 @@ export function buildGeometry(def) {
   const k0 = new ItemBuilder({ lod: 0, name: def.id });
   def.build(k0);
   const layout = packCharts(k0.charts, { targetDensity: def.aoDensity ?? 90 });
+  layout.pieces = Object.fromEntries(k0.pieceCounts);
   const lods = LODS.map((lod) => {
     const k = new ItemBuilder({ lod, layout, name: def.id });
     def.build(k);

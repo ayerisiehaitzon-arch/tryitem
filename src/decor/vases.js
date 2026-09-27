@@ -5,10 +5,10 @@ import { ceramicUV } from '../materials/atlas.js';
 
 // 一件车削陶瓷器物：器型（profiles.js）+ 图集里对应的釉面区域，全部共用一个材质。
 // segs = [LOD0, LOD1, LOD2] 圆周分段；轮廓按剪影误差自适应取点（1mm / 2.2mm / 6mm）
-export function vessel3d(k, { name, shape, segs, scale = 1, pos = [0, 0, 0], rot = 0 }) {
+export function vessel3d(k, { name, shape, segs, scale = 1, pos = [0, 0, 0], rot = 0, tol = [0.001, 0.0022, 0.006] }) {
   return revolve(k, {
     name, mat: 'glaze', cv: vessel(shape), scale,
-    segs: k.q(...segs), tol: k.q(0.001, 0.0022, 0.006), maxAngle: k.q(0.9, 1.2, 1.6),
+    segs: k.q(...segs), tol: k.q(...tol), maxAngle: k.q(0.9, 1.2, 1.6),
     uv: (u, v) => ceramicUV(shape, u, v),
     density: { in: 0.5 },
     xf: xf({ pos, rot: [0, rot, 0] }),

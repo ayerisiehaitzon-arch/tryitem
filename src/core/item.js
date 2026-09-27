@@ -19,6 +19,7 @@ export class ItemBuilder {
     this.parts = [];
     this.charts = [];
     this.chartIndex = new Map();
+    this.pieceCounts = new Map(); // 长条图块组各切了几段（LOD0 第一遍记下来，写进图集排布）
   }
 
   // 按 LOD 取值：q(LOD0值, LOD1值, LOD2值)，缺省沿用前一个
@@ -48,7 +49,10 @@ export class ItemBuilder {
   // 长条图块切成几段（LOD 间保持一致：低 LOD 直接沿用 LOD0 的段数）
   pieces(prefix, length, maxLen = 0.9) {
     if (this.layout) {
-      // 取最大的段号（某一段可能没有分到任何线段而没生成图块，段号不一定连续）
+      // LOD0 第一遍记下的段数。不能从图块的最大段号反推：最后一段可能没分到任何线段、没生成图块，
+      // 反推出来的段数就少了一段，线段的归属跟着变（分界正好落在中点时，浮点误差会把它分到另一段）
+      const rec = this.layout.pieces?.[prefix];
+      if (rec) return rec;
       let n = 0;
       for (const id of Object.keys(this.layout.rects)) {
         if (!id.startsWith(`${prefix}.`)) continue;
@@ -58,7 +62,9 @@ export class ItemBuilder {
       if (n === 0) throw new Error(`[${this.name}] 找不到图块组 ${prefix}`);
       return n;
     }
-    return Math.max(1, Math.ceil(length / maxLen - 0.05));
+    const K = Math.max(1, Math.ceil(length / maxLen - 0.05));
+    this.pieceCounts.set(prefix, K);
+    return K;
   }
 
   // 部件的确定性随机数（与 LOD 无关）
