@@ -462,5 +462,23 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 衣帽间 ——
+Object.assign(MATERIALS, {
+  clothes: {
+    label: '衣物（衬衫 / 大衣 / 裙子 / 裤子 / 毛衣 / 皮鞋 / 手袋 / 收纳盒，面料图集）',
+    // 图集：每件衣服按真实尺寸铺在自己那种面料的格子里，颜色、粗糙度都由贴图给；
+    // 细节法线是一小块平纹，在整张图集上重复 128 次。搭在衣架上的裤子是单层的布：双面显示
+    tex: 'clothes', tile: [1, 1], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.7, normalRepeat: [128, 128],
+    sheen: { color: [0.3, 0.3, 0.3], roughness: 0.55 },
+  },
+  trinkets: {
+    label: '首饰与小摆件（金 / 银 / 珍珠 / 宝石 / 香水 / 口红，调色板）',
+    // 调色板：颜色、粗糙度、金属度都在贴图里（金属部分金属度 1，珍珠、宝石、香水是非金属）
+    tex: 'trinkets', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

@@ -15,6 +15,7 @@ import * as patio from './patio-textures.js';
 import * as entry from './entry-textures.js';
 import * as kids from './kids-textures.js';
 import * as laundry from './laundry-textures.js';
+import * as closet from './closet-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -409,6 +410,13 @@ export const TEXTURES = {
     size: 512, detail: 0.5, normalStrength: 1.5, v: 1,
     gen: (S) => laundry.torchon(S, { seed: 481, threads: 160, base: [228, 220, 202], stripe: [176, 50, 46], stripes: [[0.05, 0.078], [0.092, 0.1]] }),
   },
+  // —— 衣帽间 ——
+  // 衣物图集：16 种面料（条纹、格子呢的色纱是细线：颜色图不做色度抽样）；法线另用一小块可平铺的平纹（同地毯）
+  clothes: {
+    size: 1024, detail: 0.5, v: 1, chroma444: true,
+    gen: (S) => closet.clothes(S, { seed: 501 }), normalTile: { size: 256, strength: 2.2, gen: closet.weave },
+  },
+  trinkets: { size: 128, normalStrength: 1, v: 1, chroma444: true, gen: closet.trinkets },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T03:58:06.365Z",
+  "generated": "2026-09-28T05:24:12.980Z",
   "items": [
     {
       "id": "dining_chair",
@@ -2329,6 +2329,148 @@
         "az": 18
       },
       "fileKB": 693
+    },
+    {
+      "id": "open_wardrobe",
+      "name": "开放衣柜",
+      "nameEn": "Open Walnut Wardrobe",
+      "category": "closet",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        2200,
+        2300,
+        600
+      ],
+      "lods": [
+        {
+          "tris": 5910,
+          "verts": 5371,
+          "drawCalls": 4
+        },
+        {
+          "tris": 4008,
+          "verts": 4014,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1142,
+          "verts": 1583,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "LED 灯带（乳白扩散罩）",
+        "拉丝黄铜",
+        "衣物（衬衫 / 大衣 / 裙子 / 裤子 / 毛衣 / 皮鞋 / 手袋 / 收纳盒，面料图集）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 141,
+      "lodDistances": null,
+      "view": {
+        "el": 8,
+        "az": 18
+      },
+      "fileKB": 1497
+    },
+    {
+      "id": "dressing_table",
+      "name": "梳妆台",
+      "nameEn": "Walnut Vanity with Hollywood Mirror",
+      "category": "closet",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        1100,
+        1916,
+        779
+      ],
+      "lods": [
+        {
+          "tris": 3361,
+          "verts": 3145,
+          "drawCalls": 7
+        },
+        {
+          "tris": 2238,
+          "verts": 2261,
+          "drawCalls": 7
+        },
+        {
+          "tris": 1000,
+          "verts": 1147,
+          "drawCalls": 7
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "拉丝黄铜",
+        "银镜",
+        "暖光灯泡",
+        "圈绒（奶白）",
+        "首饰与小摆件（金 / 银 / 珍珠 / 宝石 / 香水 / 口红，调色板）",
+        "透明玻璃"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 226,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 24
+      },
+      "fileKB": 1086
+    },
+    {
+      "id": "jewelry_island",
+      "name": "首饰岛台",
+      "nameEn": "Walnut Jewelry Island",
+      "category": "closet",
+      "mount": "floor",
+      "size": [
+        1300,
+        1215,
+        709
+      ],
+      "lods": [
+        {
+          "tris": 3814,
+          "verts": 4073,
+          "drawCalls": 6
+        },
+        {
+          "tris": 2536,
+          "verts": 3045,
+          "drawCalls": 6
+        },
+        {
+          "tris": 516,
+          "verts": 784,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "拉丝黄铜",
+        "丝绒（墨绿）",
+        "透明玻璃",
+        "首饰与小摆件（金 / 银 / 珍珠 / 宝石 / 香水 / 口红，调色板）",
+        "植鞣皮（干邑色）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 163,
+      "lodDistances": null,
+      "view": {
+        "el": 30,
+        "az": 24
+      },
+      "fileKB": 1165
     }
   ]
 }

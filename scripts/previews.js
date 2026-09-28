@@ -29,6 +29,9 @@
 //   docs/previews/laundry.jpg         洗衣房三件：洗衣机、烘干机、晾衣架
 //   docs/previews/laundry-detail.jpg  洗衣房特写：洗衣机的门和内筒、烘干机的控制面板、晾衣架上的毛巾和袜子、水泥花砖
 //   docs/previews/laundry-room.jpg    全屋陈列里的洗衣房
+//   docs/previews/closet.jpg          衣帽间三件：开放衣柜、梳妆台、首饰岛台
+//   docs/previews/closet-detail.jpg   衣帽间特写：衬衫的领子和袖口、长衣区的大衣和吊带裙、香水和化妆镜灯泡、丝绒格子里的首饰
+//   docs/previews/closet-room.jpg     全屋陈列里的衣帽间
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -48,7 +51,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -217,6 +220,22 @@ await grid(laundryDetail, 2, [600, 450], path.join(out, 'laundry-detail.jpg'));
 const laundryRoom = await shoot({ items: ['room'], views: ['&target=20.1:0.9:-0.75&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'laundry-room.png' });
 await sharp(laundryRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'laundry-room.jpg'));
 console.log('→ docs/previews/laundry-room.jpg');
+
+const closetHero = await shoot({ items: closetIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `c_${id}.png` });
+await grid(closetHero, 3, [480, 360], path.join(out, 'closet.jpg'));
+
+// 衣帽间特写：一排衬衫（领子、袖口、条纹和格子的尺度）、长衣区（大衣的领子和袖口、真丝吊带裙的褶）、
+// 梳妆台（托盘上的香水、化妆镜的球泡和墙上的光晕）、首饰岛台的丝绒格子（戒指卷、表枕、珍珠项链）
+const closetDetail = [];
+closetDetail.push(...await shoot({ items: ['open_wardrobe'], views: ['&target=0.6:1.6:0.3&d=1.35&el=8&az=-20'], size: [800, 600], outDir: tmp, name: () => 'clo0.png' }));
+closetDetail.push(...await shoot({ items: ['open_wardrobe'], views: ['&target=-0.72:1.42:0.35&d=1.75&el=6&az=22'], size: [800, 600], outDir: tmp, name: () => 'clo1.png' }));
+closetDetail.push(...await shoot({ items: ['dressing_table'], views: ['&target=-0.16:0.93:0.28&d=0.75&el=16&az=14'], size: [800, 600], outDir: tmp, name: () => 'clo2.png' }));
+closetDetail.push(...await shoot({ items: ['jewelry_island'], views: ['&target=-0.1:0.86:0.05&d=0.85&el=52&az=8'], size: [800, 600], outDir: tmp, name: () => 'clo3.png' }));
+await grid(closetDetail, 2, [600, 450], path.join(out, 'closet-detail.jpg'));
+
+const closetRoom = await shoot({ items: ['room'], views: ['&target=24.1:0.9:-0.75&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'closet-room.png' });
+await sharp(closetRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'closet-room.jpg'));
+console.log('→ docs/previews/closet-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

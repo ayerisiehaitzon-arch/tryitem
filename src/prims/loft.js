@@ -12,11 +12,13 @@ const len = (a) => Math.hypot(a[0], a[1], a[2]);
  *   rings   [[p0, p1, …], …] 3D 点，从下到上；每个环的第 0 点是接缝，放在看不见的一侧（贴墙那边）
  *   caps    [底, 顶] 是否封口（截面环是水平的平面多边形，按耳切法三角化）
  *   density { side, cap0, cap1 } AO 纹素密度倍率
+ *   orient  可选 (i, j) → 方向：第 i 环第 j 点的“外侧”大致朝哪。又薄又带褶的截面（挂着的衣服）用环中心判断会翻错，
+ *           这时由调用者直接告诉哪边是外面
  *
  * 法线：环向、纵向各取中心差分再叉乘，整个曲面是平滑的（低面数也不显棱）；
  * 朝向环中心的法线翻过来，所以不用关心环的绕向。侧面一个 AO 图块：u 沿环（弧长归一化），v 沿纵向。
  */
-export function loft(k, { name, mat, rings, caps = [false, false], density = {} }) {
+export function loft(k, { name, mat, rings, caps = [false, false], density = {}, orient = null }) {
   const part = k.part(mat, name);
   const n = rings[0].length, m = rings.length;
   const centroid = (ring) => ring.reduce((a, p) => [a[0] + p[0] / n, a[1] + p[1] / n, a[2] + p[2] / n], [0, 0, 0]);
@@ -45,7 +47,7 @@ export function loft(k, { name, mat, rings, caps = [false, false], density = {} 
       const Tu = sub(rings[i][(jj + 1) % n], rings[i][(jj - 1 + n) % n]);
       const Tv = sub(rings[Math.min(m - 1, i + 1)][jj], rings[Math.max(0, i - 1)][jj]);
       let N = cross(Tu, Tv);
-      if (dot(N, sub(P, C[i])) < 0) N = [-N[0], -N[1], -N[2]];
+      if (dot(N, orient ? orient(i, jj) : sub(P, C[i])) < 0) N = [-N[0], -N[1], -N[2]];
       const u = U[i][j] / U[i][n], v = colLen[i] / H;
       row.push(part.v(P, N, [U[i][j], colLen[i]], ch, [u, v]));
     }

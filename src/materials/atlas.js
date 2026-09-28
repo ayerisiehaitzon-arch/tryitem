@@ -191,3 +191,75 @@ export function applianceSwatch(name) {
   const w = A.size / A.swatches.length;
   return [(i + 0.5) * w / A.size, (A.swatchY + (A.size - A.swatchY) / 2) / A.size];
 }
+
+// —— 衣物图集：1024×1024，4 × 4 格，每格 256px 是一种面料（衣帽间里所有的衣服、鞋、包、收纳盒共用一个材质）——
+//   和调色板不同，面料格子里有图案（条纹、格子、罗纹、麻花、皮面的包浆）：一件衣服按它的真实尺寸（米）铺在格子里，
+//   格子中心 = 这片布的中心，一格代表 P 米见方的一块布 —— 所以一格只装得下不超过 P 米的一片布：
+//   衬衫 0.85m，长大衣、长裙、搭在衣架上的裤子 1.28m，叠好的毛衣、收纳盒、皮具 0.45m（小东西分到的像素多）。
+//   u（贴图横向）是布的经向 = 衣服挂着时的竖直方向，v 是纬向。织物的细节（经纬纱）不在这张图里：
+//   材质另有一小块可平铺的织纹法线，按 normalRepeat 重复铺满（同地毯）。
+export const CLOTHES_ATLAS = {
+  size: 1024,
+  cols: 4,
+  margin: 3,
+  cells: [
+    { name: 'oxford', P: 0.85 }, { name: 'oxfordBlue', P: 0.85 }, { name: 'stripe', P: 0.85 }, { name: 'plaid', P: 0.85 },
+    { name: 'camel', P: 1.28 }, { name: 'charcoal', P: 1.28 }, { name: 'crepe', P: 1.28 }, { name: 'silk', P: 1.28 },
+    { name: 'denim', P: 1.28 }, { name: 'olive', P: 1.28 }, { name: 'knitRib', P: 0.45 }, { name: 'knitGrey', P: 0.45 },
+    { name: 'knitCable', P: 0.45 }, { name: 'linen', P: 0.45 }, { name: 'leather', P: 0.45 }, { name: 'leatherBlack', P: 0.45 },
+  ],
+};
+
+// 格子里的一点：u, v 是相对格子中心的米数 → 图集 UV。超出格子（这片布比格子大）直接报错
+export function clothesUV(name, u, v) {
+  const A = CLOTHES_ATLAS;
+  const i = A.cells.findIndex((c) => c.name === name);
+  if (i < 0) throw new Error(`衣物图集里没有 ${name}`);
+  const { P } = A.cells[i];
+  const fu = 0.5 + u / P, fv = 0.5 + v / P;
+  if (fu < -1e-6 || fu > 1 + 1e-6 || fv < -1e-6 || fv > 1 + 1e-6) throw new Error(`${name}：${(Math.abs(u) * 2).toFixed(2)} × ${(Math.abs(v) * 2).toFixed(2)}m 的布放不进 ${P}m 的格子`);
+  const cell = A.size / A.cols, m = A.margin;
+  const x0 = (i % A.cols) * cell, y0 = Math.floor(i / A.cols) * cell;
+  return [(x0 + m + fu * (cell - 2 * m)) / A.size, (y0 + m + fv * (cell - 2 * m)) / A.size];
+}
+
+// —— 首饰调色板：128×128，8 × 8 个 16px 的格子（用了前三行）——
+//   同玩具调色板：部件的 UV 指向格子正中，整个部件一种颜色；多了金属度 —— 金、玫瑰金、银、钢是金属，
+//   珍珠、宝石、表盘、口红、香水是非金属。首饰、香水瓶盖、口红、瓷瓶和花共用一个材质、一次 draw call
+export const TRINKET_ATLAS = {
+  size: 128,
+  cols: 8,
+  swatches: [
+    { name: 'gold', c: [244, 206, 132], rough: 0.16, metal: 1 },
+    { name: 'brass', c: [220, 182, 118], rough: 0.3, metal: 1 },
+    { name: 'roseGold', c: [236, 176, 152], rough: 0.18, metal: 1 },
+    { name: 'silver', c: [236, 236, 238], rough: 0.1, metal: 1 },
+    { name: 'steel', c: [204, 206, 210], rough: 0.24, metal: 1 },
+    { name: 'pearl', c: [240, 232, 222], rough: 0.2 },
+    { name: 'emerald', c: [20, 116, 76], rough: 0.04 },
+    { name: 'ruby', c: [164, 18, 42], rough: 0.04 },
+    { name: 'sapphire', c: [28, 54, 154], rough: 0.04 },
+    { name: 'diamond', c: [242, 246, 250], rough: 0.02 },
+    { name: 'onyx', c: [18, 18, 20], rough: 0.08 },
+    { name: 'dial', c: [242, 236, 222], rough: 0.3 },
+    { name: 'dialNavy', c: [30, 42, 78], rough: 0.22 },
+    { name: 'strap', c: [128, 74, 44], rough: 0.5 },
+    { name: 'strapBlack', c: [30, 28, 28], rough: 0.45 },
+    { name: 'lipstick', c: [162, 30, 48], rough: 0.32 },
+    { name: 'amber', c: [210, 132, 50], rough: 0.08 },
+    { name: 'rose', c: [234, 162, 170], rough: 0.08 },
+    { name: 'porcelain', c: [243, 242, 237], rough: 0.12 },
+    { name: 'petal', c: [236, 170, 176], rough: 0.6 },
+    { name: 'leaf', c: [88, 118, 74], rough: 0.55 },
+    { name: 'black', c: [24, 24, 26], rough: 0.35 },
+    { name: 'cream', c: [238, 230, 214], rough: 0.5 },
+    { name: 'powder', c: [224, 178, 158], rough: 0.9 },
+  ],
+};
+
+export function trinketUV(name) {
+  const A = TRINKET_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`首饰调色板里没有 ${name}`);
+  return [((i % A.cols) + 0.5) / A.cols, (Math.floor(i / A.cols) + 0.5) / A.cols];
+}
