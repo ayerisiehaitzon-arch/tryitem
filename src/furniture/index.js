@@ -24,7 +24,7 @@ import wallLamp from '../lighting/wall-lamp.js';
 import { wall, wallWainscot } from '../architecture/walls.js';
 import { wallDoor } from '../architecture/door.js';
 import { wallWindow } from '../architecture/window.js';
-import { floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, floorChecker, floorCement, floorRubber } from '../architecture/floors.js';
+import { floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, floorChecker, floorCement, floorRubber, floorBrick } from '../architecture/floors.js';
 import { railing } from '../architecture/railing.js';
 import kitchenBase from '../kitchen/base.js';
 import kitchenWall from '../kitchen/wall.js';
@@ -56,17 +56,21 @@ import yogaMat from '../gym/yoga-mat.js';
 import grandPiano from '../music/grand-piano.js';
 import musicStand from '../music/music-stand.js';
 import pianoBench from '../music/piano-bench.js';
+import teaTable from '../tea/tea-table.js';
+import teaCushion from '../tea/cushion.js';
+import curioShelf from '../tea/curio-shelf.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
 // 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）、
 // 阳台（category: 'balcony'）、书房（category: 'study'）、玄关（category: 'entry'）、儿童房（category: 'kids'）、
-// 洗衣房（category: 'laundry'）、衣帽间（category: 'closet'）、健身房（category: 'gym'）、书房二 / 琴房（category: 'music'）
+// 洗衣房（category: 'laundry'）、衣帽间（category: 'closet'）、健身房（category: 'gym'）、书房二 / 琴房（category: 'music'）、
+// 茶室（category: 'tea'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
   books, vases, fiddleFig, snakePlant, rug,
   floorLamp, tableLamp, pendant, wallLamp,
-  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, railing, floorChecker, floorCement, floorRubber,
+  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, railing, floorChecker, floorCement, floorRubber, floorBrick,
   kitchenBase, kitchenWall, kitchenIsland,
   vanity, toilet, shower,
   loungeChair, gardenStool, oliveTree,
@@ -77,4 +81,5 @@ export const FURNITURE = [
   openWardrobe, dressingTable, jewelryIsland,
   treadmill, dumbbellRack, yogaMat,
   grandPiano, musicStand, pianoBench,
+  teaTable, teaCushion, curioShelf,
 ];

@@ -391,3 +391,87 @@ export function scoreUV(page, u, v) {
   const x0 = (page % 2) * c, y0 = Math.floor(page / 2) * c;
   return [(x0 + m + u * (c - 2 * m)) / S, (y0 + m + v * (c - 2 * m)) / S];
 }
+
+// —— 原木大板：2048²（茶桌的桌面一整块）——
+//   top：俯视的桌面（x 沿板长、z 横跨板宽，范围见 tea/slab.js 的 SLAB_BOX）：年轮、白边、树结、裂缝和蝴蝶榫画在确切的位置上；
+//   edgeF / edgeB：前、后两条自然边的侧面（u 沿边的弧长，v 从桌面往下）；
+//   endL / endR：两头锯开的端面（u 从后沿到前沿，v 从桌面往下），看得见年轮的弧
+export const SLAB_ATLAS = {
+  size: 2048,
+  regions: {
+    top: [0, 0, 2048, 1536],
+    edgeF: [0, 1536, 2048, 1728],
+    edgeB: [0, 1728, 2048, 1920],
+    endL: [0, 1920, 1024, 2048],
+    endR: [1024, 1920, 2048, 2048],
+  },
+};
+export function slabUV(region, u, v) {
+  const [x0, y0, x1, y1] = SLAB_ATLAS.regions[region];
+  const S = SLAB_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+
+// —— 茶具图集：1024²（茶桌上的茶具、博古架上的摆件共用一个材质）——
+//   iron：铁壶壶身的霰点（u 绕一圈，v 沿 tea/profiles.js 里壶身曲线的弧长）；tray：乌金石茶盘的盘面（俯视，一道道出水槽）；
+//   qinghua：青花将军罐 / 茶叶罐（u 绕一圈，v 沿曲线）；cake：普洱茶饼正面的棉纸（俯视）；book：线装书的封面；
+//   zisha：紫砂壶身（u 绕一圈，v 沿曲线）；celadon：哥窑开片（杯子、梅瓶）；bamboo：湘妃竹（u 沿竹竿，v 绕一圈）；
+//   swatch：纯色格子，部件的 UV 指向格子正中
+export const TEA_ATLAS = {
+  size: 1024,
+  regions: {
+    iron: [0, 0, 512, 256], tray: [512, 0, 1024, 256],
+    qinghua: [0, 256, 512, 512], cake: [512, 256, 768, 512], book: [768, 256, 1024, 512],
+    zisha: [0, 512, 512, 768], celadon: [512, 512, 1024, 768],
+    bamboo: [0, 768, 1024, 896], swatch: [0, 896, 1024, 1024],
+  },
+  tray: { w: 0.5, h: 0.24 },    // 茶盘盘面的物理尺寸（米）
+  cake: { r: 0.1 },             // 茶饼半径
+  book: { w: 0.165, h: 0.245 }, // 书的封面
+  bamboo: { len: 0.25 },        // 竹竿贴图代表的长度
+  cols: 16,
+  swatches: [
+    { name: 'zisha', c: [122, 70, 55], rough: 0.5 },
+    { name: 'celadon', c: [160, 168, 150], rough: 0.2 },
+    { name: 'porcelain', c: [238, 238, 232], rough: 0.12 },
+    { name: 'slate', c: [30, 31, 33], rough: 0.36 },
+    { name: 'iron', c: [46, 43, 41], rough: 0.55, metal: 0.3 },
+    { name: 'bronze', c: [96, 84, 58], rough: 0.42, metal: 0.85 },
+    { name: 'brass', c: [214, 176, 112], rough: 0.28, metal: 1 },
+    { name: 'bamboo', c: [192, 160, 102], rough: 0.5 },
+    { name: 'black', c: [26, 26, 28], rough: 0.55 },
+    { name: 'glassBlack', c: [12, 12, 14], rough: 0.06 },
+    { name: 'rock', c: [42, 42, 44], rough: 0.32 },
+    { name: 'paper', c: [234, 228, 212], rough: 0.85 },
+    { name: 'indigo', c: [40, 52, 86], rough: 0.8 },
+    { name: 'red', c: [170, 42, 38], rough: 0.55 },
+    { name: 'ash', c: [198, 194, 186], rough: 0.92 },
+    { name: 'verdigris', c: [92, 126, 108], rough: 0.6 },
+    { name: 'tea', c: [112, 64, 28], rough: 0.05 },
+    { name: 'stand', c: [62, 34, 26], rough: 0.35 },
+    { name: 'gold', c: [232, 194, 124], rough: 0.2, metal: 1 },
+    { name: 'white', c: [244, 242, 236], rough: 0.5 },
+  ],
+};
+export function teaUV(region, u, v) {
+  const [x0, y0, x1, y1] = TEA_ATLAS.regions[region];
+  const S = TEA_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function teaSwatch(name) {
+  const A = TEA_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`茶具图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}
+
+// —— 蒲团：1024² ——
+//   top：俯视的顶面（一圈圈往外盘的蒲草辫，直径 0.47m 画满这一块）；side：侧面一排排横着的草辫（u 绕一圈，v 从顶边往下）
+export const STRAW = { size: 1024, regions: { top: [0, 0, 1024, 768], side: [0, 768, 1024, 1024] }, R: 0.235, pitch: 0.0165, braid: 0.012 };
+export function strawUV(region, u, v) {
+  const [x0, y0, x1, y1] = STRAW.regions[region];
+  const S = STRAW.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}

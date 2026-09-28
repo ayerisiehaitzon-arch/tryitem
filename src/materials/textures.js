@@ -18,6 +18,7 @@ import * as laundry from './laundry-textures.js';
 import * as closet from './closet-textures.js';
 import * as gym from './gym-textures.js';
 import * as music from './music-textures.js';
+import * as tea from './tea-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -443,6 +444,27 @@ export const TEXTURES = {
   piano: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => music.pianoAtlas(S, { seed: 701 }) },
   // 乐谱：四页，钢琴谱两页（大谱表）、小提琴分谱两页；墨是平的，法线只留一点纸的纤维
   score: { size: 1024, detail: 0.5, normalStrength: 0.4, v: 1, gen: (S) => music.score(S, { seed: 711 }) },
+  // —— 茶室 ——
+  // 原木大板：桌面一整块（年轮、白边、树结、裂缝和蝴蝶榫按 tea/slab.js 的轮廓画在确切的位置上）+ 两条自然边 + 两个端面
+  slab: { size: 2048, detail: 0.5, normalStrength: 1.2, v: 1, gen: (S) => tea.slab(S, { seed: 801 }) },
+  // 蒲团：顶面一圈圈盘出去的蒲草辫、侧面一排排横着的辫子
+  straw: { size: 1024, detail: 0.5, normalStrength: 3, v: 1, gen: (S) => tea.straw(S, { seed: 811 }) },
+  // 茶具图集：铁壶、茶盘、青花、茶饼、线装书、紫砂、开片、湘妃竹、纯色格子；青花的细线、书签上的字：不做色度抽样
+  tea: { size: 1024, detail: 0.5, normalStrength: 2, v: 2, chroma444: true, gen: (S) => tea.teaAtlas(S, { seed: 821 }) },
+  // 方砖（青灰金砖）：一张贴图 = 一整块 2m 地板模块（5 × 5 块 40cm 的砖），1.3mm 一个像素
+  fangzhuan: {
+    size: 1536, detail: 0.5, normalStrength: 0.9, v: 1,
+    gen: (S) => tea.fangzhuan(S, { seed: 841, period: 2, tiles: 5, joint: 0.003, bevel: 0.003, base: [96, 98, 100], warm: [106, 100, 94], cool: [84, 92, 100], mortar: [66, 66, 66] }),
+  },
+  // 红木（老红木 / 酸枝）：深红褐色、细密的年轮，博古架用
+  rosewood: {
+    size: 1024, detail: 0.5, normalStrength: 1.6, v: 2,
+    gen: (S) => wood(S, {
+      seed: 831, staves: 6, rings: 22, warp: 2.2, archChance: 0.4,
+      staveTint: 0.1, staveWarm: 0.04, pores: 0.6, lateMix: 0.7, colorVar: 0.1, fiberVar: 0.06,
+      early: rgb(94, 45, 33), late: rgb(50, 22, 17), pore: rgb(38, 17, 13), rough: 0.42,
+    }),
+  },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB

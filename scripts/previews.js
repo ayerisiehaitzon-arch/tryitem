@@ -38,6 +38,9 @@
 //   docs/previews/music.jpg           书房二三件：三角钢琴、乐谱架、琴凳
 //   docs/previews/music-detail.jpg    书房二特写：键盘和金字铭牌、琴肚子里的铁板和琴弦、琴凳的菱形拉扣、竖琴谱板和小提琴分谱
 //   docs/previews/music-room.jpg      全屋陈列里的书房二
+//   docs/previews/tea.jpg             茶室三件：原木茶桌、蒲团、博古架
+//   docs/previews/tea-detail.jpg      茶室特写：茶盘上的紫砂壶和开片杯、大板树根那头的蝴蝶榫和裂缝、蒲草辫盘的蒲团、博古架的月洞和梅瓶
+//   docs/previews/tea-room.jpg        全屋陈列里的茶室
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -57,7 +60,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -273,6 +276,22 @@ await grid(musicDetail, 2, [600, 450], path.join(out, 'music-detail.jpg'));
 const musicRoom = await shoot({ items: ['room'], views: ['&target=32.1:0.9:-0.6&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'music-room.png' });
 await sharp(musicRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'music-room.jpg'));
 console.log('→ docs/previews/music-room.jpg');
+
+const teaHero = await shoot({ items: teaIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `t_${id}.png` });
+await grid(teaHero, 3, [480, 360], path.join(out, 'tea.jpg'));
+
+// 茶室特写：茶盘上的紫砂壶、公道杯和四只开片杯（旁边电陶炉上的铁壶）、大板树根那头的裂缝和两枚枫木蝴蝶榫、
+// 蒲草辫盘出来的蒲团、博古架的月洞和里面的哥窑梅瓶
+const teaDetail = [];
+teaDetail.push(...await shoot({ items: ['tea_table'], views: ['&target=-0.18:0.45:-0.08&d=0.8&el=32&az=14'], size: [800, 600], outDir: tmp, name: () => 'tea0.png' }));
+teaDetail.push(...await shoot({ items: ['tea_table'], views: ['&target=-0.62:0.36:0.12&d=0.62&el=40&az=-28'], size: [800, 600], outDir: tmp, name: () => 'tea1.png' }));
+teaDetail.push(...await shoot({ items: ['tea_cushion'], views: ['&target=0:0.08:0&d=0.85&el=34&az=20'], size: [800, 600], outDir: tmp, name: () => 'tea2.png' }));
+teaDetail.push(...await shoot({ items: ['curio_shelf'], views: ['&target=0.05:1.3:0.2&d=1.35&el=4&az=12'], size: [800, 600], outDir: tmp, name: () => 'tea3.png' }));
+await grid(teaDetail, 2, [600, 450], path.join(out, 'tea-detail.jpg'));
+
+const teaRoom = await shoot({ items: ['room'], views: ['&target=36.0:0.7:-0.6&d=7.0&el=24&az=16'], size: [1600, 900], outDir: tmp, name: () => 'tea-room.png' });
+await sharp(teaRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'tea-room.jpg'));
+console.log('→ docs/previews/tea-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

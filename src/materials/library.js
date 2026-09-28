@@ -545,5 +545,39 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 茶室 ——
+Object.assign(MATERIALS, {
+  slab: {
+    label: '黑胡桃原木大板（木蜡油）',
+    // 整块桌面一张贴图：UV 由几何直接按位置给出，不能加随机偏移；罩一层很薄的清漆，只有一点柔和的光泽
+    tex: 'slab', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.5,
+    clearcoat: { factor: 0.25, roughness: 0.35 },
+  },
+  straw: {
+    label: '蒲草（编辫盘绕）',
+    tex: 'straw', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    sheen: { color: [0.36, 0.3, 0.2], roughness: 0.6 },
+  },
+  tea: {
+    label: '茶具与摆件（铁壶 / 紫砂 / 青花 / 开片 / 乌金石 / 湘妃竹 / 线装书 / 茶饼，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里（铁壶、铜炉、黄铜带一点金属度）
+    tex: 'tea', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.6,
+  },
+  floor_brick: {
+    label: '方砖（青灰金砖，擦蜡）',
+    tex: 'fangzhuan', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+  rosewood: {
+    label: '红木（深红褐，擦漆）',
+    tex: 'rosewood', tile: [0.6, 0.6],
+    roughness: 1, metallic: 0, normalScale: 0.5,
+    clearcoat: { factor: 0.35, roughness: 0.3 },
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

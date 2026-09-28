@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T09:40:51.270Z",
+  "generated": "2026-09-28T12:21:04.555Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1427,6 +1427,46 @@
       "fileKB": 650
     },
     {
+      "id": "floor_brick",
+      "name": "方砖地面",
+      "nameEn": "Grey Clay Square Tile Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "方砖（青灰金砖，擦蜡）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 204
+    },
+    {
       "id": "kitchen_base",
       "name": "橱柜",
       "nameEn": "Shaker Kitchen Base Run",
@@ -2766,6 +2806,140 @@
         "az": 32
       },
       "fileKB": 718
+    },
+    {
+      "id": "tea_table",
+      "name": "原木茶桌",
+      "nameEn": "Live-Edge Walnut Tea Table",
+      "category": "tea",
+      "mount": "floor",
+      "size": [
+        1620,
+        680,
+        770
+      ],
+      "lods": [
+        {
+          "tris": 6460,
+          "verts": 4929,
+          "drawCalls": 6
+        },
+        {
+          "tris": 3472,
+          "verts": 2950,
+          "drawCalls": 6
+        },
+        {
+          "tris": 1640,
+          "verts": 1608,
+          "drawCalls": 6
+        }
+      ],
+      "materials": [
+        "黑胡桃原木大板（木蜡油）",
+        "胡桃木（哑光清漆）",
+        "红木（深红褐，擦漆）",
+        "茶具与摆件（铁壶 / 紫砂 / 青花 / 开片 / 乌金石 / 湘妃竹 / 线装书 / 茶饼，图集）",
+        "透明玻璃",
+        "亚麻布（鼠尾草绿）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 224,
+      "lodDistances": null,
+      "view": {
+        "el": 26,
+        "az": 24,
+        "dist": 0.9
+      },
+      "fileKB": 2161
+    },
+    {
+      "id": "tea_cushion",
+      "name": "蒲团",
+      "nameEn": "Braided Cattail Floor Cushion",
+      "category": "tea",
+      "mount": "floor",
+      "size": [
+        477,
+        129,
+        477
+      ],
+      "lods": [
+        {
+          "tris": 828,
+          "verts": 518,
+          "drawCalls": 1
+        },
+        {
+          "tris": 456,
+          "verts": 300,
+          "drawCalls": 1
+        },
+        {
+          "tris": 210,
+          "verts": 150,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "蒲草（编辫盘绕）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 336,
+      "lodDistances": null,
+      "view": {
+        "el": 30,
+        "az": 20,
+        "dist": 0.9
+      },
+      "fileKB": 513
+    },
+    {
+      "id": "curio_shelf",
+      "name": "博古架",
+      "nameEn": "Rosewood Curio Shelf",
+      "category": "tea",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        1540,
+        1902,
+        365
+      ],
+      "lods": [
+        {
+          "tris": 7897,
+          "verts": 6806,
+          "drawCalls": 4
+        },
+        {
+          "tris": 5027,
+          "verts": 4830,
+          "drawCalls": 4
+        },
+        {
+          "tris": 2530,
+          "verts": 2905,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "红木（深红褐，擦漆）",
+        "亚麻布（燕麦色）",
+        "茶具与摆件（铁壶 / 紫砂 / 青花 / 开片 / 乌金石 / 湘妃竹 / 线装书 / 茶饼，图集）",
+        "拉丝黄铜"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 205,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 22
+      },
+      "fileKB": 1938
     }
   ]
 }
