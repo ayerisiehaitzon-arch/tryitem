@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T12:21:04.555Z",
+  "generated": "2026-09-28T13:49:39.355Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1465,6 +1465,49 @@
         "az": 24
       },
       "fileKB": 204
+    },
+    {
+      "id": "wall_slat",
+      "name": "木条吸音墙",
+      "nameEn": "Acoustic Slat Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        154
+      ],
+      "lods": [
+        {
+          "tris": 540,
+          "verts": 1066,
+          "drawCalls": 4
+        },
+        {
+          "tris": 532,
+          "verts": 1058,
+          "drawCalls": 4
+        },
+        {
+          "tris": 528,
+          "verts": 1054,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "黑色吸音毡",
+        "白色哑光烤漆",
+        "胡桃木（哑光清漆）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 226,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 28
+      },
+      "fileKB": 691
     },
     {
       "id": "kitchen_base",
@@ -2940,6 +2983,134 @@
         "az": 22
       },
       "fileKB": 1938
+    },
+    {
+      "id": "projector_screen",
+      "name": "投影幕",
+      "nameEn": "Fixed-Frame Projection Screen",
+      "category": "theater",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        2364,
+        1900,
+        420
+      ],
+      "lods": [
+        {
+          "tris": 1508,
+          "verts": 1730,
+          "drawCalls": 2
+        },
+        {
+          "tris": 904,
+          "verts": 1228,
+          "drawCalls": 2
+        },
+        {
+          "tris": 540,
+          "verts": 946,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "影音器材（幕布画面 / 功放 / 喇叭 / 投影仪 / 金属 / 橡胶 / LED，图集）",
+        "胡桃木（哑光清漆）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 118,
+      "lodDistances": null,
+      "view": {
+        "el": 8,
+        "az": 18
+      },
+      "fileKB": 882
+    },
+    {
+      "id": "theater_sofa",
+      "name": "影音沙发",
+      "nameEn": "Theater Recliner Sofa",
+      "category": "theater",
+      "mount": "floor",
+      "size": [
+        2451,
+        1062,
+        1469
+      ],
+      "lods": [
+        {
+          "tris": 4716,
+          "verts": 3932,
+          "drawCalls": 2
+        },
+        {
+          "tris": 2546,
+          "verts": 2476,
+          "drawCalls": 2
+        },
+        {
+          "tris": 1294,
+          "verts": 1500,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "影音器材（幕布画面 / 功放 / 喇叭 / 投影仪 / 金属 / 橡胶 / LED，图集）",
+        "丝绒（午夜蓝）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 200,
+      "lodDistances": null,
+      "view": {
+        "el": 18,
+        "az": 26
+      },
+      "fileKB": 1200
+    },
+    {
+      "id": "tower_speaker",
+      "name": "落地音箱",
+      "nameEn": "Floor-Standing Tower Speaker",
+      "category": "theater",
+      "mount": "floor",
+      "size": [
+        292,
+        1100,
+        429
+      ],
+      "lods": [
+        {
+          "tris": 2814,
+          "verts": 2280,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1736,
+          "verts": 1524,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1038,
+          "verts": 1034,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "影音器材（幕布画面 / 功放 / 喇叭 / 投影仪 / 金属 / 橡胶 / LED，图集）",
+        "胡桃木（哑光清漆）",
+        "黑色皮革（拉扣）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 308,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 28
+      },
+      "fileKB": 1260
     }
   ]
 }

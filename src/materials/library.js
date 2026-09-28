@@ -579,5 +579,28 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 影音室 ——
+Object.assign(MATERIALS, {
+  theater: {
+    label: '影音器材（幕布画面 / 功放 / 喇叭 / 投影仪 / 金属 / 橡胶 / LED，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；幕布上的画面、功放的显示屏、LED 灯圈自发光，其余格子不发光
+    tex: 'theater', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+    emissive: [1, 1, 1], emissiveStrength: 1.25,
+  },
+  velvet_ink: {
+    label: '丝绒（午夜蓝）',
+    tex: 'velvet_ink', tile: [0.2, 0.2],
+    roughness: 1, metallic: 0, normalScale: 0.5,
+    sheen: { color: [0.24, 0.3, 0.48], roughness: 0.35 },
+  },
+  felt_black: {
+    label: '黑色吸音毡',
+    tex: 'felt_black', tile: [0.08, 0.08],
+    roughness: 1, metallic: 0, normalScale: 0.6,
+    sheen: { color: [0.16, 0.16, 0.18], roughness: 0.7 },
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

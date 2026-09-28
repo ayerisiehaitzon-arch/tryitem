@@ -217,7 +217,7 @@
   </div>
   <p class="caption" id="caption"></p>
   <nav class="dock">
-    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具、墙地门窗、厨房、浴室、阳台、书房、玄关、儿童房、洗衣房、衣帽间、健身房、书房二与茶室"></div>
+    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具、墙地门窗、厨房、浴室、阳台、书房、玄关、儿童房、洗衣房、衣帽间、健身房、书房二、茶室与影音室"></div>
     <div class="controls">
       <div class="seg" role="group" aria-label="显示">
         <button id="t-wire" aria-pressed="false">线框</button>
@@ -463,11 +463,12 @@ function instantiate(asset, pos = [0, 0, 0], rotY = 0, { lift = 0 } = {}) {
 //   → 洗衣房（洗衣机、烘干机并排靠墙，窗前一架晾衣屏风）→ 衣帽间（开放衣柜占满一面墙、好莱坞镜梳妆台、地毯上的首饰岛台）
 //   → 健身房（跑步机对着窗、靠墙的哑铃架、隔墙上斜靠一面穿衣镜、地上一张卷着一头的瑜伽垫）
 //   → 书房二（三角钢琴的直边靠着隔墙、琴盖朝屋里撑开，琴凳摆在键盘前的地毯上，右边一个乐谱架，靠墙一架书）
-//   → 茶室（博古架贴着隔墙边的后墙，窗前一张原木大板茶桌，主人的蒲团在桌后、两个客人的蒲团在桌前）；
+//   → 茶室（博古架贴着隔墙边的后墙，窗前一张原木大板茶桌，主人的蒲团在桌后、两个客人的蒲团在桌前）
+//   → 影音室（木条吸音墙上挂着投影幕，底下悬着影音柜和激光投影仪，两边一对落地音箱，三座的影音沙发对着幕布）；
 //   书桌前面是餐厅，厨房和餐厅连成一片水磨石地面，
 //   餐边柜靠在厨房旁边的后墙上；客厅往前伸出一个阳台（户外地板、三面栏杆、一对户外椅夹着鼓凳，两角各一棵橄榄树）。
 // 地面：玄关黑白棋盘格大理石，书桌、客厅、书房、衣帽间人字拼，厨房、餐厅水磨石，卧室、儿童房宽板，浴室六角马赛克，洗衣房水泥花砖，
-// 健身房橡胶地垫，书房二人字拼，茶室青灰方砖；
+// 健身房橡胶地垫，书房二人字拼，茶室青灰方砖，影音室宽板；
 // 地板模块按 2m 网格铺，接缝处的图案严丝合缝。
 // 摆件放在家具上：书在书架第二层，花瓶在茶几上，台灯在书桌上；地毯压在沙发前腿下。
 // 吊柜装在台面上方 55cm（地面以上 1.45m）：柜底的灯带照在墙砖上，光斑正好铺满台面到柜底这一段。
@@ -480,6 +481,7 @@ const CX = 22.06; // 洗衣房和衣帽间之间的隔墙（同样只有后半�
 const GX = 26.06; // 衣帽间和健身房之间的隔墙（同样只有后半截）
 const MX = 30.06; // 健身房和书房二之间的隔墙（同样只有后半截）
 const TX = 34.06; // 书房二和茶室之间的隔墙（同样只有后半截）
+const HX = 38.06; // 茶室和影音室之间的隔墙（同样只有后半截）
 const ROOM = [
   // —— 墙 ——
   ['wall_door', [-13, 0, WZ], 0],
@@ -508,6 +510,8 @@ const ROOM = [
   ['wall_wainscot', [33, 0, WZ], 0],
   ['wall', [35, 0, WZ], 0],
   ['wall_window', [37, 0, WZ], 0],
+  ['wall_slat', [39, 0, WZ], 0],
+  ['wall_slat', [41, 0, WZ], 0],
   ['wall', [LX, 0, -1.12], Math.PI / 2],
   ['wall', [LX, 0, 0.88], Math.PI / 2],
   ['wall', [PX, 0, -1.0], Math.PI / 2],
@@ -517,6 +521,7 @@ const ROOM = [
   ['wall', [GX, 0, -1.0], Math.PI / 2],
   ['wall', [MX, 0, -1.0], Math.PI / 2],
   ['wall', [TX, 0, -1.0], Math.PI / 2],
+  ['wall', [HX, 0, -1.0], Math.PI / 2],
   // —— 地面 ——
   ['floor_checker', [-13, 0, -1], 0],
   ['floor_checker', [-11, 0, -1], 0],
@@ -570,6 +575,10 @@ const ROOM = [
   ['floor_brick', [37, 0, -1], 0],
   ['floor_brick', [35, 0, 1], 0],
   ['floor_brick', [37, 0, 1], 0],
+  ['floor_plank', [39, 0, -1], 0],
+  ['floor_plank', [41, 0, -1], 0],
+  ['floor_plank', [39, 0, 1], 0],
+  ['floor_plank', [41, 0, 1], 0],
   ['floor_deck', [-1, 0, 3], 0],
   ['floor_deck', [1, 0, 3], 0],
   // —— 玄关 ——（鞋柜、穿衣镜的原点在墙根；衣帽架立在入户门左边，包和围巾朝着屋里；
@@ -673,6 +682,13 @@ const ROOM = [
   ['tea_cushion', [36.36, 0, 0.3], 1.2],
   ['tea_cushion', [37.22, 0, 0.28], 2.1],
   ['snake_plant', [37.74, 0, -1.74], 0.6],
+  // —— 影音室 ——（两块木条吸音墙拼成后墙，投影幕挂在正中，底下悬着影音柜和激光投影仪；两只落地音箱在幕布两边，
+  //    稍微朝里转一点对着沙发；三座的影音沙发背对着前面、离幕布 2.8m，最左边那一座躺下了；右后角一盆虎尾兰）
+  ['projector_screen', [40, 0, -2.0], 0],
+  ['tower_speaker', [38.56, 0, -1.72], 0.18],
+  ['tower_speaker', [41.44, 0, -1.72], -0.18],
+  ['theater_sofa', [40, 0, 0.86], Math.PI],
+  ['snake_plant', [41.8, 0, -1.3], 2.2],
   // —— 阳台 ——（栏杆 2m 一个模块：前面两块，左右各一块转 90°）
   ['railing', [-1, 0, 4], 0],
   ['railing', [1, 0, 4], 0],
@@ -1007,7 +1023,8 @@ $('items').innerHTML = `
   + group('衣帽间', mf.items.filter((s) => s.category === 'closet'))
   + group('健身房', mf.items.filter((s) => s.category === 'gym'))
   + group('书房二', mf.items.filter((s) => s.category === 'music'))
-  + group('茶室', mf.items.filter((s) => s.category === 'tea'));
+  + group('茶室', mf.items.filter((s) => s.category === 'tea'))
+  + group('影音室', mf.items.filter((s) => s.category === 'theater'));
 for (const b of document.querySelectorAll('.item')) b.onclick = () => select(b.dataset.id);
 const wanted = params.get('item') || location.hash.slice(1);
 const first = wanted === 'room' || mf.items.find((s) => s.id === wanted) ? wanted : mf.items[0].id;

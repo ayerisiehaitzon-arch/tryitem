@@ -475,3 +475,61 @@ export function strawUV(region, u, v) {
   const S = STRAW.size, m = 2;
   return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
 }
+
+// —— 影音室图集：2048²（投影幕的画面、功放面板、喇叭的振膜、投影仪的网布、铭牌、纯色格子共用一个材质）——
+//   film：幕布上的画面（16:9，里面是 2.39:1 的宽银幕电影，上下两道黑边），颜色和自发光各画一份；
+//   receiver：功放的拉丝铝面板（0.43 × 0.134m）：中间一块黑玻璃的显示屏（自发光的字）、两个旋钮的位置、一排小按钮；
+//   cone：低音振膜（u 绕一圈，v 从外沿到防尘帽）；weave：中音的编织振膜（同样的展开）；
+//   fabric：投影仪正面的针织网布（0.55 × 0.09m）；badge：音箱的铝铭牌（上半）、投影仪顶上的字（下半）；
+//   control：沙发扶手侧面的按键（躺下 / 坐起两个箭头、USB 口）；swatch：纯色格子（LED 的格子带自发光）
+export const THEATER_ATLAS = {
+  size: 2048,
+  regions: {
+    film: [0, 0, 2048, 1152],
+    receiver: [0, 1152, 1024, 1472],
+    cone: [1024, 1152, 1536, 1280], weave: [1536, 1152, 2048, 1280],
+    fabric: [1024, 1280, 1536, 1408], badge: [1536, 1280, 2048, 1344], badgeW: [1536, 1344, 2048, 1408],
+    control: [1024, 1408, 1280, 1472],
+    swatch: [0, 1472, 2048, 1600],
+  },
+  film: { aspect: 2.39 },                 // 画面里电影本身的宽高比（上下是黑边）
+  receiver: { w: 0.43, h: 0.134 },
+  fabric: { w: 0.55, h: 0.09 },
+  badge: { w: 0.07, h: 0.0088 }, badgeW: { w: 0.12, h: 0.015 },
+  control: { w: 0.08, h: 0.02 },
+  cols: 16,
+  swatches: [
+    { name: 'velvetBlack', c: [14, 14, 16], rough: 0.95 },
+    { name: 'screen', c: [214, 214, 210], rough: 0.9 },
+    { name: 'satinBlack', c: [24, 24, 26], rough: 0.42 },
+    { name: 'aluminum', c: [180, 182, 186], rough: 0.3, metal: 1 },
+    { name: 'darkMetal', c: [58, 60, 64], rough: 0.35, metal: 1 },
+    { name: 'chrome', c: [222, 224, 228], rough: 0.12, metal: 1 },
+    { name: 'gold', c: [226, 186, 112], rough: 0.24, metal: 1 },
+    { name: 'rubber', c: [22, 22, 23], rough: 0.7 },
+    { name: 'silk', c: [46, 46, 48], rough: 0.62 },
+    { name: 'felt', c: [16, 16, 17], rough: 0.95 },
+    { name: 'glassBlack', c: [8, 8, 10], rough: 0.05 },
+    { name: 'projWhite', c: [228, 228, 224], rough: 0.32 },
+    { name: 'projGray', c: [120, 122, 126], rough: 0.4 },
+    { name: 'plastic', c: [30, 30, 32], rough: 0.5 },
+    { name: 'steel', c: [196, 198, 202], rough: 0.22, metal: 1 },
+    { name: 'ledBlue', c: [70, 150, 255], rough: 0.3, emit: [80, 170, 255] },
+    { name: 'ledWhite', c: [240, 236, 226], rough: 0.3, emit: [255, 244, 222] },
+    { name: 'disc', c: [36, 60, 150], rough: 0.3 },
+    { name: 'lens', c: [20, 24, 34], rough: 0.04 },
+  ],
+};
+export function theaterUV(region, u, v) {
+  const [x0, y0, x1, y1] = THEATER_ATLAS.regions[region];
+  const S = THEATER_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function theaterSwatch(name) {
+  const A = THEATER_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`影音室图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}

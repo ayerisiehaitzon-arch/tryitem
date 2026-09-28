@@ -151,3 +151,33 @@ export const wallWainscot = {
     }
   },
 };
+
+// —— 木条吸音墙：正面是一根根竖着的胡桃木条，条与条之间露出黑色的吸音毡；背面白墙 ——
+// 木条 2.7cm 宽、2cm 厚，中心距 4cm；第一根离模块端头 2cm：模块拼起来，跨过接缝的间距也是 4cm。
+// 木条底下离地 1cm 留一道影缝，顶到墙顶。每根木条的木纹偏移各不相同（按部件名随机），不会一排一样。
+export const SLATS = { pitch: 0.04, w: 0.027, t: 0.02, gap: 0.01 };
+export const wallSlat = {
+  id: 'wall_slat',
+  name: '木条吸音墙',
+  nameEn: 'Acoustic Slat Wall',
+  category: 'architecture',
+  aoDensity: 110,
+  shadow: { margin: 0.32, maxDist: 0.9, density: 60 },
+  view: { el: 12, az: 28 },
+  build(k) {
+    const { L, H, T } = WALL;
+    const skin = 0.004;
+    wallBox(k, { name: 'wall', x0: -L / 2, x1: L / 2, z1: T / 2 - skin, omit: ['ny', 'pz'], ends: ['nx', 'px'] });
+    wallBox(k, { name: 'felt', mat: 'felt_black', x0: -L / 2, x1: L / 2, z0: T / 2 - skin, omit: ['ny', 'nz'], ends: ['nx', 'px'], density: { pz: 0.6 } });
+    wallEnds(k);
+    skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
+    const { pitch, w, t, gap } = SLATS, n = Math.round(L / pitch);
+    for (let i = 0; i < n; i++) {
+      const x = -L / 2 + pitch / 2 + i * pitch;
+      k.box({
+        name: `slat${i}`, mat: 'walnut', size: [w, H - gap, t], segs: 0, grain: 'y', omit: ['nz'],
+        density: { px: 0.3, nx: 0.3, ny: 0.2 }, xf: xf({ pos: [x, gap + (H - gap) / 2, T / 2 + t / 2] }),
+      });
+    }
+  },
+};
