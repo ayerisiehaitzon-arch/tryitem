@@ -22,13 +22,14 @@ function put(out, i, c, h, r) {
 }
 
 // ——————————————————————— 细线字体 ———————————————————————
-// 数字和几个大写字母：每个字是几条折线（圆弧用折线近似），坐标在 w × 1 的框里（y 向下，1 是基线）
+// 数字和几个大写字母：每个字是几条折线（圆弧用折线近似），坐标在 w × 1 的框里（y 向下，1 是基线）。
+// 琴房的乐谱标题、钢琴上的铭牌（几何的金字）也用它
 const arc = (cx, cy, rx, ry, a0, a1, n = 10) => Array.from({ length: n + 1 }, (_, i) => {
   const a = ((a0 + ((a1 - a0) * i) / n) * Math.PI) / 180;
   return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)];
 });
 const bowlP = [[0.06, 1], [0.06, 0], [0.3, 0], ...arc(0.3, 0.26, 0.24, 0.26, -90, 90, 8).slice(1), [0.06, 0.52]];
-const GLYPHS = {
+export const GLYPHS = {
   '0': { w: 0.6, s: [arc(0.3, 0.5, 0.27, 0.5, 0, 360, 18)] },
   '1': { w: 0.42, s: [[[0.06, 0.18], [0.28, 0], [0.28, 1]]] },
   '2': { w: 0.6, s: [[...arc(0.3, 0.29, 0.26, 0.29, 195, 375, 10), [0.03, 1], [0.58, 1]]] },
@@ -62,11 +63,13 @@ const GLYPHS = {
   S: { w: 0.58, s: [[...arc(0.29, 0.255, 0.25, 0.255, -25, -270, 12), ...arc(0.29, 0.75, 0.27, 0.25, -90, 155, 12).slice(1)]] },
   T: { w: 0.6, s: [[[0.02, 0], [0.58, 0]], [[0.3, 0], [0.3, 1]]] },
   U: { w: 0.6, s: [[[0.06, 0], [0.06, 0.68], ...arc(0.3, 0.68, 0.24, 0.32, 180, 0, 10).slice(1), [0.54, 0]]] },
+  V: { w: 0.6, s: [[[0.02, 0], [0.3, 1], [0.58, 0]]] },
+  Y: { w: 0.6, s: [[[0.02, 0], [0.3, 0.52], [0.58, 0]], [[0.3, 0.52], [0.3, 1]]] },
 };
 const TRACK = 0.2;
-const textWidth = (str, h) => ([...str].reduce((s, ch) => s + (GLYPHS[ch]?.w ?? 0.5) + TRACK, 0) - TRACK) * h;
+export const textWidth = (str, h) => ([...str].reduce((s, ch) => s + (GLYPHS[ch]?.w ?? 0.5) + TRACK, 0) - TRACK) * h;
 // 一行字：x, y 是左上角（米），h 是字高；align 'left' | 'center' | 'right'
-function text(fill, str, x, y, h, { stroke = 0.13, align = 'left', ...style } = {}) {
+export function text(fill, str, x, y, h, { stroke = 0.13, align = 'left', ...style } = {}) {
   const width = textWidth(str, h);
   let cx = align === 'center' ? x - width / 2 : align === 'right' ? x - width : x;
   const sw = stroke * h;

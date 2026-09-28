@@ -330,3 +330,64 @@ export function gymHexUV(i, x, y) {
 //   top：正面（印对位线）占 v 的 [0, 0.47]，bottom：背面（深一号的颜色、防滑波纹）占 [0.5, 0.97]，
 //   edge：最下面一窄条画垫子的切边（上半是正面的颜色、下半是背面的颜色），垫子卷起来时侧面一圈圈的双色就是它
 export const YOGA = { L: 1.83, W: 0.61, T: 0.005, top: [0, 0.47], bottom: [0.5, 0.97], edge: [0.98, 1] };
+
+// —— 钢琴图集：2048²（三角钢琴里面除了烤漆的琴壳，都在这一张图上）——
+//   harp：俯视的音板、铸铁板、琴弦、弦轴、制音器（x 横跨琴宽、z 从前往后，范围见 music/outline.js 的 HARP），
+//         琴肚子里的平面、制音器的顶面都按位置直接投影进来；
+//   octave：一个八度的白键顶面（七个白键 + 画上去的五个黑键：LOD2 没有黑键的几何，就用画的）。v = 0 是琴键前沿，在区域的下沿；
+//   keyfront：同一个八度的白键前脸，紧贴在 octave 下面 —— 键顶前沿的小圆角从一块过渡到另一块，中间不串色；
+//   swatch：纯色格子（象牙白、乌木黑、琴键呢、黄铜、金漆、钢……），部件的 UV 指向格子正中。
+export const PIANO_ATLAS = {
+  size: 2048,
+  regions: {
+    harp: [0, 0, 2048, 1792],
+    octave: [0, 1792, 512, 2016],
+    keyfront: [0, 2016, 512, 2048],
+    swatch: [512, 1792, 2048, 2048],
+  },
+  cols: 12,
+  swatches: [
+    { name: 'ivory', c: [238, 234, 224], rough: 0.24 },
+    { name: 'ebony', c: [20, 19, 19], rough: 0.34 },
+    { name: 'felt', c: [112, 30, 40], rough: 0.95 },
+    { name: 'brass', c: [232, 194, 126], rough: 0.2, metal: 1 },
+    { name: 'gold', c: [208, 170, 100], rough: 0.4, metal: 1 },
+    { name: 'steel', c: [206, 208, 212], rough: 0.24, metal: 1 },
+    { name: 'damper', c: [30, 27, 26], rough: 0.4 },
+    { name: 'black', c: [14, 14, 16], rough: 0.12 },
+    { name: 'rubber', c: [34, 34, 36], rough: 0.85 },
+    { name: 'spruce', c: [222, 188, 134], rough: 0.45 },
+    { name: 'feltBlack', c: [28, 28, 30], rough: 0.95 },
+    { name: 'chrome', c: [236, 238, 240], rough: 0.06, metal: 1 },
+  ],
+};
+
+export function pianoUV(region, u, v) {
+  const [x0, y0, x1, y1] = PIANO_ATLAS.regions[region];
+  const S = PIANO_ATLAS.size, m = 2;
+  const X = x0 + m + u * (x1 - x0 - 2 * m);
+  // octave / keyfront 共用的那条边（琴键前沿）不留边距：两块在那里严丝合缝
+  const Y = region === 'octave' ? y1 - v * (y1 - y0 - m) : region === 'keyfront' ? y0 + v * (y1 - y0 - m) : y0 + m + v * (y1 - y0 - 2 * m);
+  return [X / S, Y / S];
+}
+
+export function pianoSwatch(name) {
+  const A = PIANO_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`钢琴图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}
+
+// —— 乐谱：1024²，四页（2 × 2 格，每页 512²）——
+//   0、1：钢琴谱（大谱表：高音谱表 + 低音谱表，花括号连起来），摊开放在钢琴的谱架上；
+//   2、3：小提琴分谱（单行谱表），放在乐谱架上。
+//   一页 23 × 30.5cm，u 横跨页宽，v 从页顶往下；纸的背面指向页边空白里的一点（blank）
+export const SCORE = { size: 1024, W: 0.23, H: 0.305, blank: [0.02, 0.012] };
+
+export function scoreUV(page, u, v) {
+  const S = SCORE.size, c = S / 2, m = 2;
+  const x0 = (page % 2) * c, y0 = Math.floor(page / 2) * c;
+  return [(x0 + m + u * (c - 2 * m)) / S, (y0 + m + v * (c - 2 * m)) / S];
+}

@@ -53,11 +53,14 @@ import jewelryIsland from '../closet/jewelry-island.js';
 import treadmill from '../gym/treadmill.js';
 import dumbbellRack from '../gym/dumbbell-rack.js';
 import yogaMat from '../gym/yoga-mat.js';
+import grandPiano from '../music/grand-piano.js';
+import musicStand from '../music/music-stand.js';
+import pianoBench from '../music/piano-bench.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
 // 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）、
 // 阳台（category: 'balcony'）、书房（category: 'study'）、玄关（category: 'entry'）、儿童房（category: 'kids'）、
-// 洗衣房（category: 'laundry'）、衣帽间（category: 'closet'）、健身房（category: 'gym'）
+// 洗衣房（category: 'laundry'）、衣帽间（category: 'closet'）、健身房（category: 'gym'）、书房二 / 琴房（category: 'music'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
@@ -73,4 +76,5 @@ export const FURNITURE = [
   washer, dryer, dryingRack,
   openWardrobe, dressingTable, jewelryIsland,
   treadmill, dumbbellRack, yogaMat,
+  grandPiano, musicStand, pianoBench,
 ];

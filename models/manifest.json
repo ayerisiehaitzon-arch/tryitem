@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T07:31:47.532Z",
+  "generated": "2026-09-28T09:40:51.270Z",
   "items": [
     {
       "id": "dining_chair",
@@ -2639,6 +2639,133 @@
         "az": 20
       },
       "fileKB": 811
+    },
+    {
+      "id": "grand_piano",
+      "name": "三角钢琴",
+      "nameEn": "Baby Grand Piano",
+      "category": "music",
+      "mount": "floor",
+      "size": [
+        1502,
+        1807,
+        1644
+      ],
+      "lods": [
+        {
+          "tris": 4318,
+          "verts": 4235,
+          "drawCalls": 3
+        },
+        {
+          "tris": 2372,
+          "verts": 2898,
+          "drawCalls": 3
+        },
+        {
+          "tris": 948,
+          "verts": 1236,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "钢琴烤漆（黑色镜面）",
+        "钢琴（琴键 / 铸铁板 / 琴弦 / 音板 / 黄铜，图集）",
+        "乐谱纸（钢琴谱 / 小提琴分谱）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 136,
+      "lodDistances": null,
+      "view": {
+        "el": 28,
+        "az": 38,
+        "dist": 0.82
+      },
+      "fileKB": 1772
+    },
+    {
+      "id": "music_stand",
+      "name": "乐谱架",
+      "nameEn": "Walnut Lyre Music Stand",
+      "category": "music",
+      "mount": "floor",
+      "size": [
+        560,
+        1350,
+        421
+      ],
+      "lods": [
+        {
+          "tris": 2958,
+          "verts": 2327,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1738,
+          "verts": 1500,
+          "drawCalls": 3
+        },
+        {
+          "tris": 892,
+          "verts": 976,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "拉丝黄铜",
+        "乐谱纸（钢琴谱 / 小提琴分谱）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 360,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 30
+      },
+      "fileKB": 831
+    },
+    {
+      "id": "piano_bench",
+      "name": "琴凳",
+      "nameEn": "Adjustable Tufted Piano Bench",
+      "category": "music",
+      "mount": "floor",
+      "size": [
+        658,
+        510,
+        360
+      ],
+      "lods": [
+        {
+          "tris": 3556,
+          "verts": 2702,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1518,
+          "verts": 1385,
+          "drawCalls": 3
+        },
+        {
+          "tris": 456,
+          "verts": 584,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "黑色皮革（拉扣）",
+        "钢琴烤漆（黑色镜面）",
+        "黑色粉末喷涂钢"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 348,
+      "lodDistances": null,
+      "view": {
+        "el": 24,
+        "az": 32
+      },
+      "fileKB": 718
     }
   ]
 }

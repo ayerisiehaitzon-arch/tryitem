@@ -37,8 +37,8 @@ export const sdPoly = (x, y, P) => {
 export function painter(out, S, box, W, H) {
   const [bx0, by0, bx1, by1] = box;
   const sx = (bx1 - bx0) / W, sy = (by1 - by0) / H, px = 1 / Math.min(sx, sy);
-  // sdf：(x, y) → 距离；bb：[x0, y0, x1, y1]（米）；把覆盖率混进颜色 / 自发光 / 粗糙度 / 高度
-  const fill = (sdf, bb, { color = null, emit = null, rough = null, height = null, alpha = 1 } = {}) => {
+  // sdf：(x, y) → 距离；bb：[x0, y0, x1, y1]（米）；把覆盖率混进颜色 / 自发光 / 粗糙度 / 高度 / 金属度
+  const fill = (sdf, bb, { color = null, emit = null, rough = null, height = null, metal = null, alpha = 1 } = {}) => {
     const i0 = Math.max(bx0, Math.floor(bx0 + (bb[0] - px) * sx)), i1 = Math.min(bx1 - 1, Math.ceil(bx0 + (bb[2] + px) * sx));
     const j0 = Math.max(by0, Math.floor(by0 + (bb[1] - px) * sy)), j1 = Math.min(by1 - 1, Math.ceil(by0 + (bb[3] + px) * sy));
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
@@ -50,6 +50,7 @@ export function painter(out, S, box, W, H) {
       if (emit) for (let c = 0; c < 3; c++) out.emit[k * 3 + c] = mix(out.emit[k * 3 + c], emit[c], a);
       if (rough !== null) out.rough[k] = mix(out.rough[k], rough, a);
       if (height !== null) out.height[k] = mix(out.height[k], height, a);
+      if (metal !== null && out.metal) out.metal[k] = mix(out.metal[k], metal, a);
     }
   };
   return { fill, px };

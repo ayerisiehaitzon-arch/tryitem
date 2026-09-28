@@ -35,6 +35,9 @@
 //   docs/previews/gym.jpg             健身房三件：跑步机、哑铃架、瑜伽垫
 //   docs/previews/gym-detail.jpg      健身房特写：跑步机的屏幕和控制台、哑铃端面的重量和滚花握把、瑜伽垫卷起来的一头、橡胶地垫
 //   docs/previews/gym-room.jpg        全屋陈列里的健身房
+//   docs/previews/music.jpg           书房二三件：三角钢琴、乐谱架、琴凳
+//   docs/previews/music-detail.jpg    书房二特写：键盘和金字铭牌、琴肚子里的铁板和琴弦、琴凳的菱形拉扣、竖琴谱板和小提琴分谱
+//   docs/previews/music-room.jpg      全屋陈列里的书房二
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -54,7 +57,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -254,6 +257,22 @@ await grid(gymDetail, 2, [600, 450], path.join(out, 'gym-detail.jpg'));
 const gymRoom = await shoot({ items: ['room'], views: ['&target=28.1:0.9:-0.75&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'gym-room.png' });
 await sharp(gymRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'gym-room.jpg'));
 console.log('→ docs/previews/gym-room.jpg');
+
+const musicHero = await shoot({ items: musicIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `m_${id}.png` });
+await grid(musicHero, 3, [480, 360], path.join(out, 'music.jpg'));
+
+// 书房二特写：键盘和金字铭牌、琴肚子里（金色铁板、交叉的缠铜低音弦、弦轴、制音器、铸字）、
+// 琴凳的菱形拉扣和滚边、乐谱架的竖琴谱板和小提琴分谱
+const musicDetail = [];
+musicDetail.push(...await shoot({ items: ['grand_piano'], views: ['&target=-0.1:0.78:0.62&d=0.95&el=24&az=16'], size: [800, 600], outDir: tmp, name: () => 'mus0.png' }));
+musicDetail.push(...await shoot({ items: ['grand_piano'], views: ['&target=0.05:0.93:-0.1&d=1.25&el=44&az=58'], size: [800, 600], outDir: tmp, name: () => 'mus1.png' }));
+musicDetail.push(...await shoot({ items: ['piano_bench'], views: ['&target=0:0.46:0&d=0.9&el=34&az=24'], size: [800, 600], outDir: tmp, name: () => 'mus2.png' }));
+musicDetail.push(...await shoot({ items: ['music_stand'], views: ['&target=0:1.08:0.06&d=0.95&el=10&az=12'], size: [800, 600], outDir: tmp, name: () => 'mus3.png' }));
+await grid(musicDetail, 2, [600, 450], path.join(out, 'music-detail.jpg'));
+
+const musicRoom = await shoot({ items: ['room'], views: ['&target=32.1:0.9:-0.6&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'music-room.png' });
+await sharp(musicRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'music-room.jpg'));
+console.log('→ docs/previews/music-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

@@ -17,6 +17,7 @@ import * as kids from './kids-textures.js';
 import * as laundry from './laundry-textures.js';
 import * as closet from './closet-textures.js';
 import * as gym from './gym-textures.js';
+import * as music from './music-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -436,6 +437,12 @@ export const TEXTURES = {
     size: 1536, detail: 0.5, normalStrength: 0.8, v: 1,
     gen: (S) => gym.rubberFloor(S, { seed: 651, period: 2, tiles: 4, joint: 0.001, bevel: 0.0015, density: 0.1, base: [34, 34, 36], fleck: [150, 152, 156], blue: [84, 112, 160] }),
   },
+  // —— 书房二（琴房）——
+  // 钢琴图集：俯视的音板 / 铸铁板 / 琴弦 / 弦轴 / 制音器（1.4m 见方画在 2048 × 1792 像素里，琴弦一两个像素宽）、
+  // 一个八度的琴键（顶面 + 前脸）、纯色格子
+  piano: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => music.pianoAtlas(S, { seed: 701 }) },
+  // 乐谱：四页，钢琴谱两页（大谱表）、小提琴分谱两页；墨是平的，法线只留一点纸的纤维
+  score: { size: 1024, detail: 0.5, normalStrength: 0.4, v: 1, gen: (S) => music.score(S, { seed: 711 }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB

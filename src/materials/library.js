@@ -517,5 +517,33 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 书房二（琴房）——
+const LEATHER_BASE = [122, 72, 46]; // 植鞣皮贴图的颜色：黑色的琴凳皮面用同一张图染出来
+Object.assign(MATERIALS, {
+  lacquer: {
+    label: '钢琴烤漆（黑色镜面）',
+    // 几乎纯黑、粗糙度很低，再罩一层清漆：看得见的全是环境的倒影
+    color: srgb(10, 10, 12), metallic: 0, roughness: 0.08,
+    clearcoat: { factor: 1, roughness: 0.02 },
+  },
+  piano: {
+    label: '钢琴（琴键 / 铸铁板 / 琴弦 / 音板 / 黄铜，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里（铁板的金漆、琴弦、弦轴、黄铜是金属，琴键、音板、呢子不是）
+    tex: 'piano', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.6,
+  },
+  score: {
+    label: '乐谱纸（钢琴谱 / 小提琴分谱）',
+    tex: 'score', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.4,
+  },
+  leather_black: {
+    label: '黑色皮革（拉扣）',
+    // 和干邑色植鞣皮同一张贴图：铺得密一倍（细纹的牛皮），法线压浅一点
+    tex: 'leather', tile: [0.14, 0.14], color: tint([28, 28, 30], LEATHER_BASE),
+    roughness: 1, metallic: 0, normalScale: 0.6,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;
