@@ -349,5 +349,33 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 玄关 ——
+Object.assign(MATERIALS, {
+  floor_checker: {
+    label: '黑白棋盘格大理石（抛光）',
+    tex: 'checker', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    clearcoat: { factor: 0.35, roughness: 0.12 },
+  },
+  travertine: {
+    label: '洞石（顺纹切，哑光）',
+    tex: 'travertine', tile: [0.6, 0.6],
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+  felt: {
+    label: '羊毛毡（驼色）',
+    tex: 'felt', tile: [0.08, 0.08],
+    roughness: 1, metallic: 0, normalScale: 0.6,
+    sheen: { color: [0.42, 0.33, 0.24], roughness: 0.7 },
+  },
+  linen_mustard: {
+    label: '亚麻布（芥末黄，围巾）',
+    // 和托特包的帆布同一张亚麻贴图，染成芥末黄 —— 衣帽架上不多带一套贴图
+    tex: 'linen', tile: [0.1, 0.1], color: tint([200, 150, 58]), doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.8,
+    sheen: { color: [0.5, 0.4, 0.18], roughness: 0.6 },
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

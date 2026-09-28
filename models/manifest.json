@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T23:06:11.793Z",
+  "generated": "2026-09-28T01:32:51.107Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1307,6 +1307,46 @@
       "fileKB": 389
     },
     {
+      "id": "floor_checker",
+      "name": "棋盘格大理石地面",
+      "nameEn": "Checkerboard Marble Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "黑白棋盘格大理石（抛光）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 303
+    },
+    {
       "id": "kitchen_base",
       "name": "橱柜",
       "nameEn": "Shaker Kitchen Base Run",
@@ -1839,6 +1879,143 @@
         "az": 30
       },
       "fileKB": 133
+    },
+    {
+      "id": "shoe_cabinet",
+      "name": "鞋柜",
+      "nameEn": "Oak Tilt-out Shoe Cabinet",
+      "category": "entry",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        920,
+        1473,
+        280
+      ],
+      "lods": [
+        {
+          "tris": 859,
+          "verts": 800,
+          "drawCalls": 4
+        },
+        {
+          "tris": 645,
+          "verts": 631,
+          "drawCalls": 4
+        },
+        {
+          "tris": 190,
+          "verts": 247,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "洞石（顺纹切，哑光）",
+        "拉丝黄铜",
+        "手工釉面炻器（图集）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 324,
+      "lodDistances": null,
+      "view": {
+        "el": 14,
+        "az": 30
+      },
+      "fileKB": 992
+    },
+    {
+      "id": "floor_mirror",
+      "name": "穿衣镜",
+      "nameEn": "Arched Brass Floor Mirror",
+      "category": "entry",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        700,
+        1793,
+        197
+      ],
+      "lods": [
+        {
+          "tris": 866,
+          "verts": 548,
+          "drawCalls": 3
+        },
+        {
+          "tris": 414,
+          "verts": 314,
+          "drawCalls": 3
+        },
+        {
+          "tris": 234,
+          "verts": 198,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "拉丝黄铜",
+        "银镜",
+        "胡桃木（哑光清漆）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 174,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 28
+      },
+      "fileKB": 337
+    },
+    {
+      "id": "coat_stand",
+      "name": "衣帽架",
+      "nameEn": "Oak Coat Stand",
+      "category": "entry",
+      "mount": "floor",
+      "size": [
+        468,
+        1847,
+        537
+      ],
+      "lods": [
+        {
+          "tris": 1472,
+          "verts": 1223,
+          "drawCalls": 5
+        },
+        {
+          "tris": 890,
+          "verts": 822,
+          "drawCalls": 5
+        },
+        {
+          "tris": 497,
+          "verts": 468,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "羊毛毡（驼色）",
+        "植鞣皮（干邑色）",
+        "户外帆布（燕麦色）",
+        "亚麻布（芥末黄，围巾）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 377,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": -20
+      },
+      "fileKB": 1274
     }
   ]
 }

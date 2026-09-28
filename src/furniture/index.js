@@ -24,7 +24,7 @@ import wallLamp from '../lighting/wall-lamp.js';
 import { wall, wallWainscot } from '../architecture/walls.js';
 import { wallDoor } from '../architecture/door.js';
 import { wallWindow } from '../architecture/window.js';
-import { floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck } from '../architecture/floors.js';
+import { floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, floorChecker } from '../architecture/floors.js';
 import { railing } from '../architecture/railing.js';
 import kitchenBase from '../kitchen/base.js';
 import kitchenWall from '../kitchen/wall.js';
@@ -38,18 +38,22 @@ import oliveTree from '../balcony/olive.js';
 import libraryWall from '../study/library.js';
 import readingChair from '../study/reading-chair.js';
 import readingLamp from '../study/reading-lamp.js';
+import shoeCabinet from '../entry/shoe-cabinet.js';
+import floorMirror from '../entry/floor-mirror.js';
+import coatStand from '../entry/coat-stand.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
 // 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）、
-// 阳台（category: 'balcony'）、书房（category: 'study'）
+// 阳台（category: 'balcony'）、书房（category: 'study'）、玄关（category: 'entry'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
   books, vases, fiddleFig, snakePlant, rug,
   floorLamp, tableLamp, pendant, wallLamp,
-  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, railing,
+  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, railing, floorChecker,
   kitchenBase, kitchenWall, kitchenIsland,
   vanity, toilet, shower,
   loungeChair, gardenStool, oliveTree,
   libraryWall, readingChair, readingLamp,
+  shoeCabinet, floorMirror, coatStand,
 ];

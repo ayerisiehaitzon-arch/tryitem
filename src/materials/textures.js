@@ -12,6 +12,7 @@ import * as decor from './decor-textures.js';
 import * as lamp from './lamp-textures.js';
 import { INTERIOR } from './interior-textures.js';
 import * as patio from './patio-textures.js';
+import * as entry from './entry-textures.js';
 
 const VERSION = 8;
 
@@ -324,6 +325,38 @@ export const TEXTURES = {
   patio: { size: 1024, detail: 0.5, normalStrength: 2.5, v: 2, gen: patio.patio },
   // —— 书房 ——
   velvet_rust: { size: 512, normalStrength: 1.2, v: 2, gen: (S) => velvet(S, { seed: 52, crush: 0.16, color: rgb(116, 44, 30) }) },
+  // —— 玄关 ——（棋盘格：一张贴图 = 一整块 2m 地板模块，6 × 6 块 33cm 的砖）
+  checker: {
+    size: 2048, detail: 0.5, normalStrength: 0.8, v: 2,
+    gen: (S) => entry.checker(S, {
+      seed: 401, period: 2, tiles: 6, joint: 0.002, bevel: 0.0012, grout: rgb(196, 194, 188),
+      // 白砖（卡拉拉）：灰色主纹 + 另一个方向的浅色细纹，主纹旁边一圈淡灰的晕；黑砖：稀疏的白色粗纹 + 细碎的白纹
+      white: {
+        base: rgb(236, 234, 229), cloud: rgb(222, 221, 218), haloColor: rgb(214, 213, 211), vein: rgb(128, 130, 136), vein2: rgb(170, 171, 175),
+        main: { dens: 1.6, amp: 0.7, freq: 0.5, width: 0.0014, strength: 0.7, halo: 0.35 },
+        fine: { dens: 3.2, amp: 0.9, freq: 0.9, width: 0.0006, strength: 0.4 },
+        tone: 0.02, rough: 0.14,
+      },
+      black: {
+        base: rgb(30, 30, 33), cloud: rgb(44, 44, 48), haloColor: rgb(58, 58, 62), vein: rgb(224, 220, 212), vein2: rgb(150, 148, 144),
+        main: { dens: 0.9, amp: 0.6, freq: 0.45, width: 0.0022, strength: 0.9, halo: 0.3 },
+        fine: { dens: 3.5, amp: 1.1, freq: 1.0, width: 0.0005, strength: 0.45 },
+        tone: 0.06, rough: 0.12,
+      },
+    }),
+  },
+  travertine: {
+    size: 1024, detail: 0.5, normalStrength: 1, v: 4,
+    gen: (S) => entry.travertine(S, {
+      seed: 411, bands: 40, porous: 0.4,
+      tones: [
+        { p: 0.36, c: rgb(230, 218, 196) }, { p: 0.3, c: rgb(218, 201, 172) }, { p: 0.2, c: rgb(202, 181, 146) },
+        { p: 0.14, c: rgb(238, 230, 214) },
+      ],
+      fill: rgb(188, 166, 130), pitsX: 12, pitsY: 90, rough: 0.5, roughFill: 0.75,
+    }),
+  },
+  felt: { size: 256, normalStrength: 2, v: 1, gen: (S) => entry.felt(S, { seed: 421, color: rgb(160, 118, 76), mottle: 0.05 }) },
 };
 
 function alloc(S) {

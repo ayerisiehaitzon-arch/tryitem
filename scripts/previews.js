@@ -20,6 +20,9 @@
 //   docs/previews/study.jpg           书房三件：书架墙、阅读椅、阅读落地灯
 //   docs/previews/study-detail.jpg    书房特写：一格一格的书、书梯挂钩与梯轨、竖条绗缝椅背与嵌条、灯罩里的白搪瓷
 //   docs/previews/study-room.jpg      全屋陈列里的书房
+//   docs/previews/entry.jpg           玄关三件：鞋柜、穿衣镜、衣帽架
+//   docs/previews/entry-detail.jpg    玄关特写：翻斗门的半圆拉手与洞石台面、拱形镜框、帽子托特包和围巾、棋盘格大理石
+//   docs/previews/entry-room.jpg      全屋陈列里的玄关
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -39,7 +42,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -162,6 +165,21 @@ await grid(sd, 2, [600, 450], path.join(out, 'study-detail.jpg'));
 const sroom = await shoot({ items: ['room'], views: ['&target=4:0.9:-1&d=7.5&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'study-room.png' });
 await sharp(sroom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'study-room.jpg'));
 console.log('→ docs/previews/study-room.jpg');
+
+const en = await shoot({ items: entryIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `n_${id}.png` });
+await grid(en, 3, [480, 360], path.join(out, 'entry.jpg'));
+
+// 玄关特写：鞋柜（半圆拉手、对花的木纹、洞石台面、干罂粟果）、拱形镜框的顶、衣帽架上的帽子 / 托特包 / 围巾、棋盘格大理石
+const ed = [];
+ed.push(...await shoot({ items: ['shoe_cabinet'], views: ['&target=0:0.8:0.2&dist=0.4&el=22&az=25'], size: [800, 600], outDir: tmp, name: () => 'n0.png' }));
+ed.push(...await shoot({ items: ['floor_mirror'], views: ['&target=0:1.62:0.05&dist=0.3&el=6&az=24'], size: [800, 600], outDir: tmp, name: () => 'n1.png' }));
+ed.push(...await shoot({ items: ['coat_stand'], views: ['&target=0:1.35:0&dist=0.42&el=8&az=-20'], size: [800, 600], outDir: tmp, name: () => 'n2.png' }));
+ed.push(...await shoot({ items: ['floor_checker'], views: ['&target=0:0:0.3&dist=0.3&el=30&az=20'], size: [800, 600], outDir: tmp, name: () => 'n3.png' }));
+await grid(ed, 2, [600, 450], path.join(out, 'entry-detail.jpg'));
+
+const nroom = await shoot({ items: ['room'], views: ['&target=-12:0.9:-1&d=7.5&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'entry-room.png' });
+await sharp(nroom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'entry-room.jpg'));
+console.log('→ docs/previews/entry-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿
