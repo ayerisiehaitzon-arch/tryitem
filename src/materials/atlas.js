@@ -263,3 +263,70 @@ export function trinketUV(name) {
   if (i < 0) throw new Error(`首饰调色板里没有 ${name}`);
   return [((i % A.cols) + 0.5) / A.cols, (Math.floor(i / A.cols) + 0.5) / A.cols];
 }
+
+// —— 健身器材图集：1024×1024（跑步机、哑铃共用一个材质）——
+//   上面：跑步机的屏幕（22 寸 16:9，一帧“晨跑”的风景画面 + 运动数据，整块画在自发光图里）；
+//   中间：控制台面板的印字（速度 / 坡度按键）、八个哑铃头端面（黑色橡胶上印着重量）；
+//   最下面两行：纯色格子（烤漆、塑料、橡胶、铝、镀铬……），部件的 UV 指向格子正中（同家电图集）。
+export const GYM_ATLAS = {
+  size: 1024,
+  regions: {
+    screen: [0, 0, 1024, 576],
+    console: [0, 576, 1024, 704],
+    hex: [0, 704, 1024, 832],
+    swatch: [0, 832, 1024, 1024],
+  },
+  // 屏幕、控制台面板的物理尺寸（米）：一块区域就是一整块面板
+  screen: { w: 0.496, h: 0.279 },
+  console: { w: 0.62, h: 0.0775 },
+  // 哑铃头端面上印的重量（kg），一格一个
+  weights: ['2.5', '5', '7.5', '10', '12.5', '15', '17.5', '20'],
+  cols: 8,
+  swatches: [
+    { name: 'graphite', c: [60, 62, 66], rough: 0.42 },
+    { name: 'black', c: [22, 23, 25], rough: 0.32 },
+    { name: 'matte', c: [32, 33, 35], rough: 0.72 },
+    { name: 'rubber', c: [38, 39, 41], rough: 0.88 },
+    { name: 'aluminum', c: [198, 201, 206], rough: 0.3, metal: 1 },
+    { name: 'chrome', c: [232, 234, 237], rough: 0.07, metal: 1 },
+    { name: 'gunmetal', c: [78, 80, 85], rough: 0.34, metal: 1 },
+    { name: 'copper', c: [218, 148, 104], rough: 0.3, metal: 1 },
+    { name: 'red', c: [200, 38, 42], rough: 0.36 },
+    { name: 'green', c: [64, 172, 96], rough: 0.36 },
+    { name: 'white', c: [238, 238, 236], rough: 0.34 },
+    { name: 'grey', c: [124, 126, 130], rough: 0.5 },
+    { name: 'glass', c: [10, 11, 13], rough: 0.05 },
+    { name: 'orange', c: [240, 128, 56], rough: 0.4 },
+    { name: 'iron', c: [40, 40, 42], rough: 0.62 },
+    { name: 'cream', c: [232, 224, 208], rough: 0.5 },
+  ],
+};
+
+// 区域里的一点：u, v ∈ [0, 1]（v 向下）→ 图集 UV
+export function gymUV(region, u, v) {
+  const [x0, y0, x1, y1] = GYM_ATLAS.regions[region];
+  const S = GYM_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+
+export function gymSwatch(name) {
+  const A = GYM_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`健身器材图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}
+
+// 哑铃头端面：第 i 格（重量），x, y 是端面上的位置除以六边形外接圆半径（[-1, 1]）→ 图集 UV。
+// 六边形外接圆占格子宽的 0.9
+export function gymHexUV(i, x, y) {
+  const [x0, y0, x1] = GYM_ATLAS.regions.hex;
+  const c = (x1 - x0) / GYM_ATLAS.weights.length;
+  return [(x0 + (i + 0.5) * c + x * 0.45 * c) / GYM_ATLAS.size, (y0 + 0.5 * c + y * 0.45 * c) / GYM_ATLAS.size];
+}
+
+// —— 瑜伽垫：183 × 61cm、5mm 厚；贴图 1024²，u 沿垫子的长 ——
+//   top：正面（印对位线）占 v 的 [0, 0.47]，bottom：背面（深一号的颜色、防滑波纹）占 [0.5, 0.97]，
+//   edge：最下面一窄条画垫子的切边（上半是正面的颜色、下半是背面的颜色），垫子卷起来时侧面一圈圈的双色就是它
+export const YOGA = { L: 1.83, W: 0.61, T: 0.005, top: [0, 0.47], bottom: [0.5, 0.97], edge: [0.98, 1] };

@@ -32,6 +32,9 @@
 //   docs/previews/closet.jpg          衣帽间三件：开放衣柜、梳妆台、首饰岛台
 //   docs/previews/closet-detail.jpg   衣帽间特写：衬衫的领子和袖口、长衣区的大衣和吊带裙、香水和化妆镜灯泡、丝绒格子里的首饰
 //   docs/previews/closet-room.jpg     全屋陈列里的衣帽间
+//   docs/previews/gym.jpg             健身房三件：跑步机、哑铃架、瑜伽垫
+//   docs/previews/gym-detail.jpg      健身房特写：跑步机的屏幕和控制台、哑铃端面的重量和滚花握把、瑜伽垫卷起来的一头、橡胶地垫
+//   docs/previews/gym-room.jpg        全屋陈列里的健身房
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -51,7 +54,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -236,6 +239,21 @@ await grid(closetDetail, 2, [600, 450], path.join(out, 'closet-detail.jpg'));
 const closetRoom = await shoot({ items: ['room'], views: ['&target=24.1:0.9:-0.75&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'closet-room.png' });
 await sharp(closetRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'closet-room.jpg'));
 console.log('→ docs/previews/closet-room.jpg');
+
+const gymHero = await shoot({ items: gymIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `g_${id}.png` });
+await grid(gymHero, 3, [480, 360], path.join(out, 'gym.jpg'));
+
+// 健身房特写：跑步机的屏幕（晨跑的风景和运动数据）和控制台、哑铃端面的重量和滚花握把、瑜伽垫卷起来的那一头（一圈圈双色的螺旋）、橡胶地垫
+const gymDetail = [];
+gymDetail.push(...await shoot({ items: ['treadmill'], views: ['&target=0:1.27:-0.66&d=0.95&el=12&az=8'], size: [800, 600], outDir: tmp, name: () => 'gym0.png' }));
+gymDetail.push(...await shoot({ items: ['dumbbell_rack'], views: ['&target=-0.2:0.4:0.18&d=0.75&el=16&az=18'], size: [800, 600], outDir: tmp, name: () => 'gym1.png' }));
+gymDetail.push(...await shoot({ items: ['yoga_mat'], views: ['&target=0.69:0.05:0.3&d=0.38&el=12&az=12'], size: [800, 600], outDir: tmp, name: () => 'gym2.png' }));
+gymDetail.push(...await shoot({ items: ['floor_rubber'], views: ['&target=0.5:0:0.5&dist=0.3&el=30&az=20'], size: [800, 600], outDir: tmp, name: () => 'gym3.png' }));
+await grid(gymDetail, 2, [600, 450], path.join(out, 'gym-detail.jpg'));
+
+const gymRoom = await shoot({ items: ['room'], views: ['&target=28.1:0.9:-0.75&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'gym-room.png' });
+await sharp(gymRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'gym-room.jpg'));
+console.log('→ docs/previews/gym-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

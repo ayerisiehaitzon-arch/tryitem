@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T05:24:12.980Z",
+  "generated": "2026-09-28T07:31:47.532Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1387,6 +1387,46 @@
       "fileKB": 737
     },
     {
+      "id": "floor_rubber",
+      "name": "橡胶地垫",
+      "nameEn": "Rubber Gym Flooring",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "橡胶地垫（黑色，灰色 EPDM 彩点）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 650
+    },
+    {
       "id": "kitchen_base",
       "name": "橱柜",
       "nameEn": "Shaker Kitchen Base Run",
@@ -2471,6 +2511,134 @@
         "az": 24
       },
       "fileKB": 1165
+    },
+    {
+      "id": "treadmill",
+      "name": "跑步机",
+      "nameEn": "Treadmill with Touchscreen",
+      "category": "gym",
+      "mount": "floor",
+      "size": [
+        827,
+        1492,
+        1869
+      ],
+      "lods": [
+        {
+          "tris": 1910,
+          "verts": 1707,
+          "drawCalls": 2
+        },
+        {
+          "tris": 954,
+          "verts": 1011,
+          "drawCalls": 2
+        },
+        {
+          "tris": 408,
+          "verts": 542,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "健身器材（烤漆 / 塑料 / 橡胶 / 铝 / 镀铬 / 屏幕，图集）",
+        "橡胶跑带（菱格防滑纹）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 175,
+      "lodDistances": null,
+      "view": {
+        "el": 18,
+        "az": 32
+      },
+      "fileKB": 512
+    },
+    {
+      "id": "dumbbell_rack",
+      "name": "哑铃架",
+      "nameEn": "Two-Tier Dumbbell Rack",
+      "category": "gym",
+      "mount": "floor",
+      "size": [
+        1410,
+        820,
+        834
+      ],
+      "lods": [
+        {
+          "tris": 2708,
+          "verts": 2982,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1830,
+          "verts": 2490,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1064,
+          "verts": 1732,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "黑色粉末喷涂钢",
+        "健身器材（烤漆 / 塑料 / 橡胶 / 铝 / 镀铬 / 屏幕，图集）",
+        "橡木（木蜡油）",
+        "滚花镀铬（哑铃握把）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 159,
+      "lodDistances": null,
+      "view": {
+        "el": 18,
+        "az": 24
+      },
+      "fileKB": 1068
+    },
+    {
+      "id": "yoga_mat",
+      "name": "瑜伽垫",
+      "nameEn": "Yoga Mat with Cork Blocks & Strap",
+      "category": "gym",
+      "mount": "floor",
+      "size": [
+        1491,
+        295,
+        760
+      ],
+      "lods": [
+        {
+          "tris": 1230,
+          "verts": 1142,
+          "drawCalls": 5
+        },
+        {
+          "tris": 762,
+          "verts": 750,
+          "drawCalls": 5
+        },
+        {
+          "tris": 424,
+          "verts": 436,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "天然橡胶瑜伽垫（鼠尾草绿，印对位线，正反两色）",
+        "软木（瑜伽砖）",
+        "亚麻布（燕麦色）",
+        "拉丝不锈钢",
+        "黑色哑光塑料"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 277,
+      "lodDistances": null,
+      "view": {
+        "el": 34,
+        "az": 20
+      },
+      "fileKB": 811
     }
   ]
 }

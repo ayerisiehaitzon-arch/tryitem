@@ -13,17 +13,17 @@ function alloc(S, extra = []) {
   return o;
 }
 
-// —— 2D 有符号距离（米；内部为负）——
-const sdRoundRect = (x, y, cx, cy, hw, hh, r) => {
+// —— 2D 有符号距离（米；内部为负）——（健身房的图集也用这几个）
+export const sdRoundRect = (x, y, cx, cy, hw, hh, r) => {
   const qx = Math.abs(x - cx) - hw + r, qy = Math.abs(y - cy) - hh + r;
   return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
 };
-const sdSeg = (x, y, a, b, w) => {
+export const sdSeg = (x, y, a, b, w) => {
   const dx = b[0] - a[0], dy = b[1] - a[1];
   const t = clamp01(((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy + 1e-12));
   return Math.hypot(x - a[0] - dx * t, y - a[1] - dy * t) - w / 2;
 };
-const sdPoly = (x, y, P) => {
+export const sdPoly = (x, y, P) => {
   let d = Infinity, inside = false;
   for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
     const a = P[j], b = P[i];
@@ -34,7 +34,7 @@ const sdPoly = (x, y, P) => {
 };
 
 // 在图集的一块区域上按米作画：box 是像素框，W×H 是这块区域代表的物理尺寸（米），y 向下
-function painter(out, S, box, W, H) {
+export function painter(out, S, box, W, H) {
   const [bx0, by0, bx1, by1] = box;
   const sx = (bx1 - bx0) / W, sy = (by1 - by0) / H, px = 1 / Math.min(sx, sy);
   // sdf：(x, y) → 距离；bb：[x0, y0, x1, y1]（米）；把覆盖率混进颜色 / 自发光 / 粗糙度 / 高度

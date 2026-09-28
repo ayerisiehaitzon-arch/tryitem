@@ -480,5 +480,42 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 健身房 ——
+Object.assign(MATERIALS, {
+  gym: {
+    label: '健身器材（烤漆 / 塑料 / 橡胶 / 铝 / 镀铬 / 屏幕，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；跑步机的屏幕整块自发光（风景画面和数据），其余格子不发光
+    tex: 'gym', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.6,
+    emissive: [1, 1, 1], emissiveStrength: 1.35,
+  },
+  belt: {
+    label: '橡胶跑带（菱格防滑纹）',
+    tex: 'belt', tile: [0.04, 0.04],
+    roughness: 1, metallic: 0, normalScale: 1,
+  },
+  knurl: {
+    label: '滚花镀铬（哑铃握把）',
+    tex: 'knurl', tile: [0.008, 0.008],
+    roughness: 1, metallic: 1, normalScale: 1,
+  },
+  cork: {
+    label: '软木（瑜伽砖）',
+    tex: 'cork', tile: [0.12, 0.12],
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+  yoga: {
+    label: '天然橡胶瑜伽垫（鼠尾草绿，印对位线，正反两色）',
+    // 整张垫子一张贴图（正面、背面、切边三块）：UV 由几何直接给出，不能加随机偏移；卷起来的一截看得见背面
+    tex: 'yoga', tile: [1, 1], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.6,
+  },
+  floor_rubber: {
+    label: '橡胶地垫（黑色，灰色 EPDM 彩点）',
+    tex: 'rubberFloor', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

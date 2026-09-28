@@ -16,6 +16,7 @@ import * as entry from './entry-textures.js';
 import * as kids from './kids-textures.js';
 import * as laundry from './laundry-textures.js';
 import * as closet from './closet-textures.js';
+import * as gym from './gym-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -417,6 +418,24 @@ export const TEXTURES = {
     gen: (S) => closet.clothes(S, { seed: 501 }), normalTile: { size: 256, strength: 2.2, gen: closet.weave },
   },
   trinkets: { size: 128, normalStrength: 1, v: 1, chroma444: true, gen: closet.trinkets },
+  // —— 健身房 ——
+  // 器材图集：跑步机屏幕（风景 + 运动数据，整块自发光）、控制台印字、哑铃端面的重量、纯色格子；屏幕上有细线和小字：不做色度抽样
+  gym: { size: 1024, detail: 0.5, normalStrength: 2, v: 1, emit: true, chroma444: true, gen: (S) => gym.gymAtlas(S, { seed: 601 }) },
+  // 跑带：4cm 一块，20 × 20 格菱形防滑纹
+  belt: { size: 256, normalStrength: 3, v: 1, gen: (S) => gym.belt(S, { seed: 611 }) },
+  // 滚花：8mm 一块，4 × 4 颗小金字塔（每颗 2mm）
+  knurl: { size: 128, normalStrength: 5, v: 1, gen: (S) => gym.knurl(S, { seed: 621 }) },
+  cork: { size: 512, normalStrength: 2, v: 1, gen: (S) => gym.cork(S, { seed: 631 }) },
+  // 瑜伽垫：整张垫子一张贴图（正面、背面、切边三块，见 YOGA）
+  yoga: {
+    size: 1024, detail: 0.5, normalStrength: 1.2, v: 1,
+    gen: (S) => gym.yogaMat(S, { seed: 641, top: [122, 146, 126], back: [70, 84, 76], ink: [214, 220, 202] }),
+  },
+  // 橡胶地垫：一张贴图 = 一整块 2m 地板模块（4 × 4 块 50cm 的砖）；1536 像素（1.3mm 一个像素）画得出一粒粒 4mm 的彩点
+  rubberFloor: {
+    size: 1536, detail: 0.5, normalStrength: 0.8, v: 1,
+    gen: (S) => gym.rubberFloor(S, { seed: 651, period: 2, tiles: 4, joint: 0.001, bevel: 0.0015, density: 0.1, base: [34, 34, 36], fleck: [150, 152, 156], blue: [84, 112, 160] }),
+  },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB
