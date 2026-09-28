@@ -23,6 +23,9 @@
 //   docs/previews/entry.jpg           玄关三件：鞋柜、穿衣镜、衣帽架
 //   docs/previews/entry-detail.jpg    玄关特写：翻斗门的半圆拉手与洞石台面、拱形镜框、帽子托特包和围巾、棋盘格大理石
 //   docs/previews/entry-room.jpg      全屋陈列里的玄关
+//   docs/previews/kids.jpg            儿童房三件：儿童床、玩具柜、小书桌
+//   docs/previews/kids-detail.jpg     儿童房特写：山墙上的小旗子、弯曲胶合板的边、画纸上的蜡笔画、圈绒兔子
+//   docs/previews/kids-room.jpg       全屋陈列里的儿童房
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -42,7 +45,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -180,6 +183,21 @@ await grid(ed, 2, [600, 450], path.join(out, 'entry-detail.jpg'));
 const nroom = await shoot({ items: ['room'], views: ['&target=-12:0.9:-1&d=7.5&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'entry-room.png' });
 await sharp(nroom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'entry-room.jpg'));
 console.log('→ docs/previews/entry-room.jpg');
+
+const kidsHero = await shoot({ items: kidsIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `k_${id}.png` });
+await grid(kidsHero, 3, [480, 360], path.join(out, 'kids.jpg'));
+
+// 儿童房特写：床尾山墙（小旗子、烟囱、屋脊梁）、玩具柜弯过去的胶合板边、画纸上的蜡笔画和笔筒、床头的圈绒兔子
+const kidsDetail = [];
+kidsDetail.push(...await shoot({ items: ['kids_bed'], views: ['&target=0.05:1.28:0.95&d=1.75&el=6&az=14'], size: [800, 600], outDir: tmp, name: () => 'kid0.png' }));
+kidsDetail.push(...await shoot({ items: ['toy_cabinet'], views: ['&target=-0.5:0.56:0.39&d=0.42&el=16&az=32'], size: [800, 600], outDir: tmp, name: () => 'kid1.png' }));
+kidsDetail.push(...await shoot({ items: ['kids_desk'], views: ['&target=0.02:0.58:-0.02&d=0.85&el=42&az=10'], size: [800, 600], outDir: tmp, name: () => 'kid2.png' }));
+kidsDetail.push(...await shoot({ items: ['kids_bed'], views: ['&target=0.26:0.4:-0.58&d=0.55&el=16&az=22'], size: [800, 600], outDir: tmp, name: () => 'kid3.png' }));
+await grid(kidsDetail, 2, [600, 450], path.join(out, 'kids-detail.jpg'));
+
+const kidsRoom = await shoot({ items: ['room'], views: ['&target=16.1:0.9:-0.75&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'kids-room.png' });
+await sharp(kidsRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'kids-room.jpg'));
+console.log('→ docs/previews/kids-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

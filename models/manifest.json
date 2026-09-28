@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T01:32:51.107Z",
+  "generated": "2026-09-28T03:02:36.407Z",
   "items": [
     {
       "id": "dining_chair",
@@ -2016,6 +2016,142 @@
         "az": -20
       },
       "fileKB": 1274
+    },
+    {
+      "id": "kids_bed",
+      "name": "儿童床",
+      "nameEn": "Birch House Bed",
+      "category": "kids",
+      "mount": "floor",
+      "size": [
+        1008,
+        1713,
+        2008
+      ],
+      "lods": [
+        {
+          "tris": 2657,
+          "verts": 2228,
+          "drawCalls": 6
+        },
+        {
+          "tris": 1713,
+          "verts": 1611,
+          "drawCalls": 6
+        },
+        {
+          "tris": 683,
+          "verts": 916,
+          "drawCalls": 6
+        }
+      ],
+      "materials": [
+        "桦木（旋切贴皮，水性哑光清漆）",
+        "亚麻布（米白）",
+        "色织格子布（雾蓝，被套）",
+        "亚麻布（芥末黄，围巾）",
+        "圈绒（奶白）",
+        "木玩具的水性漆 / 布（调色板）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 152,
+      "lodDistances": null,
+      "view": {
+        "el": 14,
+        "az": 32
+      },
+      "fileKB": 1366
+    },
+    {
+      "id": "toy_cabinet",
+      "name": "玩具柜",
+      "nameEn": "Bent Birch Toy Cabinet",
+      "category": "kids",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        1200,
+        759,
+        435
+      ],
+      "lods": [
+        {
+          "tris": 2610,
+          "verts": 2557,
+          "drawCalls": 5
+        },
+        {
+          "tris": 1486,
+          "verts": 1754,
+          "drawCalls": 5
+        },
+        {
+          "tris": 896,
+          "verts": 1206,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "桦木（旋切贴皮，水性哑光清漆）",
+        "桦木胶合板的边（13 层）",
+        "亚麻布（藕粉，收纳筐）",
+        "亚麻布（鼠尾草绿）",
+        "木玩具的水性漆 / 布（调色板）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 160,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 28
+      },
+      "fileKB": 830
+    },
+    {
+      "id": "kids_desk",
+      "name": "小书桌",
+      "nameEn": "Birch Art Desk & Chair",
+      "category": "kids",
+      "mount": "floor",
+      "size": [
+        800,
+        660,
+        770
+      ],
+      "lods": [
+        {
+          "tris": 2670,
+          "verts": 2201,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1489,
+          "verts": 1404,
+          "drawCalls": 4
+        },
+        {
+          "tris": 870,
+          "verts": 858,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "桦木胶合板的边（13 层）",
+        "桦木（旋切贴皮，水性哑光清漆）",
+        "画纸（蜡笔画）",
+        "木玩具的水性漆 / 布（调色板）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 272,
+      "lodDistances": null,
+      "view": {
+        "el": 22,
+        "az": 30
+      },
+      "fileKB": 746
     }
   ]
 }

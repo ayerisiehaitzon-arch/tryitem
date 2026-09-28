@@ -377,5 +377,46 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 儿童房 ——
+// 胶合板：一块板拆成两种材质 —— 面是桦木贴皮（birch），边是一层层的单板（ply）。
+// ply 的贴图 v 方向正好是一块板的厚度（18mm），边带的 v 按板厚方向的坐标给（不是弧长），所以不能加随机偏移
+export const PLY_T = 0.018;
+Object.assign(MATERIALS, {
+  birch: {
+    label: '桦木（旋切贴皮，水性哑光清漆）',
+    tex: 'birch', tile: [0.6, 0.6],
+    roughness: 1, metallic: 0, normalScale: 0.5,
+  },
+  ply: {
+    label: '桦木胶合板的边（13 层）',
+    tex: 'ply', tile: [0.25, PLY_T], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.6,
+  },
+  toys: {
+    label: '木玩具的水性漆 / 布（调色板）',
+    // 调色板：部件的 UV 指向格子正中，颜色、粗糙度都由贴图给；布做的小旗子是单层的，材质双面显示
+    tex: 'toys', tile: [1, 1], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0,
+  },
+  gingham: {
+    label: '色织格子布（雾蓝，被套）',
+    tex: 'gingham', tile: [0.14, 0.14],
+    roughness: 1, metallic: 0, normalScale: 0.8,
+    sheen: { color: [0.5, 0.52, 0.56], roughness: 0.55 },
+  },
+  drawing: {
+    label: '画纸（蜡笔画）',
+    // 整张纸一张贴图（从纸卷那头到卷起来的那头）；纸是单层的，卷起来的那头看得见背面
+    tex: 'drawing', tile: [1, 1], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.5,
+  },
+  linen_blush: {
+    label: '亚麻布（藕粉，收纳筐）',
+    tex: 'linen', tile: [0.12, 0.12], color: tint([214, 170, 160]),
+    roughness: 1, metallic: 0, normalScale: 0.9,
+    sheen: { color: [0.5, 0.4, 0.38], roughness: 0.55 },
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

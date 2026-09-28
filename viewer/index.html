@@ -217,7 +217,7 @@
   </div>
   <p class="caption" id="caption"></p>
   <nav class="dock">
-    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具、墙地门窗、厨房、浴室、阳台、书房与玄关"></div>
+    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具、墙地门窗、厨房、浴室、阳台、书房、玄关与儿童房"></div>
     <div class="controls">
       <div class="seg" role="group" aria-label="显示">
         <button id="t-wire" aria-pressed="false">线框</button>
@@ -459,14 +459,16 @@ function instantiate(asset, pos = [0, 0, 0], rotY = 0, { lift = 0 } = {}) {
 
 // 全屋陈列：一套“剖开的公寓”——后墙和左墙是墙地门窗构件拼出来的（2m 模块），前面敞开；
 //   玄关（入户门、鞋柜、穿衣镜、衣帽架）→ 厨房（地柜 + 吊柜 + 岛台）→ 书桌（窗下）→ 门 → 客厅（书架、沙发、地毯）→ 书房（书架墙、窗前的阅读椅和阅读灯）
-//   → 卧室（护墙板墙、一对壁灯）→ 浴室（浴室柜、马桶、淋浴间）；书桌前面是餐厅，厨房和餐厅连成一片水磨石地面，
+//   → 卧室（护墙板墙、一对壁灯）→ 浴室（浴室柜、马桶、淋浴间）→ 儿童房（小房子床、窗下的玩具柜、地毯上的小书桌）；
+//   书桌前面是餐厅，厨房和餐厅连成一片水磨石地面，
 //   餐边柜靠在厨房旁边的后墙上；客厅往前伸出一个阳台（户外地板、三面栏杆、一对户外椅夹着鼓凳，两角各一棵橄榄树）。
-// 地面：玄关黑白棋盘格大理石，书桌、客厅、书房人字拼，厨房、餐厅水磨石，卧室宽板，浴室六角马赛克；地板模块按 2m 网格铺，接缝处的图案严丝合缝。
+// 地面：玄关黑白棋盘格大理石，书桌、客厅、书房人字拼，厨房、餐厅水磨石，卧室、儿童房宽板，浴室六角马赛克；地板模块按 2m 网格铺，接缝处的图案严丝合缝。
 // 摆件放在家具上：书在书架第二层，花瓶在茶几上，台灯在书桌上；地毯压在沙发前腿下。
 // 吊柜装在台面上方 55cm（地面以上 1.45m）：柜底的灯带照在墙砖上，光斑正好铺满台面到柜底这一段。
 const WZ = -2.06; // 后墙中线（墙面在 z = -2）
 const LX = -14.06; // 左墙中线（墙面在 x = -14）
 const PX = -10.06; // 玄关和厨房之间的隔墙（只有后半截：从后墙墙面到 z = 0，前半截是进厨房的口）
+const KX = 14.06; // 浴室和儿童房之间的隔墙（同样只有后半截）
 const ROOM = [
   // —— 墙 ——
   ['wall_door', [-13, 0, WZ], 0],
@@ -483,9 +485,12 @@ const ROOM = [
   ['wall_wainscot', [9, 0, WZ], 0],
   ['wall', [11, 0, WZ], 0],
   ['wall', [13, 0, WZ], 0],
+  ['wall', [15, 0, WZ], 0],
+  ['wall_window', [17, 0, WZ], 0],
   ['wall', [LX, 0, -1.12], Math.PI / 2],
   ['wall', [LX, 0, 0.88], Math.PI / 2],
   ['wall', [PX, 0, -1.0], Math.PI / 2],
+  ['wall', [KX, 0, -1.0], Math.PI / 2],
   // —— 地面 ——
   ['floor_checker', [-13, 0, -1], 0],
   ['floor_checker', [-11, 0, -1], 0],
@@ -515,6 +520,10 @@ const ROOM = [
   ['floor_hex', [11, 0, 1], 0],
   ['floor_hex', [13, 0, -1], 0],
   ['floor_hex', [13, 0, 1], 0],
+  ['floor_plank', [15, 0, -1], 0],
+  ['floor_plank', [17, 0, -1], 0],
+  ['floor_plank', [15, 0, 1], 0],
+  ['floor_plank', [17, 0, 1], 0],
   ['floor_deck', [-1, 0, 3], 0],
   ['floor_deck', [1, 0, 3], 0],
   // —— 玄关 ——（鞋柜、穿衣镜的原点在墙根；衣帽架立在入户门左边，包和围巾朝着屋里；
@@ -570,6 +579,14 @@ const ROOM = [
   ['vanity', [10.9, 0, -2.0], 0],
   ['toilet', [11.85, 0, -2.0], 0],
   ['shower', [13.3, 0, -2.0], 0],
+  // —— 儿童房 ——（床头靠后墙，小房子的山墙朝着屋里；窗下是玩具柜（原点在墙根），床和玩具柜之间一盆虎尾兰；
+  //    小书桌连小椅子放在地毯上（和沙发一样抬起地毯的厚度），上面吊一只纸灯笼）
+  ['kids_bed', [14.8, 0, -0.97], 0],
+  ['toy_cabinet', [17, 0, -2.0], 0],
+  ['snake_plant', [15.85, 0, -1.72], 0.8],
+  ['rug', [16.4, 0, 0.45], 0],
+  ['kids_desk', [16.45, 0, 0.12], -0.12, { lift: 0.021 }],
+  ['pendant_lantern', [16.45, 2.6, 0.3], 0],
   // —— 阳台 ——（栏杆 2m 一个模块：前面两块，左右各一块转 90°）
   ['railing', [-1, 0, 4], 0],
   ['railing', [1, 0, 4], 0],
@@ -898,7 +915,8 @@ $('items').innerHTML = `
   + group('浴室', mf.items.filter((s) => s.category === 'bathroom'))
   + group('阳台', mf.items.filter((s) => s.category === 'balcony'))
   + group('书房', mf.items.filter((s) => s.category === 'study'))
-  + group('玄关', mf.items.filter((s) => s.category === 'entry'));
+  + group('玄关', mf.items.filter((s) => s.category === 'entry'))
+  + group('儿童房', mf.items.filter((s) => s.category === 'kids'));
 for (const b of document.querySelectorAll('.item')) b.onclick = () => select(b.dataset.id);
 const wanted = params.get('item') || location.hash.slice(1);
 const first = wanted === 'room' || mf.items.find((s) => s.id === wanted) ? wanted : mf.items[0].id;

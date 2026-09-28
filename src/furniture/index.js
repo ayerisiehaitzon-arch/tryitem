@@ -41,10 +41,13 @@ import readingLamp from '../study/reading-lamp.js';
 import shoeCabinet from '../entry/shoe-cabinet.js';
 import floorMirror from '../entry/floor-mirror.js';
 import coatStand from '../entry/coat-stand.js';
+import kidsBed from '../kids/bed.js';
+import toyCabinet from '../kids/toy-cabinet.js';
+import kidsDesk from '../kids/desk.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
 // 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）、
-// 阳台（category: 'balcony'）、书房（category: 'study'）、玄关（category: 'entry'）
+// 阳台（category: 'balcony'）、书房（category: 'study'）、玄关（category: 'entry'）、儿童房（category: 'kids'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
@@ -56,4 +59,5 @@ export const FURNITURE = [
   loungeChair, gardenStool, oliveTree,
   libraryWall, readingChair, readingLamp,
   shoeCabinet, floorMirror, coatStand,
+  kidsBed, toyCabinet, kidsDesk,
 ];

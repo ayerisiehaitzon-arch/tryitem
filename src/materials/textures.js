@@ -13,6 +13,8 @@ import * as lamp from './lamp-textures.js';
 import { INTERIOR } from './interior-textures.js';
 import * as patio from './patio-textures.js';
 import * as entry from './entry-textures.js';
+import * as kids from './kids-textures.js';
+import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
 
@@ -357,7 +359,80 @@ export const TEXTURES = {
     }),
   },
   felt: { size: 256, normalStrength: 2, v: 1, gen: (S) => entry.felt(S, { seed: 421, color: rgb(160, 118, 76), mottle: 0.05 }) },
+  // —— 儿童房 ——
+  // 桦木贴皮：旋切的一整张单板，没有拼板缝（staves = 1）；花纹是宽而柔和的水波纹，颜色浅、对比弱，导管几乎看不见
+  birch: {
+    size: 1024, detail: 0.5, normalStrength: 1.6, v: 2,
+    gen: (S) => wood(S, {
+      seed: 81, staves: 1, rings: 6, warp: 1.7, archChance: 0,
+      staveTint: 0.03, staveWarm: 0.02, pores: 0.18, lateMix: 0.42, colorVar: 0.05, fiberVar: 0.04,
+      early: rgb(234, 214, 182), late: rgb(212, 184, 144), pore: rgb(196, 168, 132), rough: 0.55,
+    }),
+  },
+  // 胶合板的边：v 正好一块板厚（18mm，13 层）
+  ply: {
+    size: 256, normalStrength: 1.2, v: 1,
+    gen: (S) => kids.plyEdge(S, {
+      seed: 431, plies: 13, wave: 0.006, plyTone: 0.08, glueW: 0.006,
+      long: [228, 206, 170], cross: [204, 176, 136], glue: [140, 112, 78],
+    }),
+  },
+  toys: { size: 128, normalStrength: 1, v: 1, chroma444: true, gen: kids.toys },
+  // 画纸上的蜡笔画：纸宽 0.6m、长 0.43m；画在平铺的那一段里（画的坐标：x 米，y 米、从靠纸卷的上沿往下）
+  drawing: {
+    size: 1024, detail: 0.5, normalStrength: 1.2, v: 1,
+    gen: (S) => kids.drawing(S, { seed: 451, ...DRAWING, paper: [246, 243, 236], draw: kidsDrawing }),
+  },
+  gingham: {
+    size: 512, detail: 0.5, normalStrength: 2.5, v: 2,
+    gen: (S) => kids.gingham(S, {
+      seed: 441, threads: 96, stripe: 6, slub: 0.08, threadTone: 0.04, mottle: 0.03,
+      color: [96, 126, 168], white: [242, 240, 234],
+    }),
+  },
 };
+
+// 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB
+function kidsDrawing({ stroke, fill, circlePts }) {
+  const C = {
+    red: [206, 64, 52], orange: [236, 136, 48], yellow: [242, 196, 48], green: [84, 158, 72],
+    blue: [58, 110, 190], brown: [126, 84, 52], pink: [232, 120, 150], purple: [130, 90, 170],
+  };
+  // 彩虹（左上）
+  [[C.red, 0.1], [C.orange, 0.088], [C.yellow, 0.076], [C.green, 0.064], [C.blue, 0.052]].forEach(([c, r], i) =>
+    stroke(circlePts(0.14, 0.215, r, 18, Math.PI * 1.02, Math.PI * 1.98), 0.0085, c, { seed: 10 + i, amp: 0.0015 }));
+  // 太阳（右上）：涂满的圆 + 一圈光芒
+  fill((x, y) => Math.hypot(x - 0.475, y - 0.075) < 0.032, [0.44, 0.04, 0.51, 0.11], C.yellow, { angle: 0.5 });
+  stroke(circlePts(0.475, 0.075, 0.032, 20), 0.004, C.orange, { seed: 20 });
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2 + 0.2;
+    stroke([[0.475 + Math.cos(a) * 0.042, 0.075 + Math.sin(a) * 0.042], [0.475 + Math.cos(a) * 0.062, 0.075 + Math.sin(a) * 0.062]], 0.004, C.orange, { seed: 30 + i, amp: 0.0008 });
+  }
+  // 房子：墙（红线框、浅黄涂色）、屋顶（蓝色涂满）、门（棕色）、窗（蓝框）
+  const wx0 = 0.255, wx1 = 0.365, wy0 = 0.155, wy1 = 0.245, rx = 0.31, ry = 0.085;
+  fill((x, y) => x > wx0 && x < wx1 && y > wy0 && y < wy1, [wx0, wy0, wx1, wy1], C.yellow, { angle: -0.7, pressure: 0.7 });
+  const inRoof = (x, y) => y < wy0 + 0.003 && y > ry + Math.abs(x - rx) * ((wy0 - ry) / (rx - wx0 + 0.012));
+  fill(inRoof, [wx0 - 0.015, ry, wx1 + 0.015, wy0 + 0.003], C.blue, { angle: 0.3 });
+  stroke([[wx0, wy1], [wx0, wy0], [wx1, wy0], [wx1, wy1]], 0.0045, C.red, { seed: 40 });
+  stroke([[wx0 - 0.012, wy0 + 0.002], [rx, ry], [wx1 + 0.012, wy0 + 0.002]], 0.0045, C.blue, { seed: 41 });
+  fill((x, y) => x > 0.295 && x < 0.325 && y > 0.195 && y < 0.245, [0.295, 0.195, 0.325, 0.245], C.brown, { angle: 1.4 });
+  stroke([[0.268, 0.175], [0.29, 0.175], [0.29, 0.195], [0.268, 0.195], [0.268, 0.175]], 0.0035, C.blue, { seed: 42 });
+  // 一朵花（右下）
+  stroke([[0.46, 0.25], [0.458, 0.21], [0.462, 0.185]], 0.004, C.green, { seed: 50 });
+  stroke([[0.459, 0.225], [0.44, 0.212]], 0.0035, C.green, { seed: 51 });
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2, px = 0.462 + Math.cos(a) * 0.014, py = 0.172 + Math.sin(a) * 0.014;
+    fill((x, y) => Math.hypot(x - px, y - py) < 0.009, [px - 0.01, py - 0.01, px + 0.01, py + 0.01], C.pink, { angle: a });
+  }
+  fill((x, y) => Math.hypot(x - 0.462, y - 0.172) < 0.006, [0.455, 0.165, 0.47, 0.18], C.yellow);
+  // 草地：一条来回的锯齿线
+  const grass = [];
+  for (let x = 0.05; x <= 0.555; x += 0.012) grass.push([x, 0.25], [x + 0.006, 0.232 + ((x * 97) % 1) * 0.008]);
+  stroke(grass, 0.0035, C.green, { seed: 60, amp: 0.0006 });
+  // 一只小鸟（两道弧）
+  stroke(circlePts(0.375, 0.06, 0.012, 6, Math.PI * 1.15, Math.PI * 1.85), 0.003, C.purple, { seed: 70 });
+  stroke(circlePts(0.399, 0.06, 0.012, 6, Math.PI * 1.15, Math.PI * 1.85), 0.003, C.purple, { seed: 71 });
+}
 
 function alloc(S) {
   return { color: new Float32Array(S * S * 3), height: new Float32Array(S * S), rough: new Float32Array(S * S) };

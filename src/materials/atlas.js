@@ -92,3 +92,42 @@ export function patioUV(region, u, v) {
   const S = PATIO_ATLAS.size, m = PATIO_ATLAS.margin;
   return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
 }
+
+// —— 玩具调色板：128×128，4 × 4 个 32px 的纯色格子 ——
+//   部件的 UV 全部指向格子正中（toyUV）：整个部件一种颜色。所有 UV 相同 → 屏幕上的 UV 导数为 0，
+//   GPU 总是取最清晰的一级 mipmap，远看也不会混进隔壁格子的颜色。
+//   漆面（木玩具上的水性漆）粗糙度 0.42 左右，布（小旗子、兔子耳朵里面）0.92。
+export const TOY_ATLAS = {
+  size: 128,
+  cols: 4,
+  swatches: [
+    { name: 'red', c: [192, 86, 68], rough: 0.42 },
+    { name: 'orange', c: [222, 140, 80], rough: 0.42 },
+    { name: 'yellow', c: [230, 186, 88], rough: 0.42 },
+    { name: 'green', c: [130, 160, 112], rough: 0.42 },
+    { name: 'teal', c: [78, 138, 136], rough: 0.42 },
+    { name: 'blue', c: [108, 140, 182], rough: 0.42 },
+    { name: 'lilac', c: [162, 140, 186], rough: 0.42 },
+    { name: 'pink', c: [228, 164, 156], rough: 0.42 },
+    { name: 'cream', c: [240, 232, 216], rough: 0.4 },
+    { name: 'beech', c: [218, 184, 140], rough: 0.55 },
+    { name: 'walnut', c: [104, 72, 50], rough: 0.5 },
+    { name: 'ink', c: [52, 52, 58], rough: 0.5 },
+    { name: 'fabricPink', c: [226, 170, 164], rough: 0.92 },
+    { name: 'fabricMustard', c: [214, 168, 78], rough: 0.92 },
+    { name: 'fabricSage', c: [150, 168, 138], rough: 0.92 },
+    { name: 'fabricBlue', c: [140, 164, 192], rough: 0.92 },
+  ],
+};
+
+export function toyUV(name) {
+  const A = TOY_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`调色板里没有 ${name}`);
+  return [((i % A.cols) + 0.5) / A.cols, (Math.floor(i / A.cols) + 0.5) / A.cols];
+}
+
+// —— 画纸：书桌上从纸卷拉出来的一整张纸（u 横跨纸宽，v 沿纸长：0 在纸卷那头）——
+//   w、h 是纸的物理尺寸（米）；画只在 area = [v0, v1] 这一段（平铺在桌面上的部分），
+//   纸卷本身的 UV 指向 blank（白纸的一点）
+export const DRAWING = { w: 0.6, h: 0.43, area: [0.2, 0.84], blank: [0.5, 0.05] };

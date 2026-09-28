@@ -47,7 +47,8 @@ export function createMaterial(ctx, name, def, tex, ao) {
   if (def.alphaMode === 'MASK') m.setAlphaMode('MASK').setAlphaCutoff(def.alphaCutoff ?? 0.5);
   if (def.alphaMode === 'BLEND') m.setAlphaMode('BLEND'); // 玻璃：透明度在 baseColorFactor 的 alpha 里
   if (tex?.color) m.setBaseColorTexture(texture(ctx, `${def.key}_color`, tex.color));
-  if (tex?.normal) {
+  // normalScale: 0 —— 不带法线图（调色板这种纯色格子：UV 全是同一点，法线图没有意义，还省一张图）
+  if (tex?.normal && def.normalScale !== 0) {
     m.setNormalTexture(texture(ctx, `${def.key}_normal`, tex.normal));
     m.setNormalScale(def.normalScale ?? 1);
     // 细节法线：一小块可平铺的法线图按 normalRepeat 重复（颜色图仍然整幅铺满）
