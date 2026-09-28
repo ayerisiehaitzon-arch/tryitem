@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T03:02:36.407Z",
+  "generated": "2026-09-28T03:58:06.365Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1347,6 +1347,46 @@
       "fileKB": 303
     },
     {
+      "id": "floor_cement",
+      "name": "水泥花砖地面",
+      "nameEn": "Encaustic Cement Tile Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "水泥花砖（哑光，深蓝 / 灰蓝 / 陶土红）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 737
+    },
+    {
       "id": "kitchen_base",
       "name": "橱柜",
       "nameEn": "Shaker Kitchen Base Run",
@@ -2152,6 +2192,143 @@
         "az": 30
       },
       "fileKB": 746
+    },
+    {
+      "id": "washer",
+      "name": "洗衣机",
+      "nameEn": "Front-Loading Washer",
+      "category": "laundry",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        600,
+        1096,
+        615
+      ],
+      "lods": [
+        {
+          "tris": 2442,
+          "verts": 2191,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1580,
+          "verts": 1543,
+          "drawCalls": 3
+        },
+        {
+          "tris": 878,
+          "verts": 912,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "家电（白色烤漆机身 / 镀铬 / 橡胶 / 不锈钢内筒 / 面板印字，图集）",
+        "烟灰色玻璃（洗衣机门）",
+        "木玩具的水性漆 / 布（调色板）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 228,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 26
+      },
+      "fileKB": 623
+    },
+    {
+      "id": "dryer",
+      "name": "烘干机",
+      "nameEn": "Heat-Pump Dryer",
+      "category": "laundry",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        600,
+        1000,
+        615
+      ],
+      "lods": [
+        {
+          "tris": 2830,
+          "verts": 2590,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1650,
+          "verts": 1721,
+          "drawCalls": 4
+        },
+        {
+          "tris": 872,
+          "verts": 930,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "家电（白色烤漆机身 / 镀铬 / 橡胶 / 不锈钢内筒 / 面板印字，图集）",
+        "烟灰色玻璃（洗衣机门）",
+        "毛巾布（白色毛圈）",
+        "毛巾布（鼠尾草绿）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 196,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 26
+      },
+      "fileKB": 882
+    },
+    {
+      "id": "drying_rack",
+      "name": "晾衣架",
+      "nameEn": "Folding Wooden Clothes Horse",
+      "category": "laundry",
+      "mount": "floor",
+      "size": [
+        1603,
+        1220,
+        340
+      ],
+      "lods": [
+        {
+          "tris": 2196,
+          "verts": 1840,
+          "drawCalls": 5
+        },
+        {
+          "tris": 1428,
+          "verts": 1332,
+          "drawCalls": 5
+        },
+        {
+          "tris": 276,
+          "verts": 348,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "桦木（旋切贴皮，水性哑光清漆）",
+        "木玩具的水性漆 / 布（调色板）",
+        "毛巾布（白色毛圈）",
+        "毛巾布（鼠尾草绿）",
+        "亚麻茶巾（本色，两边红条）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 240,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 18
+      },
+      "fileKB": 693
     }
   ]
 }

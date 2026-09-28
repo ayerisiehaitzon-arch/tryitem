@@ -131,3 +131,63 @@ export function toyUV(name) {
 //   w、h 是纸的物理尺寸（米）；画只在 area = [v0, v1] 这一段（平铺在桌面上的部分），
 //   纸卷本身的 UV 指向 blank（白纸的一点）
 export const DRAWING = { w: 0.6, h: 0.43, area: [0.2, 0.84], blank: [0.5, 0.05] };
+
+// —— 家电图集：1024×1024（洗衣机、烘干机共用一个材质）——
+//   上半：两台机器的内筒（u 绕内筒一圈，v 沿筒深：0 在筒口）——洗衣机是冲孔的不锈钢，烘干机是压出菱格的不锈钢；
+//   中间：两台机器的控制面板（面板上的印字、程序刻度、显示窗；显示窗里的数字画在自发光图里）；
+//   最下一行：纯色格子（白色机身、镀铬、橡胶、黑色塑料……），部件的 UV 指向格子正中（同玩具调色板）。
+//   机身绝大部分是白色格子里的同一点：一台洗衣机的白色机身、镀铬门圈、橡胶门封、内筒、面板，只有一个材质。
+export const APPLIANCE_ATLAS = {
+  size: 1024,
+  regions: {
+    drumW: [0, 0, 1024, 256],
+    drumD: [0, 256, 1024, 512],
+    panelW: [0, 512, 1024, 704],
+    panelD: [0, 704, 1024, 896],
+  },
+  // 控制面板的物理尺寸（米）：一张面板贴图就是整条面板
+  panel: { w: 0.6, h: 0.11 },
+  // 内筒展开的物理尺寸（周长 × 深）：贴图按这个尺寸画孔、压纹
+  drumW: { r: 0.235, depth: 0.38 },
+  drumD: { r: 0.24, depth: 0.44 },
+  swatchY: 896,
+  swatches: [
+    { name: 'white', c: [243, 243, 241], rough: 0.2 },
+    { name: 'chrome', c: [226, 228, 232], rough: 0.07, metal: 1 },
+    { name: 'rubber', c: [88, 90, 94], rough: 0.78 },
+    { name: 'black', c: [28, 29, 31], rough: 0.42 },
+    { name: 'graphite', c: [66, 68, 72], rough: 0.32 },
+    { name: 'steel', c: [196, 198, 201], rough: 0.3, metal: 1 },
+    { name: 'grey', c: [176, 178, 180], rough: 0.5 },
+    { name: 'glassDark', c: [20, 22, 26], rough: 0.06 },
+  ],
+};
+
+// 两块控制面板的布局（米，面板左上角为原点，y 向下）：几何体（抽屉、旋钮、显示窗边框、按钮）和面板贴图共用这一份。
+//   drawer：抽屉面板的右边缘；knob：程序旋钮中心；display：显示窗；time：显示的剩余时间；digit：数码管颜色
+export const APPLIANCE_PANELS = {
+  W: {
+    drawer: 0.19, knob: { cx: 0.3, cy: 0.056 },
+    display: { x0: 0.395, y0: 0.03, x1: 0.478, y1: 0.078 }, time: '1:25', digit: [170, 222, 255],
+    buttons: [[0.51, 0.07], [0.538, 0.07], [0.566, 0.07]],
+  },
+  D: {
+    drawer: 0.21, knob: { cx: 0.32, cy: 0.056 },
+    display: { x0: 0.41, y0: 0.03, x1: 0.493, y1: 0.078 }, time: '0:52', digit: [255, 178, 84],
+    buttons: [[0.524, 0.07], [0.552, 0.07], [0.58, 0.07]],
+  },
+};
+
+export function applianceUV(region, u, v) {
+  const [x0, y0, x1, y1] = APPLIANCE_ATLAS.regions[region];
+  const S = APPLIANCE_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+
+export function applianceSwatch(name) {
+  const A = APPLIANCE_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`家电图集里没有 ${name}`);
+  const w = A.size / A.swatches.length;
+  return [(i + 0.5) * w / A.size, (A.swatchY + (A.size - A.swatchY) / 2) / A.size];
+}

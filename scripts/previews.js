@@ -26,6 +26,9 @@
 //   docs/previews/kids.jpg            儿童房三件：儿童床、玩具柜、小书桌
 //   docs/previews/kids-detail.jpg     儿童房特写：山墙上的小旗子、弯曲胶合板的边、画纸上的蜡笔画、圈绒兔子
 //   docs/previews/kids-room.jpg       全屋陈列里的儿童房
+//   docs/previews/laundry.jpg         洗衣房三件：洗衣机、烘干机、晾衣架
+//   docs/previews/laundry-detail.jpg  洗衣房特写：洗衣机的门和内筒、烘干机的控制面板、晾衣架上的毛巾和袜子、水泥花砖
+//   docs/previews/laundry-room.jpg    全屋陈列里的洗衣房
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -45,7 +48,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -198,6 +201,22 @@ await grid(kidsDetail, 2, [600, 450], path.join(out, 'kids-detail.jpg'));
 const kidsRoom = await shoot({ items: ['room'], views: ['&target=16.1:0.9:-0.75&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'kids-room.png' });
 await sharp(kidsRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'kids-room.jpg'));
 console.log('→ docs/previews/kids-room.jpg');
+
+const laundryHero = await shoot({ items: laundryIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `u_${id}.png` });
+await grid(laundryHero, 3, [480, 360], path.join(out, 'laundry.jpg'));
+
+// 洗衣房特写：洗衣机门（镀铬门圈、隔着烟灰玻璃的门封和冲孔内筒）、烘干机的控制面板（琥珀色的数码管）、
+// 晾衣架（毛巾的褶、夹着木夹子的袜子、布带铰链）、水泥花砖
+const laundryDetail = [];
+laundryDetail.push(...await shoot({ items: ['washer'], views: ['&target=0:0.43:0.6&d=0.75&el=8&az=15'], size: [800, 600], outDir: tmp, name: () => 'lau0.png' }));
+laundryDetail.push(...await shoot({ items: ['dryer'], views: ['&target=0.08:0.8:0.6&d=0.52&el=14&az=10'], size: [800, 600], outDir: tmp, name: () => 'lau1.png' }));
+laundryDetail.push(...await shoot({ items: ['drying_rack'], views: ['&target=0.35:1.05:0.1&d=0.8&el=4&az=40'], size: [800, 600], outDir: tmp, name: () => 'lau2.png' }));
+laundryDetail.push(...await shoot({ items: ['floor_cement'], views: ['&target=0:0:0.3&dist=0.3&el=30&az=20'], size: [800, 600], outDir: tmp, name: () => 'lau3.png' }));
+await grid(laundryDetail, 2, [600, 450], path.join(out, 'laundry-detail.jpg'));
+
+const laundryRoom = await shoot({ items: ['room'], views: ['&target=20.1:0.9:-0.75&d=7.4&el=20&az=18'], size: [1600, 900], outDir: tmp, name: () => 'laundry-room.png' });
+await sharp(laundryRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'laundry-room.jpg'));
+console.log('→ docs/previews/laundry-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

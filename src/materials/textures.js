@@ -14,6 +14,7 @@ import { INTERIOR } from './interior-textures.js';
 import * as patio from './patio-textures.js';
 import * as entry from './entry-textures.js';
 import * as kids from './kids-textures.js';
+import * as laundry from './laundry-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -389,6 +390,24 @@ export const TEXTURES = {
       seed: 441, threads: 96, stripe: 6, slub: 0.08, threadTone: 0.04, mottle: 0.03,
       color: [96, 126, 168], white: [242, 240, 234],
     }),
+  },
+  // —— 洗衣房 ——
+  // 家电图集：两台机器的内筒、控制面板、纯色格子；显示窗里的数字单独一张自发光图。面板上有细线和小字：颜色图不做色度抽样
+  appliance: { size: 1024, detail: 0.5, normalStrength: 2, v: 2, emit: true, chroma444: true, gen: (S) => laundry.appliance(S, { seed: 461 }) },
+  // 毛巾：白色毛圈（贴图 5cm 见方，48 × 55 个毛圈头）；彩色毛巾是同一张图染色
+  terry: { size: 512, normalStrength: 3, v: 2, gen: (S) => laundry.terry(S, { seed: 471, cells: 48, mottle: 0.03, color: [244, 242, 236] }) },
+  // 水泥花砖：一张贴图 = 一整块 2m 地板模块（10 × 10 块 20cm 的砖）；1536 像素（1.3mm 一个像素）足够画清砖缝和图案
+  cement: {
+    size: 1536, detail: 0.5, normalStrength: 0.9, v: 2,
+    gen: (S) => laundry.cementTiles(S, {
+      seed: 491, period: 2, tiles: 10, joint: 0.002, bevel: 0.0015,
+      base: [234, 228, 214], navy: [40, 54, 80], blue: [134, 154, 164], red: [180, 100, 72], grout: [168, 164, 156],
+    }),
+  },
+  // 条纹茶巾：v 是整幅宽，两条长边各两道红条
+  torchon: {
+    size: 512, detail: 0.5, normalStrength: 1.5, v: 1,
+    gen: (S) => laundry.torchon(S, { seed: 481, threads: 160, base: [228, 220, 202], stripe: [176, 50, 46], stripes: [[0.05, 0.078], [0.092, 0.1]] }),
   },
 };
 

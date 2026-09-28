@@ -418,5 +418,49 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 洗衣房 ——
+const TERRY_BASE = [244, 242, 236];
+export const TORCHON_W = 0.46; // 茶巾的宽：贴图的 v 正好一幅
+Object.assign(MATERIALS, {
+  appliance: {
+    label: '家电（白色烤漆机身 / 镀铬 / 橡胶 / 不锈钢内筒 / 面板印字，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里（镀铬、内筒是金属）；显示窗里的数字是自发光
+    tex: 'appliance', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.6,
+    emissive: [1, 1, 1], emissiveStrength: 2.5,
+  },
+  glass_smoke: {
+    label: '烟灰色玻璃（洗衣机门）',
+    // 和透明玻璃一样半透明混合、不参与 AO；颜色深一些，筒里的东西隐约看得见
+    color: srgb(44, 48, 54, 0.46), metallic: 0, roughness: 0.04,
+    alphaMode: 'BLEND', aoStrength: 0,
+  },
+  terry: {
+    label: '毛巾布（白色毛圈）',
+    // 晾衣架上搭着的毛巾是单层的（双面显示）
+    tex: 'terry', tile: [0.05, 0.05], doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    sheen: { color: [0.62, 0.62, 0.6], roughness: 0.6 },
+  },
+  terry_sage: {
+    label: '毛巾布（鼠尾草绿）',
+    tex: 'terry', tile: [0.05, 0.05], color: tint([150, 170, 142], TERRY_BASE), doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    sheen: { color: [0.4, 0.46, 0.38], roughness: 0.6 },
+  },
+  floor_cement: {
+    label: '水泥花砖（哑光，深蓝 / 灰蓝 / 陶土红）',
+    tex: 'cement', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+  },
+  torchon: {
+    label: '亚麻茶巾（本色，两边红条）',
+    // v 正好一条茶巾的宽（条纹贴着长边），所以不能加随机偏移
+    tex: 'torchon', tile: [0.6, TORCHON_W], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.8,
+    sheen: { color: [0.5, 0.48, 0.44], roughness: 0.6 },
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;
