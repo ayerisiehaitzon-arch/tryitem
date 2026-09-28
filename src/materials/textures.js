@@ -20,6 +20,7 @@ import * as gym from './gym-textures.js';
 import * as music from './music-textures.js';
 import * as tea from './tea-textures.js';
 import * as theater from './theater-textures.js';
+import * as gym2 from './gym2-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -473,6 +474,9 @@ export const TEXTURES = {
   velvet_ink: { size: 512, normalStrength: 1.2, v: 2, gen: (S) => velvet(S, { seed: 53, crush: 0.16, color: rgb(22, 28, 50) }) },
   // 吸音墙的黑色羊毛毡（和玄关的驼色毡同一个生成器）
   felt_black: { size: 256, normalStrength: 2, v: 1, gen: (S) => entry.felt(S, { seed: 422, color: rgb(34, 34, 37), mottle: 0.05 }) },
+  // —— 健身房二 ——
+  // 健身房二图集：单车的触摸屏（自发光）、划船机的液晶表、配重片上的公斤数、立柱上的刻度、贴标、纯色格子
+  gym2: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, emit: true, gen: (S) => gym2.gym2Atlas(S, { seed: 1001 }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB

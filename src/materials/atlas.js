@@ -533,3 +533,70 @@ export function theaterSwatch(name) {
   const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
   return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
 }
+
+// —— 健身房二图集：2048²（动感单车、划船机、龙门架共用一个材质）——
+//   bikeScreen：单车触摸屏上的骑行画面（0.48 × 0.3m，整块自发光）：课程、爬坡剖面、四块数据、功率区间；
+//   rowerScreen：划船机的液晶表（0.2 × 0.125m）：灰绿底、黑色的段码数字，带一点背光；
+//   plates：配重片正面，两列 × 十行，一格一片（0.3 × 0.05m）：5 ~ 100kg 的白字、插销孔；
+//   scale：龙门架滑轮立柱正面的刻度条（0.05 × 1.5m）：1 ~ 20 档的数字和刻线；
+//   decal / decal2：车架、护罩上的贴标（0.3 × 0.075m）；swatch：纯色格子（带自发光的是指示灯）
+export const GYM2_ATLAS = {
+  size: 2048,
+  regions: {
+    bikeScreen: [0, 0, 1024, 640],
+    rowerScreen: [1024, 0, 1536, 320],
+    decal: [1024, 320, 1536, 448], decal2: [1024, 448, 1536, 576],
+    scale: [1536, 0, 1600, 1024],
+    plates: [0, 640, 1024, 1490],
+    swatch: [0, 1920, 2048, 2048],
+  },
+  bikeScreen: { w: 0.48, h: 0.3 },
+  rowerScreen: { w: 0.2, h: 0.125 },
+  decal: { w: 0.3, h: 0.075 },
+  plate: { w: 0.3, h: 0.05, n: 20, step: 5, cols: 2 },
+  scale: { w: 0.05, h: 1.5, n: 20, pitch: 0.07, y0: 0.08 },
+  cols: 16,
+  swatches: [
+    { name: 'frame', c: [26, 27, 29], rough: 0.62 },
+    { name: 'satin', c: [20, 20, 22], rough: 0.4 },
+    { name: 'red', c: [206, 34, 40], rough: 0.38 },
+    { name: 'chrome', c: [232, 234, 237], rough: 0.07, metal: 1 },
+    { name: 'aluminum', c: [192, 195, 200], rough: 0.3, metal: 1 },
+    { name: 'steel', c: [150, 152, 156], rough: 0.3, metal: 1 },
+    { name: 'rubber', c: [30, 30, 32], rough: 0.85 },
+    { name: 'foam', c: [34, 34, 36], rough: 0.95 },
+    { name: 'plastic', c: [40, 41, 44], rough: 0.5 },
+    { name: 'nylon', c: [48, 49, 52], rough: 0.45 },
+    { name: 'cable', c: [18, 18, 20], rough: 0.35 },
+    { name: 'plate', c: [28, 28, 30], rough: 0.42 },
+    { name: 'glass', c: [8, 9, 11], rough: 0.05 },
+    { name: 'white', c: [236, 236, 234], rough: 0.4 },
+    { name: 'strap', c: [36, 36, 40], rough: 0.8 },
+    { name: 'paddle', c: [60, 64, 70], rough: 0.4 },
+    { name: 'ledRed', c: [255, 60, 60], rough: 0.3, emit: [255, 70, 64] },
+    { name: 'ledGreen', c: [80, 230, 120], rough: 0.3, emit: [90, 255, 130] },
+    { name: 'bottle', c: [210, 40, 44], rough: 0.25 },
+    { name: 'cap', c: [240, 240, 238], rough: 0.4 },
+  ],
+};
+export function gym2UV(region, u, v) {
+  const [x0, y0, x1, y1] = GYM2_ATLAS.regions[region];
+  const S = GYM2_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function gym2Swatch(name) {
+  const A = GYM2_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`健身房二图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}
+// 第 i 片配重片（0 是最上面那片 5kg）正面在图集里的一格 → UV
+export function plateUV(i, u, v) {
+  const [x0, y0, x1, y1] = GYM2_ATLAS.regions.plates;
+  const P = GYM2_ATLAS.plate, rows = Math.ceil(P.n / P.cols);
+  const cw = (x1 - x0) / P.cols, ch = (y1 - y0) / rows, m = 2;
+  const cx = x0 + (i % P.cols) * cw, cy = y0 + Math.floor(i / P.cols) * ch;
+  return [(cx + m + u * (cw - 2 * m)) / GYM2_ATLAS.size, (cy + m + v * (ch - 2 * m)) / GYM2_ATLAS.size];
+}

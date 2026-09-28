@@ -602,5 +602,22 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 健身房二 ——
+Object.assign(MATERIALS, {
+  gym2: {
+    label: '健身器材二（单车屏幕 / 液晶表 / 配重片 / 刻度 / 贴标 / 金属 / 橡胶，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；单车的触摸屏、液晶表的背光、指示灯自发光
+    tex: 'gym2', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+    emissive: [1, 1, 1], emissiveStrength: 1.3,
+  },
+  water: {
+    label: '水（划船机水箱）',
+    // 和玻璃一样半透明混合、不参与 AO；比玻璃浓一点、带一点蓝绿
+    color: srgb(70, 150, 185, 0.42), metallic: 0, roughness: 0.04,
+    alphaMode: 'BLEND', aoStrength: 0,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

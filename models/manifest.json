@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T13:49:39.355Z",
+  "generated": "2026-09-28T15:49:57.915Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1508,6 +1508,49 @@
         "az": 28
       },
       "fileKB": 691
+    },
+    {
+      "id": "wall_mirror",
+      "name": "镜面墙",
+      "nameEn": "Gym Mirror Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        148
+      ],
+      "lods": [
+        {
+          "tris": 160,
+          "verts": 212,
+          "drawCalls": 4
+        },
+        {
+          "tris": 80,
+          "verts": 148,
+          "drawCalls": 4
+        },
+        {
+          "tris": 72,
+          "verts": 140,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "白色哑光烤漆",
+        "银镜",
+        "抛光铝"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 118,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 28
+      },
+      "fileKB": 190
     },
     {
       "id": "kitchen_base",
@@ -3111,6 +3154,130 @@
         "az": 28
       },
       "fileKB": 1260
+    },
+    {
+      "id": "spin_bike",
+      "name": "动感单车",
+      "nameEn": "Indoor Cycling Bike",
+      "category": "gym2",
+      "mount": "floor",
+      "size": [
+        560,
+        1398,
+        1203
+      ],
+      "lods": [
+        {
+          "tris": 6670,
+          "verts": 5515,
+          "drawCalls": 2
+        },
+        {
+          "tris": 3810,
+          "verts": 3561,
+          "drawCalls": 2
+        },
+        {
+          "tris": 1739,
+          "verts": 1910,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "健身器材二（单车屏幕 / 液晶表 / 配重片 / 刻度 / 贴标 / 金属 / 橡胶，图集）",
+        "黑色皮革（拉扣）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 222,
+      "lodDistances": null,
+      "view": {
+        "el": 14,
+        "az": 42
+      },
+      "fileKB": 1275
+    },
+    {
+      "id": "rowing_machine",
+      "name": "划船机",
+      "nameEn": "Water Rowing Machine",
+      "category": "gym2",
+      "mount": "floor",
+      "size": [
+        600,
+        797,
+        2040
+      ],
+      "lods": [
+        {
+          "tris": 3912,
+          "verts": 3551,
+          "drawCalls": 4
+        },
+        {
+          "tris": 2484,
+          "verts": 2500,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1262,
+          "verts": 1430,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "健身器材二（单车屏幕 / 液晶表 / 配重片 / 刻度 / 贴标 / 金属 / 橡胶，图集）",
+        "透明玻璃",
+        "水（划船机水箱）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 357,
+      "lodDistances": null,
+      "view": {
+        "el": 20,
+        "az": 38
+      },
+      "fileKB": 1428
+    },
+    {
+      "id": "cable_crossover",
+      "name": "龙门架",
+      "nameEn": "Cable Crossover Station",
+      "category": "gym2",
+      "mount": "floor",
+      "size": [
+        2620,
+        2200,
+        935
+      ],
+      "lods": [
+        {
+          "tris": 4836,
+          "verts": 4860,
+          "drawCalls": 1
+        },
+        {
+          "tris": 3436,
+          "verts": 3888,
+          "drawCalls": 1
+        },
+        {
+          "tris": 1836,
+          "verts": 2528,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "健身器材二（单车屏幕 / 液晶表 / 配重片 / 刻度 / 贴标 / 金属 / 橡胶，图集）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 245,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 24
+      },
+      "fileKB": 1180
     }
   ]
 }

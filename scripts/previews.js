@@ -44,6 +44,9 @@
 //   docs/previews/theater.jpg         影音室三件：投影幕（连影音柜和投影仪）、影音沙发、落地音箱
 //   docs/previews/theater-detail.jpg  影音室特写：幕布上的电影画面、功放和超短焦投影仪、扶手箱的杯架和灯圈、音箱的单元
 //   docs/previews/theater-room.jpg    全屋陈列里的影音室
+//   docs/previews/gym2.jpg            健身房二三件：动感单车、划船机、龙门架
+//   docs/previews/gym2-detail.jpg     健身房二特写：单车的骑行课程屏、飞轮和磁控刹车、划船机的水箱和桨叶、配重片和滑车
+//   docs/previews/gym2-room.jpg       全屋陈列里的健身房二
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -63,7 +66,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -311,6 +314,22 @@ await grid(theaterDetail, 2, [600, 450], path.join(out, 'theater-detail.jpg'));
 const theaterRoom = await shoot({ items: ['room'], views: ['&target=40.0:0.9:-0.5&d=7.2&el=22&az=16'], size: [1600, 900], outDir: tmp, name: () => 'theater-room.png' });
 await sharp(theaterRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'theater-room.jpg'));
 console.log('→ docs/previews/theater-room.jpg');
+
+const gym2Hero = await shoot({ items: gym2Ids, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(gym2Hero, 3, [480, 360], path.join(out, 'gym2.jpg'));
+
+// 健身房二特写：单车把手上方的骑行课程屏（爬坡剖面、踏频 / 功率 / 阻力 / 心率）、左边看镀铬飞轮和红色磁控刹车、
+// 划船机从前面看水箱（水里的桨叶、透过水的底板木纹）和脚踏板、龙门架右塔的配重片（40 kg 插着销）和第 14 档的滑车
+const gym2Detail = [];
+gym2Detail.push(...await shoot({ items: ['spin_bike'], views: ['&target=0:1.18:-0.2&d=0.95&el=12&az=22'], size: [800, 600], outDir: tmp, name: () => 'gy0.png' }));
+gym2Detail.push(...await shoot({ items: ['spin_bike'], views: ['&target=-0.02:0.42:-0.3&d=1.05&el=10&az=-72'], size: [800, 600], outDir: tmp, name: () => 'gy1.png' }));
+gym2Detail.push(...await shoot({ items: ['rowing_machine'], views: ['&target=0:0.36:-0.7&d=1.45&el=24&az=142'], size: [800, 600], outDir: tmp, name: () => 'gy2.png' }));
+gym2Detail.push(...await shoot({ items: ['cable_crossover'], views: ['&target=1.02:0.95:-0.1&d=1.7&el=6&az=-24'], size: [800, 600], outDir: tmp, name: () => 'gy3.png' }));
+await grid(gym2Detail, 2, [600, 450], path.join(out, 'gym2-detail.jpg'));
+
+const gym2Room = await shoot({ items: ['room'], views: ['&target=44.0:0.9:-0.4&d=7.4&el=20&az=14'], size: [1600, 900], outDir: tmp, name: () => 'gym2-room.png' });
+await sharp(gym2Room[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'gym2-room.jpg'));
+console.log('→ docs/previews/gym2-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

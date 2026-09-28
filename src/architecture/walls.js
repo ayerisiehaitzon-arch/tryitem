@@ -181,3 +181,29 @@ export const wallSlat = {
     }
   },
 };
+
+// —— 镜面墙（健身房）：正面一整块银镜，下沿坐在一道铝托条上、上沿一道铝收边，镜子下面是普通的踢脚线；背面白墙 ——
+// 镜子左右各缩 1mm：模块拼起来，镜子和镜子之间留一道 2mm 的缝（真实的镜面墙也是一块块拼起来的）。
+export const MIRROR = { y0: 0.11, y1: 2.3, t: 0.006 };
+export const wallMirror = {
+  id: 'wall_mirror',
+  name: '镜面墙',
+  nameEn: 'Gym Mirror Wall',
+  category: 'architecture',
+  aoDensity: 80,
+  shadow: { margin: 0.32, maxDist: 0.9, density: 60 },
+  view: { el: 12, az: 28 },
+  build(k) {
+    const { L, T } = WALL;
+    const { y0, y1, t } = MIRROR;
+    wallBox(k, { name: 'wall', x0: -L / 2, x1: L / 2, ends: ['nx', 'px'] });
+    wallEnds(k);
+    skirting(k, { name: 'skirtingF', x0: -L / 2, x1: L / 2, zFace: T / 2, side: 1 });
+    skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
+    k.box({ name: 'mirror', mat: 'mirror', size: [L - 0.002, y1 - y0, t], segs: 0, omit: ['nz'], density: { pz: 0.5 }, xf: xf({ pos: [0, (y0 + y1) / 2, T / 2 + t / 2] }) });
+    // 铝托条（镜子下沿）和铝收边（上沿），两头和线条一样缩 0.5mm
+    const d = t + 0.006;
+    k.box({ name: 'ledge', mat: 'aluminum', size: [L - 2 * TRIM_GAP, 0.012, d], r: k.q(0.002, 0), segs: k.q(1, 0), omit: ['nz'], xf: xf({ pos: [0, y0 - 0.006, T / 2 + d / 2] }) });
+    k.box({ name: 'cap', mat: 'aluminum', size: [L - 2 * TRIM_GAP, 0.016, d], r: k.q(0.002, 0), segs: k.q(1, 0), omit: ['nz'], xf: xf({ pos: [0, y1 + 0.008, T / 2 + d / 2] }) });
+  },
+};
