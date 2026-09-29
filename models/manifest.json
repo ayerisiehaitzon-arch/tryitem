@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-29T16:06:53.276Z",
+  "generated": "2026-09-29T17:55:22.634Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1753,6 +1753,48 @@
         "az": 24
       },
       "fileKB": 1741
+    },
+    {
+      "id": "wall_paper",
+      "name": "墙纸墙",
+      "nameEn": "Floral Wallpaper Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        148
+      ],
+      "lods": [
+        {
+          "tris": 68,
+          "verts": 108,
+          "drawCalls": 3
+        },
+        {
+          "tris": 52,
+          "verts": 92,
+          "drawCalls": 3
+        },
+        {
+          "tris": 44,
+          "verts": 84,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "碎花墙纸（奶油底、半落版的小枝子）",
+        "白色哑光烤漆"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 124,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 30
+      },
+      "fileKB": 310
     },
     {
       "id": "kitchen_base",
@@ -4270,6 +4312,177 @@
         "az": 22
       },
       "fileKB": 861
+    },
+    {
+      "id": "sewing_table",
+      "name": "缝纫机桌",
+      "nameEn": "Sewing Table with Machine",
+      "category": "sewing",
+      "mount": "floor",
+      "size": [
+        1100,
+        1112,
+        574
+      ],
+      "lods": [
+        {
+          "tris": 4152,
+          "verts": 3576,
+          "drawCalls": 4
+        },
+        {
+          "tris": 2768,
+          "verts": 2654,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1624,
+          "verts": 1741,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "白色哑光烤漆",
+        "缝纫间（缝纫机面板 / 针板 / 纸样 / 切割垫 / 叠好的布 / 线轴 / 软尺 / 木尺 / 纯色零件，图集）",
+        "碎花棉布（雾蓝底，奶白 / 珊瑚 / 芥末黄的小花）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 478,
+      "lodDistances": null,
+      "view": {
+        "el": 18,
+        "az": 20
+      },
+      "fileKB": 2143
+    },
+    {
+      "id": "dress_form",
+      "name": "人台",
+      "nameEn": "Dress Form with Pinned Skirt",
+      "category": "sewing",
+      "mount": "floor",
+      "size": [
+        624,
+        1651,
+        561
+      ],
+      "lods": [
+        {
+          "tris": 3686,
+          "verts": 2708,
+          "drawCalls": 4
+        },
+        {
+          "tris": 2782,
+          "verts": 2105,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1976,
+          "verts": 1542,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "亚麻布（燕麦色）",
+        "缝纫间（缝纫机面板 / 针板 / 纸样 / 切割垫 / 叠好的布 / 线轴 / 软尺 / 木尺 / 纯色零件，图集）",
+        "胡桃木（哑光清漆）",
+        "碎花棉布（雾蓝底，奶白 / 珊瑚 / 芥末黄的小花）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 265,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 24
+      },
+      "fileKB": 1903
+    },
+    {
+      "id": "thread_rack",
+      "name": "线轴架",
+      "nameEn": "Wall Thread Rack with Forty Spools",
+      "category": "sewing",
+      "mount": "wall",
+      "size": [
+        620,
+        500,
+        84
+      ],
+      "lods": [
+        {
+          "tris": 6714,
+          "verts": 6810,
+          "drawCalls": 3
+        },
+        {
+          "tris": 4818,
+          "verts": 4992,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1626,
+          "verts": 1696,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "桦木胶合板的边（13 层）",
+        "桦木（旋切贴皮，水性哑光清漆）",
+        "缝纫间（缝纫机面板 / 针板 / 纸样 / 切割垫 / 叠好的布 / 线轴 / 软尺 / 木尺 / 纯色零件，图集）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 441,
+      "lodDistances": null,
+      "view": {
+        "el": 8,
+        "az": 20
+      },
+      "fileKB": 1669
+    },
+    {
+      "id": "cutting_table",
+      "name": "裁剪台",
+      "nameEn": "Cutting Table with Fabric Cubbies",
+      "category": "sewing",
+      "mount": "floor",
+      "size": [
+        1400,
+        946,
+        800
+      ],
+      "lods": [
+        {
+          "tris": 2996,
+          "verts": 3063,
+          "drawCalls": 4
+        },
+        {
+          "tris": 2478,
+          "verts": 2706,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1252,
+          "verts": 1744,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "白色哑光烤漆",
+        "缝纫间（缝纫机面板 / 针板 / 纸样 / 切割垫 / 叠好的布 / 线轴 / 软尺 / 木尺 / 纯色零件，图集）",
+        "碎花棉布（雾蓝底，奶白 / 珊瑚 / 芥末黄的小花）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 185,
+      "lodDistances": null,
+      "view": {
+        "el": 22,
+        "az": 24
+      },
+      "fileKB": 2150
     }
   ]
 }

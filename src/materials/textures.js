@@ -26,6 +26,7 @@ import * as studio from './studio-textures.js';
 import * as band from './band-textures.js';
 import * as workshop from './workshop-textures.js';
 import * as pet from './pet-textures.js';
+import * as sew from './sew-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -527,6 +528,9 @@ export const TEXTURES = {
   rope_toy: { size: 256, normalStrength: 4, v: 1, gen: (S) => pet.ropeToy(S, { seed: 1561, colors: [rgb(52, 98, 164), rgb(238, 232, 218), rgb(116, 168, 206)] }) },
   gravel: { size: 512, detail: 0.5, normalStrength: 3, v: 1, gen: (S) => pet.gravel(S, { seed: 1541 }) },
   cork_tiles: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => pet.corkTiles(S, { seed: 1551 }) },
+  sewing: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, emit: true, gen: (S) => sew.sewAtlas(S, { seed: 1601 }) },
+  calico: { size: 1024, detail: 0.5, normalStrength: 1.5, v: 1, gen: (S) => sew.calico(S, { seed: 1611 }) },
+  wallpaper: { size: 1024, detail: 0.5, normalStrength: 1, v: 1, gen: (S) => sew.wallpaper(S, { seed: 1621 }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB

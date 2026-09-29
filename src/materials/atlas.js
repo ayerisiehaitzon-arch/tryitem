@@ -931,3 +931,84 @@ export function petSwatch(name) {
   const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
   return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
 }
+
+// —— 缝纫间图集：缝纫机正面（机身正面按平面贴，机头的穿线示意、品牌、针迹表、液晶屏都画在这里）、针板、纸样、切割垫、
+//    八块叠好的布、四十种线轴的线、软尺（两段）、木尺、纯色格子 ——
+export const SEW_ATLAS = {
+  size: 2048,
+  regions: {
+    machine: [0, 0, 1024, 704], plate: [1024, 0, 1280, 256], pattern: [1280, 0, 1792, 512],
+    mat: [0, 704, 1024, 1387], fabrics: [1024, 512, 2048, 1024],
+    threads: [0, 1392, 2048, 1648], tapeA: [0, 1648, 2048, 1712], tapeB: [0, 1712, 2048, 1776], yardstick: [0, 1776, 2048, 1840],
+    swatch: [0, 1920, 2048, 2048],
+  },
+  // 缝纫机正面：机身局部 x ∈ [x0, x0 + w]、y ∈ [0, h]（y 向上），图的上沿是 y = h
+  machine: { x0: -0.22, w: 0.44, h: 0.3 },
+  plate: { size: 0.07 },
+  pattern: { size: 0.45 },
+  mat: { w: 0.9, h: 0.6 },
+  // 叠好的布：4 × 2 格，每格代表 0.3m 见方的一块布
+  fabrics: { cols: 4, rows: 2, size: 0.3, names: ['mustard', 'polka', 'gingham', 'sage', 'stripe', 'calico', 'pinkdot', 'denim'] },
+  // 线轴：一格一种颜色，u 绕线轴一圈、v 沿线轴高度
+  threads: { n: 40 },
+  // 软尺：一段 0.75m（tapeA 是 0 ~ 75cm，tapeB 是 75 ~ 150cm），宽 16mm；木尺 1m × 3cm
+  tape: { len: 0.75, w: 0.016 },
+  yardstick: { len: 1, w: 0.03 },
+  cols: 16,
+  swatches: [
+    { name: 'machineWhite', c: [244, 241, 234], rough: 0.35 },
+    { name: 'machineGray', c: [196, 198, 200], rough: 0.4 },
+    { name: 'accent', c: [92, 170, 160], rough: 0.35 },
+    { name: 'black', c: [28, 28, 30], rough: 0.4 },
+    { name: 'steel', c: [206, 208, 212], rough: 0.3, metal: 1 },
+    { name: 'chrome', c: [226, 228, 232], rough: 0.14, metal: 1 },
+    { name: 'led', c: [252, 250, 240], rough: 0.3, emit: [255, 248, 226] },
+    { name: 'tomato', c: [198, 44, 38], rough: 0.65 },
+    { name: 'leaf', c: [72, 130, 62], rough: 0.6 },
+    { name: 'strawberry', c: [214, 66, 72], rough: 0.7 },
+    { name: 'pinRed', c: [214, 40, 40], rough: 0.25 },
+    { name: 'pinYellow', c: [236, 196, 40], rough: 0.25 },
+    { name: 'pinBlue', c: [40, 92, 204], rough: 0.25 },
+    { name: 'pinWhite', c: [242, 242, 238], rough: 0.25 },
+    { name: 'pinGreen', c: [50, 164, 92], rough: 0.25 },
+    { name: 'handleOrange', c: [236, 112, 40], rough: 0.45 },
+    { name: 'spoolWhite', c: [240, 238, 232], rough: 0.5 },
+    { name: 'spoolWood', c: [214, 180, 130], rough: 0.7 },
+    { name: 'brass', c: [214, 176, 110], rough: 0.3, metal: 1 },
+    { name: 'waistTape', c: [30, 30, 32], rough: 0.8 },
+    { name: 'seam', c: [150, 132, 104], rough: 0.9 },
+    { name: 'rotaryTeal', c: [60, 150, 170], rough: 0.4 },
+    { name: 'thread', c: [236, 230, 214], rough: 0.8 },
+    { name: 'chalk', c: [236, 96, 118], rough: 0.95 },
+    { name: 'rubber', c: [40, 40, 42], rough: 0.8 },
+    { name: 'tissue', c: [232, 218, 190], rough: 0.9 },
+  ],
+};
+export function sewUV(region, u, v) {
+  const [x0, y0, x1, y1] = SEW_ATLAS.regions[region];
+  const S = SEW_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+// 八块布里的第 i 块（或按名字）：u, v ∈ [0, 1]
+export function fabricUV(which, u, v) {
+  const F = SEW_ATLAS.fabrics, i = typeof which === 'number' ? which : F.names.indexOf(which);
+  if (i < 0) throw new Error(`缝纫间图集里没有 ${which} 这块布`);
+  const [x0, y0, x1, y1] = SEW_ATLAS.regions.fabrics, S = SEW_ATLAS.size, m = 3;
+  const cw = (x1 - x0) / F.cols, ch = (y1 - y0) / F.rows, cx = x0 + (i % F.cols) * cw, cy = y0 + Math.floor(i / F.cols) * ch;
+  const cl = (t) => Math.max(0, Math.min(1, t));
+  return [(cx + m + cl(u) * (cw - 2 * m)) / S, (cy + m + cl(v) * (ch - 2 * m)) / S];
+}
+// 第 i 种线的颜色格：u 绕线轴一圈、v 沿高度
+export function threadUV(i, u, v) {
+  const [x0, y0, x1, y1] = SEW_ATLAS.regions.threads, S = SEW_ATLAS.size, m = 2;
+  const w = (x1 - x0) / SEW_ATLAS.threads.n, cx = x0 + i * w;
+  return [(cx + m + u * (w - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function sewSwatch(name) {
+  const A = SEW_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`缝纫间图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}

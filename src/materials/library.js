@@ -773,6 +773,27 @@ Object.assign(MATERIALS, {
     tex: 'cork_tiles', tile: [2, 2], noOffset: true,
     roughness: 1, metallic: 0, normalScale: 0.5,
   },
+  // —— 缝纫间 ——
+  sewing: {
+    label: '缝纫间（缝纫机面板 / 针板 / 纸样 / 切割垫 / 叠好的布 / 线轴 / 软尺 / 木尺 / 纯色零件，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；液晶屏和缝纫灯自发光。压在缝纫机底下的布边、纸样是单层的：双面显示
+    tex: 'sewing', tile: [1, 1], noOffset: true, doubleSided: true,
+    roughness: 1, metallic: 1, normalScale: 0.6,
+    emissive: [1, 1, 1], emissiveStrength: 1.2,
+  },
+  calico: {
+    label: '碎花棉布（雾蓝底，奶白 / 珊瑚 / 芥末黄的小花）',
+    // 缝纫机上的布、人台上的半身裙、裁剪台上铺开的布：都是单层的，双面显示
+    tex: 'calico', tile: [0.2, 0.2], doubleSided: true,
+    roughness: 1, metallic: 0, normalScale: 0.5,
+    sheen: { color: [0.42, 0.44, 0.48], roughness: 0.6 },
+  },
+  wallpaper: {
+    label: '碎花墙纸（奶油底、半落版的小枝子）',
+    // 周期 0.5m 整除 2m：墙模块按模块坐标贴，拼起来图案连续
+    tex: 'wallpaper', tile: [0.5, 0.5], noOffset: true,
+    roughness: 0.9, metallic: 0, normalScale: 0.3,
+  },
 });
 
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];

@@ -249,3 +249,24 @@ export const wallFoam = {
     }
   },
 };
+
+// —— 墙纸墙：正面一层碎花墙纸（1mm 的皮，和护墙板墙的做法一样），白色踢脚线，背面白墙 ——
+// 墙纸的周期 0.5m 整除 2m，按模块坐标贴：模块拼起来图案接得上
+export const wallPaper = {
+  id: 'wall_paper',
+  name: '墙纸墙',
+  nameEn: 'Floral Wallpaper Wall',
+  category: 'architecture',
+  aoDensity: 80,
+  shadow: { margin: 0.32, maxDist: 0.9, density: 60 },
+  view: { el: 16, az: 30 },
+  build(k) {
+    const { L, T } = WALL;
+    const skin = 0.001;
+    wallBox(k, { name: 'wall', x0: -L / 2, x1: L / 2, z1: T / 2 - skin, omit: ['ny', 'pz'], ends: ['nx', 'px'] });
+    wallBox(k, { name: 'paper', mat: 'wallpaper', x0: -L / 2, x1: L / 2, z0: T / 2 - skin, omit: ['ny', 'nz'], ends: ['nx', 'px'] });
+    wallEnds(k);
+    skirting(k, { name: 'skirtingF', x0: -L / 2, x1: L / 2, zFace: T / 2, side: 1 });
+    skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
+  },
+};

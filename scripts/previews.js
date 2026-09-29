@@ -62,6 +62,9 @@
 //   docs/previews/pets.jpg            宠物房四件：猫爬架、水草鱼缸、狗窝、宠物餐桌
 //   docs/previews/pets-detail.jpg     宠物房特写：圆窝里蜷着睡觉的橘猫、鱼缸里的水草和鱼、狗窝里的玩具、两只不锈钢碗
 //   docs/previews/pets-room.jpg       全屋陈列里的宠物房
+//   docs/previews/sewing.jpg          缝纫间四件：缝纫机桌、人台、线轴架、裁剪台
+//   docs/previews/sewing-detail.jpg   缝纫间特写：缝纫机正面和压脚下的布、人台上的半身裙和软尺、四十轴线、裁剪台上的纸样
+//   docs/previews/sewing-room.jpg     全屋陈列里的缝纫间
 //   docs/previews/room.jpg           全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -81,7 +84,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -429,6 +432,23 @@ await grid(petDetail, 2, [600, 450], path.join(out, 'pets-detail.jpg'));
 const petRoom = await shoot({ items: ['room'], views: ['&target=64.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'pets-room.png' });
 await sharp(petRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'pets-room.jpg'));
 console.log('→ docs/previews/pets-room.jpg');
+
+// —— 缝纫间 ——
+const sewHero = await shoot({ items: sewIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(sewHero, 4, [360, 270], path.join(out, 'sewing.jpg'));
+
+// 缝纫间特写：缝纫机正面（机头面板上的穿线槽、针迹表、发光的液晶屏和旋钮，碎花布从压脚底下穿过）；
+// 人台上别着大头针的半身裙、挂在脖子上的软尺；线轴架上的四十轴线；裁剪台上的纸样、压铁、切割垫和木尺
+const sewDetail = [];
+sewDetail.push(...await shoot({ items: ['sewing_table'], views: ['&target=-0.2:0.88:0&d=0.75&el=12&az=8'], size: [800, 600], outDir: tmp, name: () => 'sd0.png' }));
+sewDetail.push(...await shoot({ items: ['dress_form'], views: ['&target=0:1.32:0.05&d=1.05&el=8&az=-20'], size: [800, 600], outDir: tmp, name: () => 'sd1.png' }));
+sewDetail.push(...await shoot({ items: ['thread_rack'], views: ['&target=0.03:1.45:0.05&d=0.62&el=5&az=25'], size: [800, 600], outDir: tmp, name: () => 'sd2.png' }));
+sewDetail.push(...await shoot({ items: ['cutting_table'], views: ['&target=-0.05:0.9:0.0&d=1.0&el=40&az=10'], size: [800, 600], outDir: tmp, name: () => 'sd3.png' }));
+await grid(sewDetail, 2, [600, 450], path.join(out, 'sewing-detail.jpg'));
+
+const sewRoom = await shoot({ items: ['room'], views: ['&target=68.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'sewing-room.png' });
+await sharp(sewRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'sewing-room.jpg'));
+console.log('→ docs/previews/sewing-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿
