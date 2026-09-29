@@ -50,6 +50,9 @@
 //   docs/previews/game.jpg            游戏室四件：台球桌、街机、桌上足球、霓虹灯牌
 //   docs/previews/game-detail.jpg     游戏室特写：摆好的一架台球、街机的屏幕和控制台、桌上足球的小人、霓虹灯管和墙上的光晕
 //   docs/previews/game-room.jpg       全屋陈列里的游戏室
+//   docs/previews/studio.jpg          画室三件：画架、颜料推车、石膏静物台
+//   docs/previews/studio-detail.jpg   画室特写：画到一半的油画和托盘上的笔、调色板和笔筒、颜料管、石膏几何体和衬布
+//   docs/previews/studio-room.jpg     全屋陈列里的画室
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -69,7 +72,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -349,6 +352,23 @@ await grid(gameDetail, 2, [600, 450], path.join(out, 'game-detail.jpg'));
 const gameRoom = await shoot({ items: ['room'], views: ['&target=48.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'game-room.png' });
 await sharp(gameRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'game-room.jpg'));
 console.log('→ docs/previews/game-room.jpg');
+
+// —— 画室 ——
+const studioHero = await shoot({ items: studioIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(studioHero, 3, [480, 360], path.join(out, 'studio.jpg'));
+
+// 画室特写：画面右下角还没画完的地方（稀薄的底色、铅笔起稿线）和托盘上的笔、推车顶层的调色板和插满笔的铁皮罐、
+// 中层的颜料管（拧开盖子的那支挤出一截群青）、石膏几何体和垂下来的衬布
+const studioDetail = [];
+studioDetail.push(...await shoot({ items: ['easel'], views: ['&target=0.1:1.02:0.07&d=0.8&el=10&az=16'], size: [800, 600], outDir: tmp, name: () => 'st0.png' }));
+studioDetail.push(...await shoot({ items: ['art_cart'], views: ['&target=0.04:0.8:0&d=0.8&el=36&az=24'], size: [800, 600], outDir: tmp, name: () => 'st1.png' }));
+studioDetail.push(...await shoot({ items: ['art_cart'], views: ['&target=-0.05:0.5:0&d=0.72&el=42&az=5'], size: [800, 600], outDir: tmp, name: () => 'st2.png' }));
+studioDetail.push(...await shoot({ items: ['still_life'], views: ['&target=0:0.72:0.05&d=1.35&el=18&az=24'], size: [800, 600], outDir: tmp, name: () => 'st3.png' }));
+await grid(studioDetail, 2, [600, 450], path.join(out, 'studio-detail.jpg'));
+
+const studioRoom = await shoot({ items: ['room'], views: ['&target=52.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'studio-room.png' });
+await sharp(studioRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'studio-room.jpg'));
+console.log('→ docs/previews/studio-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

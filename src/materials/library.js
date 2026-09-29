@@ -636,5 +636,33 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 画室 ——
+Object.assign(MATERIALS, {
+  studio: {
+    label: '画室用品（油画 / 调色板 / 颜料管标签 / 抹布 / 金属 / 笔毛，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；油画的笔触和调色板上的颜料堆有厚度（法线）
+    tex: 'studio', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.8,
+  },
+  floor_paint: {
+    label: '溅满颜料的木地板（旧松木宽板）',
+    tex: 'studio_floor', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.7,
+  },
+  drape: {
+    label: '亚麻衬布（炭灰，双面）',
+    // 和炭灰亚麻同一张贴图；衬布是一层没有厚度的面，掀起来的布边要看得见背面
+    tex: 'linen', tile: [0.12, 0.12], color: tint([76, 78, 82]),
+    roughness: 1, metallic: 0, normalScale: 1.0, doubleSided: true,
+    sheen: { color: [0.22, 0.23, 0.25], roughness: 0.5 },
+  },
+  gypsum: {
+    label: '石膏（几何体，哑光）',
+    // 和乳胶漆同一张灰泥贴图，铺得更密、颜色更白更冷一点
+    tex: 'plaster', tile: [0.25, 0.25], color: tint([244, 243, 239], PLASTER_BASE),
+    roughness: 1, metallic: 0, normalScale: 0.3,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

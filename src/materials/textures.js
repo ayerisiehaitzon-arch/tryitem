@@ -22,6 +22,7 @@ import * as tea from './tea-textures.js';
 import * as theater from './theater-textures.js';
 import * as gym2 from './gym2-textures.js';
 import * as game from './game-textures.js';
+import * as studio from './studio-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -483,6 +484,11 @@ export const TEXTURES = {
   game: { size: 2048, detail: 0.5, normalStrength: 2, v: 3, emit: true, gen: (S) => game.gameAtlas(S, { seed: 1101 }) },
   // 台呢（和玄关的毡同一个生成器，台球绿，铺得更细）
   baize: { size: 256, normalStrength: 1.2, v: 1, gen: (S) => entry.felt(S, { seed: 612, color: rgb(24, 106, 66), mottle: 0.035 }) },
+  // —— 画室 ——
+  // 画室图集：画架上画到一半的油画（一笔一笔的笔触，颜料的厚度进高度图）、调色板、颜料管标签、抹布、纯色格子
+  studio: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => studio.studioAtlas(S, { seed: 1201 }) },
+  // 溅满颜料的旧松木宽板（周期 2m）
+  studio_floor: { size: 2048, detail: 0.5, normalStrength: 3, v: 1, gen: (S) => studio.studioFloor(S, { seed: 331 }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB

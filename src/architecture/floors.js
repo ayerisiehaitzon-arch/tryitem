@@ -27,3 +27,4 @@ export const floorChecker = floorModule({ id: 'floor_checker', name: '棋盘格�
 export const floorCement = floorModule({ id: 'floor_cement', name: '水泥花砖地面', nameEn: 'Encaustic Cement Tile Floor', mat: 'floor_cement' });
 export const floorRubber = floorModule({ id: 'floor_rubber', name: '橡胶地垫', nameEn: 'Rubber Gym Flooring', mat: 'floor_rubber' });
 export const floorBrick = floorModule({ id: 'floor_brick', name: '方砖地面', nameEn: 'Grey Clay Square Tile Floor', mat: 'floor_brick' });
+export const floorPaint = floorModule({ id: 'floor_paint', name: '溅满颜料的木地板', nameEn: 'Paint-Splattered Plank Floor', mat: 'floor_paint' });

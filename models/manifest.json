@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-29T01:53:47.628Z",
+  "generated": "2026-09-29T04:19:28.015Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1551,6 +1551,46 @@
         "az": 28
       },
       "fileKB": 190
+    },
+    {
+      "id": "floor_paint",
+      "name": "溅满颜料的木地板",
+      "nameEn": "Paint-Splattered Plank Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "溅满颜料的木地板（旧松木宽板）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 1078
     },
     {
       "id": "kitchen_base",
@@ -3443,6 +3483,130 @@
         "az": 18
       },
       "fileKB": 666
+    },
+    {
+      "id": "easel",
+      "name": "画架",
+      "nameEn": "H-Frame Studio Easel",
+      "category": "studio",
+      "mount": "floor",
+      "size": [
+        640,
+        2020,
+        640
+      ],
+      "lods": [
+        {
+          "tris": 3744,
+          "verts": 3755,
+          "drawCalls": 2
+        },
+        {
+          "tris": 1951,
+          "verts": 2086,
+          "drawCalls": 2
+        },
+        {
+          "tris": 795,
+          "verts": 1158,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "画室用品（油画 / 调色板 / 颜料管标签 / 抹布 / 金属 / 笔毛，图集）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 469,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 26
+      },
+      "fileKB": 1500
+    },
+    {
+      "id": "art_cart",
+      "name": "颜料推车",
+      "nameEn": "Art Supply Cart",
+      "category": "studio",
+      "mount": "floor",
+      "size": [
+        705,
+        1083,
+        426
+      ],
+      "lods": [
+        {
+          "tris": 9666,
+          "verts": 8211,
+          "drawCalls": 2
+        },
+        {
+          "tris": 5918,
+          "verts": 5565,
+          "drawCalls": 2
+        },
+        {
+          "tris": 3045,
+          "verts": 3185,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "画室用品（油画 / 调色板 / 颜料管标签 / 抹布 / 金属 / 笔毛，图集）",
+        "透明玻璃"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 461,
+      "lodDistances": null,
+      "view": {
+        "el": 24,
+        "az": 28
+      },
+      "fileKB": 1634
+    },
+    {
+      "id": "still_life",
+      "name": "石膏静物台",
+      "nameEn": "Plaster Still Life",
+      "category": "studio",
+      "mount": "floor",
+      "size": [
+        700,
+        962,
+        777
+      ],
+      "lods": [
+        {
+          "tris": 2522,
+          "verts": 1579,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1178,
+          "verts": 843,
+          "drawCalls": 3
+        },
+        {
+          "tris": 410,
+          "verts": 373,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "白色哑光烤漆",
+        "亚麻衬布（炭灰，双面）",
+        "石膏（几何体，哑光）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 517,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 24
+      },
+      "fileKB": 805
     }
   ]
 }

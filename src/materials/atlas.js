@@ -665,3 +665,74 @@ export function ballUV(n, u, v) {
   const cx = x0 + (n % cols) * cw, cy = y0 + Math.floor(n / cols) * ch;
   return [(cx + m + u * (cw - 2 * m)) / S, (cy + m + v * (ch - 2 * m)) / S];
 }
+
+// —— 画室图集（studio 材质）：画架上的油画、调色板、颜料管的标签、沾了颜料的抹布、纯色格子 ——
+export const STUDIO_ATLAS = {
+  size: 2048,
+  regions: {
+    painting: [0, 0, 768, 1024], palette: [768, 0, 1280, 384], labels: [768, 384, 1280, 672], rag: [1280, 0, 1536, 256],
+    back: [1280, 256, 1664, 768], swatch: [0, 1920, 2048, 2048],
+  },
+  painting: { w: 0.6, h: 0.8 },
+  palette: { w: 0.4, h: 0.3 },
+  rag: { w: 0.3, h: 0.3 },
+  labels: { cols: 4, rows: 3 },
+  // 颜料管：颜色（sRGB）和标签上的名字
+  tubes: [
+    { name: 'TITANIUM WHITE', c: [244, 242, 236] }, { name: 'CADMIUM YELLOW', c: [248, 196, 30] }, { name: 'YELLOW OCHRE', c: [200, 146, 60] },
+    { name: 'CADMIUM RED', c: [210, 40, 36] }, { name: 'ALIZARIN', c: [150, 24, 48] }, { name: 'ULTRAMARINE', c: [36, 56, 160] },
+    { name: 'SAP GREEN', c: [64, 110, 40] }, { name: 'IVORY BLACK', c: [26, 26, 28] },
+  ],
+  cols: 16,
+  swatches: [
+    { name: 'canvas', c: [238, 232, 216], rough: 0.8 },
+    { name: 'aluminum', c: [200, 202, 206], rough: 0.3, metal: 1 },
+    { name: 'capWhite', c: [240, 240, 236], rough: 0.4 },
+    { name: 'capBlack', c: [30, 30, 32], rough: 0.4 },
+    { name: 'bristle', c: [214, 190, 150], rough: 0.8 },
+    { name: 'synth', c: [112, 66, 40], rough: 0.6 },
+    { name: 'brass', c: [205, 168, 92], rough: 0.25, metal: 1 },
+    { name: 'silver', c: [205, 207, 211], rough: 0.22, metal: 1 },
+    { name: 'handleRed', c: [150, 30, 28], rough: 0.22 },
+    { name: 'handleBlack', c: [26, 26, 28], rough: 0.22 },
+    { name: 'handleWood', c: [196, 160, 110], rough: 0.35 },
+    { name: 'mint', c: [150, 200, 184], rough: 0.42 },
+    { name: 'caster', c: [44, 44, 48], rough: 0.6 },
+    { name: 'paper', c: [244, 242, 236], rough: 0.85 },
+    { name: 'cover', c: [28, 28, 30], rough: 0.7 },
+    { name: 'elastic', c: [176, 40, 40], rough: 0.6 },
+    { name: 'graphite', c: [70, 72, 76], rough: 0.5 },
+    { name: 'blade', c: [196, 198, 202], rough: 0.18, metal: 1 },
+    { name: 'cork', c: [170, 128, 88], rough: 0.8 },
+    { name: 'lilac', c: [150, 120, 190], rough: 0.4 },
+    { name: 'pine', c: [214, 186, 140], rough: 0.7 },
+    { name: 'pencilGreen', c: [36, 92, 64], rough: 0.35 },
+    { name: 'paintBlue', c: [52, 72, 168], rough: 0.3 },
+    { name: 'paintYellow', c: [232, 188, 64], rough: 0.3 },
+    { name: 'paintGreen', c: [74, 112, 58], rough: 0.3 },
+    { name: 'murky', c: [104, 100, 128], rough: 0.08 },
+    { name: 'amber', c: [118, 62, 20], rough: 0.12 },
+    { name: 'paintRed', c: [196, 44, 38], rough: 0.3 },
+  ],
+};
+export function studioUV(region, u, v) {
+  const [x0, y0, x1, y1] = STUDIO_ATLAS.regions[region];
+  const S = STUDIO_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function studioSwatch(name) {
+  const A = STUDIO_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`画室图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}
+// 第 i 支颜料管的标签（u 绕一圈、v 从管肩到管尾）
+export function labelUV(i, u, v) {
+  const [x0, y0, x1, y1] = STUDIO_ATLAS.regions.labels;
+  const { cols, rows } = STUDIO_ATLAS.labels, S = STUDIO_ATLAS.size, m = 2;
+  const cw = (x1 - x0) / cols, ch = (y1 - y0) / rows;
+  const cx = x0 + (i % cols) * cw, cy = y0 + Math.floor(i / cols) * ch;
+  return [(cx + m + u * (cw - 2 * m)) / S, (cy + m + v * (ch - 2 * m)) / S];
+}
