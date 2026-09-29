@@ -207,3 +207,45 @@ export const wallMirror = {
     k.box({ name: 'cap', mat: 'aluminum', size: [L - 2 * TRIM_GAP, 0.016, d], r: k.q(0.002, 0), segs: k.q(1, 0), omit: ['nz'], xf: xf({ pos: [0, y1 + 0.008, T / 2 + d / 2] }) });
   },
 };
+
+// —— 吸音棉墙（排练室）：正面从 25cm 到 2.25m 贴满楔形吸音棉，33.3cm 一块（6 × 6 块），每块五道楔形的棱，
+//    相邻两块的棱一竖一横（棋盘格交错）；块与块之间留 4mm 的缝；下面露出白墙和踢脚线，背面白墙 ——
+// 一块 2m 的模块正好六列，模块拼起来棱的方向接着交错下去。
+export const FOAM = { y0: 0.25, n: 6, ridges: 5, h: 0.034, base: 0.012, gap: 0.004 };
+export const wallFoam = {
+  id: 'wall_foam',
+  name: '吸音棉墙',
+  nameEn: 'Acoustic Foam Wall',
+  category: 'architecture',
+  aoDensity: 90,
+  shadow: { margin: 0.32, maxDist: 0.9, density: 60 },
+  view: { el: 12, az: 28 },
+  build(k) {
+    const { L, T } = WALL;
+    const { y0, n, ridges, h, base, gap } = FOAM;
+    const tile = L / n, zf = T / 2;
+    wallBox(k, { name: 'wall', x0: -L / 2, x1: L / 2, ends: ['nx', 'px'] });
+    wallEnds(k);
+    skirting(k, { name: 'skirtingF', x0: -L / 2, x1: L / 2, zFace: zf, side: 1 });
+    skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
+    // 整片吸音棉底下一层薄的黑底：块与块之间的缝里看到的是黑色，不是白墙
+    k.box({ name: 'foamBack', mat: 'foam', size: [L - 0.001, n * tile, 0.002], segs: 0, omit: ['nz'], density: { pz: 0.2 }, xf: xf({ pos: [0, y0 + (n * tile) / 2, zf + 0.001] }) });
+    const w = (tile - gap) / ridges;
+    const vShape = shape([[-w / 2, 0], [0, -h], [w / 2, 0]]);    // 竖棱：截面在 xz 平面（axis 'y'：截面 y → -z）；两个截面都是逆时针
+    const hShape = shape([[0, -w / 2], [0, w / 2], [-h, 0]]);    // 横棱：截面在 zy 平面（axis 'x'：截面 x → -z）
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+      const cx = -L / 2 + tile * (c + 0.5), cy = y0 + tile * (r + 0.5), s = tile - gap;
+      k.box({ name: `foamBase${r}_${c}`, mat: 'foam', size: [s, s, base - 0.002], segs: 0, omit: ['nz'], density: { pz: 0.3 }, xf: xf({ pos: [cx, cy, zf + 0.002 + (base - 0.002) / 2] }) });
+      if (k.lod === 2) continue;
+      const vertical = (r + c) % 2 === 0;
+      for (let i = 0; i < ridges; i++) {
+        const o = -s / 2 + w * (i + 0.5);
+        if (vertical) {
+          k.extrude({ name: `foam${r}_${c}_${i}`, mat: 'foam', shape: vShape, depth: s, axis: 'y', density: { cap0: 0.3, cap1: 0.3 }, xf: xf({ pos: [cx + o, cy - s / 2, zf + base] }) });
+        } else {
+          k.extrude({ name: `foam${r}_${c}_${i}`, mat: 'foam', shape: hShape, depth: s, axis: 'x', density: { cap0: 0.3, cap1: 0.3 }, xf: xf({ pos: [cx - s / 2, cy + o, zf + base] }) });
+        }
+      }
+    }
+  },
+};

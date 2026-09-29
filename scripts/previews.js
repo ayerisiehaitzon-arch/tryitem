@@ -53,6 +53,9 @@
 //   docs/previews/studio.jpg          画室三件：画架、颜料推车、石膏静物台
 //   docs/previews/studio-detail.jpg   画室特写：画到一半的油画和托盘上的笔、调色板和笔筒、颜料管、石膏几何体和衬布
 //   docs/previews/studio-room.jpg     全屋陈列里的画室
+//   docs/previews/band.jpg            排练室四件：架子鼓、电吉他、吉他音箱、麦克风架
+//   docs/previews/band-detail.jpg     排练室特写：底鼓的鼓牌和出音孔、从鼓手位置看的镲和军鼓、吉他的琴身、音箱面板
+//   docs/previews/band-room.jpg       全屋陈列里的排练室
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -72,7 +75,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -369,6 +372,23 @@ await grid(studioDetail, 2, [600, 450], path.join(out, 'studio-detail.jpg'));
 const studioRoom = await shoot({ items: ['room'], views: ['&target=52.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'studio-room.png' });
 await sharp(studioRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'studio-room.jpg'));
 console.log('→ docs/previews/studio-room.jpg');
+
+// —— 排练室 ——
+const bandHero = await shoot({ items: bandIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(bandHero, 4, [360, 270], path.join(out, 'band.jpg'));
+
+// 排练室特写：底鼓前皮的鼓牌和出音孔、嗵鼓；从鼓手的位置看过去的踩镲、军鼓和鼓棒；吉他的琴身（日落色、护板、拾音器、琴弦）；
+// 音箱的黑面板（旋钮、刻度、红宝石指示灯）
+const bandDetail = [];
+bandDetail.push(...await shoot({ items: ['drum_kit'], views: ['&target=0:0.72:0.1&d=1.55&el=12&az=10'], size: [800, 600], outDir: tmp, name: () => 'bd0.png' }));
+bandDetail.push(...await shoot({ items: ['drum_kit'], views: ['&target=0.25:0.8:-0.45&d=1.2&el=32&az=205'], size: [800, 600], outDir: tmp, name: () => 'bd1.png' }));
+bandDetail.push(...await shoot({ items: ['electric_guitar'], views: ['&target=0:0.45:0.02&d=0.85&el=8&az=10'], size: [800, 600], outDir: tmp, name: () => 'bd2.png' }));
+bandDetail.push(...await shoot({ items: ['guitar_amp'], views: ['&target=0:0.38:0.1&d=0.72&el=12&az=16'], size: [800, 600], outDir: tmp, name: () => 'bd3.png' }));
+await grid(bandDetail, 2, [600, 450], path.join(out, 'band-detail.jpg'));
+
+const bandRoom = await shoot({ items: ['room'], views: ['&target=56.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'band-room.png' });
+await sharp(bandRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'band-room.jpg'));
+console.log('→ docs/previews/band-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

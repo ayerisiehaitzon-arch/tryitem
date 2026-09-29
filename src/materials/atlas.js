@@ -736,3 +736,63 @@ export function labelUV(i, u, v) {
   const cx = x0 + (i % cols) * cw, cy = y0 + Math.floor(i / cols) * ch;
   return [(cx + m + u * (cw - 2 * m)) / S, (cy + m + v * (ch - 2 * m)) / S];
 }
+
+// —— 排练室图集：底鼓前皮的鼓牌（带出音孔的加强圈）、打击面的涂层鼓皮、镲片（车纹、锤痕、印字）、电吉他琴身的日落色、
+//    指板（品位线、贝母圆点）、琴头（木纹和标）、音箱的黑面板（字、刻度）、音箱铭牌、纯色格子 ——
+//    鼓皮、镲片按圆盘平面贴（-1..1 的单位圆），琴身、指板、琴头按吉他坐标（米）平面贴
+export const BAND_ATLAS = {
+  size: 2048,
+  regions: {
+    kickHead: [0, 0, 1024, 1024], cymbal: [1024, 0, 1536, 512], batter: [1536, 0, 2048, 512],
+    body: [1024, 512, 1504, 1152], board: [1536, 512, 2048, 576], head: [1536, 576, 1792, 704], badge: [1792, 576, 2048, 672],
+    panel: [1536, 704, 2048, 784], swatch: [0, 1920, 2048, 2048],
+  },
+  // 底鼓前皮：22 寸，区域边长 0.56m（鼓皮中心在区域中心）；鼓牌圆心和半径、出音孔（米，前皮坐标：x 向右、y 向上）
+  kick: { w: 0.56, logo: [0, 0.03], logoR: 0.135, port: [0.1455, -0.122], portR: 0.05, ringR: 0.058 },
+  body: { x0: -0.176, x1: 0.176, y0: -0.01, y1: 0.46 },
+  board: { w: 0.064 },
+  head: { len: 0.2, x0: -0.06, x1: 0.04 },
+  badge: { w: 0.12, h: 0.045 },
+  panel: { w: 0.56, h: 0.0875, knobs: [0.13, 0.19, 0.25, 0.31, 0.37, 0.43], knobY: 0.052, jacks: [0.03, 0.058], power: 0.485, jewel: 0.528 },
+  cols: 16,
+  swatches: [
+    { name: 'chrome', c: [232, 232, 236], rough: 0.1, metal: 1 },
+    { name: 'blackHw', c: [24, 24, 26], rough: 0.45 },
+    { name: 'rubber', c: [30, 30, 32], rough: 0.85 },
+    { name: 'feltRed', c: [150, 28, 32], rough: 0.95 },
+    { name: 'feltBlack', c: [28, 28, 30], rough: 0.95 },
+    { name: 'hickory', c: [214, 180, 128], rough: 0.45 },
+    { name: 'throne', c: [24, 24, 26], rough: 0.5 },
+    { name: 'maple', c: [226, 188, 124], rough: 0.22 },
+    { name: 'nickel', c: [206, 206, 210], rough: 0.18, metal: 1 },
+    { name: 'bone', c: [238, 230, 208], rough: 0.4 },
+    { name: 'pickupWhite', c: [238, 234, 222], rough: 0.3 },
+    { name: 'guardWhite', c: [242, 238, 228], rough: 0.22 },
+    { name: 'knobWhite', c: [236, 232, 220], rough: 0.3 },
+    { name: 'steel', c: [212, 214, 218], rough: 0.25, metal: 1 },
+    { name: 'burstEdge', c: [34, 16, 10], rough: 0.15 },
+    { name: 'shellInner', c: [204, 172, 124], rough: 0.8 },
+    { name: 'jewel', c: [190, 16, 14], rough: 0.2, emit: [255, 34, 20] },
+    { name: 'knobBlack', c: [16, 16, 18], rough: 0.3 },
+    { name: 'cable', c: [20, 20, 22], rough: 0.5 },
+    { name: 'mesh', c: [176, 178, 184], rough: 0.45, metal: 1 },
+    { name: 'micBody', c: [34, 34, 36], rough: 0.4 },
+    { name: 'redGloss', c: [140, 16, 22], rough: 0.15 },
+    { name: 'blackGloss', c: [12, 12, 14], rough: 0.15 },
+  ],
+};
+export function bandUV(region, u, v) {
+  const [x0, y0, x1, y1] = BAND_ATLAS.regions[region];
+  const S = BAND_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function bandSwatch(name) {
+  const A = BAND_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`排练室图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}
+// 圆盘平面贴图：(a, b) ∈ [-1, 1]²（a 向右、b 向上）→ 区域里的 UV
+export const discUV = (region, a, b) => bandUV(region, (a + 1) / 2, (1 - b) / 2);

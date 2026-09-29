@@ -664,5 +664,38 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 排练室 ——
+Object.assign(MATERIALS, {
+  band: {
+    label: '乐器（鼓皮 / 镲片 / 琴身 / 指板 / 音箱面板 / 五金，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；音箱的指示灯自发光
+    tex: 'band', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.6,
+    emissive: [1, 1, 1], emissiveStrength: 1.6,
+  },
+  sparkle_red: {
+    label: '红色闪粉鼓皮贴膜（金属亮片 + 清漆）',
+    tex: 'sparkle', tile: [0.12, 0.12],
+    roughness: 1, metallic: 1, normalScale: 0.3,
+    clearcoat: { factor: 1, roughness: 0.06 },
+  },
+  grille: {
+    label: '音箱网布（银黑平纹）',
+    tex: 'grille', tile: [0.05, 0.05],
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+  foam: {
+    label: '吸音棉（炭黑开孔海绵）',
+    tex: 'foam', tile: [0.12, 0.12],
+    roughness: 1, metallic: 0, normalScale: 1.0,
+  },
+  floor_carpet: {
+    label: '地毯拼块（深灰蓝，方块交错铺）',
+    tex: 'carpet', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.6,
+    sheen: { color: [0.18, 0.19, 0.22], roughness: 0.6 },
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

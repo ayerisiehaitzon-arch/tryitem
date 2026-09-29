@@ -21,10 +21,10 @@ import rug from '../decor/rug.js';
 import tableLamp from '../lighting/table-lamp.js';
 import pendant from '../lighting/pendant.js';
 import wallLamp from '../lighting/wall-lamp.js';
-import { wall, wallWainscot, wallSlat, wallMirror } from '../architecture/walls.js';
+import { wall, wallWainscot, wallSlat, wallMirror, wallFoam } from '../architecture/walls.js';
 import { wallDoor } from '../architecture/door.js';
 import { wallWindow } from '../architecture/window.js';
-import { floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, floorChecker, floorCement, floorRubber, floorBrick, floorPaint } from '../architecture/floors.js';
+import { floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, floorChecker, floorCement, floorRubber, floorBrick, floorPaint, floorCarpet } from '../architecture/floors.js';
 import { railing } from '../architecture/railing.js';
 import kitchenBase from '../kitchen/base.js';
 import kitchenWall from '../kitchen/wall.js';
@@ -72,18 +72,23 @@ import neonSign from '../game/neon-sign.js';
 import easel from '../studio/easel.js';
 import artCart from '../studio/art-cart.js';
 import stillLife from '../studio/still-life.js';
+import drumKit from '../band/drum-kit.js';
+import electricGuitar from '../band/guitar.js';
+import guitarAmp from '../band/amp.js';
+import micStand from '../band/mic-stand.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
 // 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）、
 // 阳台（category: 'balcony'）、书房（category: 'study'）、玄关（category: 'entry'）、儿童房（category: 'kids'）、
 // 洗衣房（category: 'laundry'）、衣帽间（category: 'closet'）、健身房（category: 'gym'）、书房二 / 琴房（category: 'music'）、
-// 茶室（category: 'tea'）、影音室（category: 'theater'）、健身房二（category: 'gym2'）、游戏室（category: 'game'）、画室（category: 'studio'）
+// 茶室（category: 'tea'）、影音室（category: 'theater'）、健身房二（category: 'gym2'）、游戏室（category: 'game'）、画室（category: 'studio'）、
+// 排练室（category: 'band'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
   books, vases, fiddleFig, snakePlant, rug,
   floorLamp, tableLamp, pendant, wallLamp,
-  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, railing, floorChecker, floorCement, floorRubber, floorBrick, wallSlat, wallMirror, floorPaint,
+  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, railing, floorChecker, floorCement, floorRubber, floorBrick, wallSlat, wallMirror, floorPaint, wallFoam, floorCarpet,
   kitchenBase, kitchenWall, kitchenIsland,
   vanity, toilet, shower,
   loungeChair, gardenStool, oliveTree,
@@ -99,4 +104,5 @@ export const FURNITURE = [
   spinBike, rowingMachine, cableCrossover,
   poolTable, arcadeCabinet, foosballTable, neonSign,
   easel, artCart, stillLife,
+  drumKit, electricGuitar, guitarAmp, micStand,
 ];

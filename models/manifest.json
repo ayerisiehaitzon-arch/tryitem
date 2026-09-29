@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-29T04:19:28.015Z",
+  "generated": "2026-09-29T08:28:04.135Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1591,6 +1591,88 @@
         "az": 24
       },
       "fileKB": 1078
+    },
+    {
+      "id": "wall_foam",
+      "name": "吸音棉墙",
+      "nameEn": "Acoustic Foam Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        180
+      ],
+      "lods": [
+        {
+          "tris": 1876,
+          "verts": 4084,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1860,
+          "verts": 4068,
+          "drawCalls": 3
+        },
+        {
+          "tris": 412,
+          "verts": 820,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "白色哑光烤漆",
+        "吸音棉（炭黑开孔海绵）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 168,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 28
+      },
+      "fileKB": 880
+    },
+    {
+      "id": "floor_carpet",
+      "name": "地毯拼块地面",
+      "nameEn": "Carpet Tile Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "地毯拼块（深灰蓝，方块交错铺）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 206
     },
     {
       "id": "kitchen_base",
@@ -3607,6 +3689,169 @@
         "az": 24
       },
       "fileKB": 805
+    },
+    {
+      "id": "drum_kit",
+      "name": "架子鼓",
+      "nameEn": "Drum Kit",
+      "category": "band",
+      "mount": "floor",
+      "size": [
+        2037,
+        1375,
+        1336
+      ],
+      "lods": [
+        {
+          "tris": 15948,
+          "verts": 15916,
+          "drawCalls": 2
+        },
+        {
+          "tris": 9318,
+          "verts": 9463,
+          "drawCalls": 2
+        },
+        {
+          "tris": 3934,
+          "verts": 3777,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "红色闪粉鼓皮贴膜（金属亮片 + 清漆）",
+        "乐器（鼓皮 / 镲片 / 琴身 / 指板 / 音箱面板 / 五金，图集）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 243,
+      "lodDistances": null,
+      "view": {
+        "el": 20,
+        "az": 18
+      },
+      "fileKB": 2492
+    },
+    {
+      "id": "electric_guitar",
+      "name": "电吉他",
+      "nameEn": "Sunburst Electric Guitar on Stand",
+      "category": "band",
+      "mount": "floor",
+      "size": [
+        418,
+        1114,
+        477
+      ],
+      "lods": [
+        {
+          "tris": 5300,
+          "verts": 5185,
+          "drawCalls": 1
+        },
+        {
+          "tris": 3522,
+          "verts": 3605,
+          "drawCalls": 1
+        },
+        {
+          "tris": 1258,
+          "verts": 1440,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "乐器（鼓皮 / 镲片 / 琴身 / 指板 / 音箱面板 / 五金，图集）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 415,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 24
+      },
+      "fileKB": 831
+    },
+    {
+      "id": "guitar_amp",
+      "name": "吉他音箱",
+      "nameEn": "Tube Guitar Combo Amp",
+      "category": "band",
+      "mount": "floor",
+      "size": [
+        620,
+        496,
+        267
+      ],
+      "lods": [
+        {
+          "tris": 1982,
+          "verts": 1660,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1330,
+          "verts": 1204,
+          "drawCalls": 3
+        },
+        {
+          "tris": 788,
+          "verts": 814,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "黑色皮革（拉扣）",
+        "音箱网布（银黑平纹）",
+        "乐器（鼓皮 / 镲片 / 琴身 / 指板 / 音箱面板 / 五金，图集）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 377,
+      "lodDistances": null,
+      "view": {
+        "el": 14,
+        "az": 26
+      },
+      "fileKB": 854
+    },
+    {
+      "id": "mic_stand",
+      "name": "麦克风架",
+      "nameEn": "Boom Mic Stand with Dynamic Mic",
+      "category": "band",
+      "mount": "floor",
+      "size": [
+        829,
+        1486,
+        804
+      ],
+      "lods": [
+        {
+          "tris": 1762,
+          "verts": 1364,
+          "drawCalls": 1
+        },
+        {
+          "tris": 980,
+          "verts": 850,
+          "drawCalls": 1
+        },
+        {
+          "tris": 382,
+          "verts": 368,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "乐器（鼓皮 / 镲片 / 琴身 / 指板 / 音箱面板 / 五金，图集）"
+      ],
+      "aoAtlas": 256,
+      "aoDensity": 342,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 60
+      },
+      "fileKB": 367
     }
   ]
 }

@@ -23,6 +23,7 @@ import * as theater from './theater-textures.js';
 import * as gym2 from './gym2-textures.js';
 import * as game from './game-textures.js';
 import * as studio from './studio-textures.js';
+import * as band from './band-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -489,6 +490,17 @@ export const TEXTURES = {
   studio: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => studio.studioAtlas(S, { seed: 1201 }) },
   // 溅满颜料的旧松木宽板（周期 2m）
   studio_floor: { size: 2048, detail: 0.5, normalStrength: 3, v: 1, gen: (S) => studio.studioFloor(S, { seed: 331 }) },
+  // —— 排练室 ——
+  // 排练室图集：底鼓前皮的鼓牌、涂层鼓皮、镲片、电吉他的琴身 / 指板 / 琴头、音箱面板和铭牌、纯色格子（指示灯自发光）
+  band: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, emit: true, gen: (S) => band.bandAtlas(S, { seed: 1301 }) },
+  // 鼓身的红色闪粉贴皮（金属亮片，外面罩清漆）
+  sparkle: { size: 512, normalStrength: 0.6, v: 1, gen: (S) => band.sparkle(S, { seed: 1311, base: rgb(92, 6, 8) }) },
+  // 音箱网布（银黑相间的平纹）
+  grille: { size: 256, normalStrength: 2, v: 1, gen: (S) => band.grille(S, { seed: 1321 }) },
+  // 吸音棉（炭黑的开孔海绵）
+  foam: { size: 256, normalStrength: 2.5, v: 1, gen: (S) => band.foam(S, { seed: 1331 }) },
+  // 地毯拼块（50cm 一块，绒毛方向相邻转 90°，周期 2m）
+  carpet: { size: 1024, detail: 0.5, normalStrength: 1.5, v: 1, gen: (S) => band.carpetTiles(S, { seed: 1341, base: rgb(54, 57, 64) }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB
