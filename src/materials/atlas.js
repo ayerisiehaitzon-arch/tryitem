@@ -600,3 +600,68 @@ export function plateUV(i, u, v) {
   const cx = x0 + (i % P.cols) * cw, cy = y0 + Math.floor(i / P.cols) * ch;
   return [(cx + m + u * (cw - 2 * m)) / GYM2_ATLAS.size, (cy + m + v * (ch - 2 * m)) / GYM2_ATLAS.size];
 }
+
+// —— 游戏室图集（game 材质）：街机的屏幕（像素风太空射击）、顶灯箱、侧板画、控制面板、投币门，
+// 桌上足球的场地，16 颗台球的展开图，底下一排纯色格子（部分自发光）——
+export const GAME_ATLAS = {
+  size: 2048,
+  regions: {
+    screen: [0, 0, 768, 1024], marquee: [768, 0, 1792, 256], cpanel: [768, 256, 1408, 512], coin: [1408, 256, 1664, 598],
+    field: [768, 598, 1792, 1180], side: [0, 1024, 420, 1920], balls: [420, 1180, 1444, 1692], swatch: [0, 1920, 2048, 2048],
+  },
+  screen: { w: 0.36, h: 0.48, gw: 216, gh: 288 },
+  marquee: { w: 0.62, h: 0.155 },
+  cpanel: { w: 0.64, h: 0.256 },
+  coin: { w: 0.27, h: 0.36 },
+  field: { w: 1.2, h: 0.682 },
+  side: { w: 0.82, h: 1.76 },
+  balls: { cols: 4, rows: 4 },
+  cols: 16,
+  swatches: [
+    { name: 'black', c: [16, 16, 18], rough: 0.35 },
+    { name: 'tmold', c: [236, 72, 44], rough: 0.4 },
+    { name: 'chrome', c: [232, 234, 237], rough: 0.07, metal: 1 },
+    { name: 'steel', c: [150, 152, 156], rough: 0.3, metal: 1 },
+    { name: 'rubber', c: [30, 30, 32], rough: 0.85 },
+    { name: 'glass', c: [8, 9, 11], rough: 0.32 },
+    { name: 'btnRed', c: [220, 30, 36], rough: 0.3 },
+    { name: 'btnYellow', c: [245, 196, 40], rough: 0.3 },
+    { name: 'btnBlue', c: [40, 90, 220], rough: 0.3 },
+    { name: 'btnGreen', c: [40, 170, 80], rough: 0.3 },
+    { name: 'white', c: [238, 238, 234], rough: 0.35 },
+    { name: 'pearl', c: [236, 232, 220], rough: 0.25 },
+    { name: 'brass', c: [205, 164, 84], rough: 0.28, metal: 1 },
+    { name: 'redTeam', c: [196, 28, 34], rough: 0.32 },
+    { name: 'blueTeam', c: [28, 76, 186], rough: 0.32 },
+    { name: 'plastic', c: [40, 41, 44], rough: 0.5 },
+    { name: 'ivory', c: [240, 232, 210], rough: 0.3 },
+    { name: 'chalk', c: [60, 110, 200], rough: 0.9 },
+    { name: 'maple', c: [214, 178, 128], rough: 0.4 },
+    { name: 'ebony', c: [24, 20, 18], rough: 0.3 },
+    { name: 'ledRed', c: [255, 70, 60], rough: 0.3, emit: [255, 70, 60] },
+    { name: 'neonPink', c: [255, 90, 190], rough: 0.3, emit: [255, 60, 170] },
+    { name: 'neonCyan', c: [90, 235, 255], rough: 0.3, emit: [60, 230, 255] },
+    { name: 'grille', c: [22, 22, 24], rough: 0.7 },
+  ],
+};
+export function gameUV(region, u, v) {
+  const [x0, y0, x1, y1] = GAME_ATLAS.regions[region];
+  const S = GAME_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function gameSwatch(name) {
+  const A = GAME_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`游戏室图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}
+// 第 n 颗台球（0 是白球，1 ~ 15 是编号球）的展开图：u 绕一圈、v 从上极点到下极点
+export function ballUV(n, u, v) {
+  const [x0, y0, x1, y1] = GAME_ATLAS.regions.balls;
+  const { cols, rows } = GAME_ATLAS.balls, S = GAME_ATLAS.size, m = 1;
+  const cw = (x1 - x0) / cols, ch = (y1 - y0) / rows;
+  const cx = x0 + (n % cols) * cw, cy = y0 + Math.floor(n / cols) * ch;
+  return [(cx + m + u * (cw - 2 * m)) / S, (cy + m + v * (ch - 2 * m)) / S];
+}

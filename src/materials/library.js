@@ -619,5 +619,22 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 游戏室 ——
+Object.assign(MATERIALS, {
+  game: {
+    label: '游戏室器材（街机屏幕 / 灯箱 / 侧板画 / 足球场地 / 台球 / 金属 / 按键，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；街机的屏幕、灯箱、投币灯自发光
+    tex: 'game', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+    emissive: [1, 1, 1], emissiveStrength: 1.3,
+  },
+  baize: {
+    label: '台呢（台球绿）',
+    tex: 'baize', tile: [0.12, 0.12],
+    roughness: 1, metallic: 0, normalScale: 0.4,
+    sheen: { color: [0.12, 0.32, 0.2], roughness: 0.5 },
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

@@ -47,7 +47,9 @@ export function buildBVH(tris /* Float32Array, 9 floats per tri */) {
   nodes.forEach((nd, i) => {
     bounds.set(nd.min, i * 6);
     bounds.set(nd.max, i * 6 + 3);
-    if (nd.count > 0) { meta[i * 3] = nd.start; meta[i * 3 + 1] = nd.count; meta[i * 3 + 2] = 1; }
+    // 没有子节点的一律当叶子：空的 BVH（比如霓虹灯牌上没有不透光的部件）根节点是一个 0 个三角形的叶子，
+    // 否则求交会把 -1 当成子节点压栈、原地打转
+    if (nd.count > 0 || nd.left < 0) { meta[i * 3] = nd.start; meta[i * 3 + 1] = nd.count; meta[i * 3 + 2] = 1; }
     else { meta[i * 3] = nd.left; meta[i * 3 + 1] = nd.right; meta[i * 3 + 2] = 0; }
   });
   // 按叶子顺序重排三角形，预计算 v0, e1, e2

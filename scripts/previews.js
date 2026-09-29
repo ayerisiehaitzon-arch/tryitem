@@ -47,6 +47,9 @@
 //   docs/previews/gym2.jpg            健身房二三件：动感单车、划船机、龙门架
 //   docs/previews/gym2-detail.jpg     健身房二特写：单车的骑行课程屏、飞轮和磁控刹车、划船机的水箱和桨叶、配重片和滑车
 //   docs/previews/gym2-room.jpg       全屋陈列里的健身房二
+//   docs/previews/game.jpg            游戏室四件：台球桌、街机、桌上足球、霓虹灯牌
+//   docs/previews/game-detail.jpg     游戏室特写：摆好的一架台球、街机的屏幕和控制台、桌上足球的小人、霓虹灯管和墙上的光晕
+//   docs/previews/game-room.jpg       全屋陈列里的游戏室
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -66,7 +69,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -330,6 +333,22 @@ await grid(gym2Detail, 2, [600, 450], path.join(out, 'gym2-detail.jpg'));
 const gym2Room = await shoot({ items: ['room'], views: ['&target=44.0:0.9:-0.4&d=7.4&el=20&az=14'], size: [1600, 900], outDir: tmp, name: () => 'gym2-room.png' });
 await sharp(gym2Room[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'gym2-room.jpg'));
 console.log('→ docs/previews/gym2-room.jpg');
+
+const gameHero = await shoot({ items: gameIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(gameHero, 4, [360, 270], path.join(out, 'game.jpg'));
+
+// 游戏室特写：三角框里摆好的一架球（号码转向不同的方向）、街机的屏幕和控制台（摇杆、开火键、印着的圈）、
+// 桌上足球的红蓝两队和中圈、霓虹灯管和墙上烘焙的粉红光晕
+const gameDetail = [];
+gameDetail.push(...await shoot({ items: ['pool_table'], views: ['&target=0.55:0.78:0&d=0.9&el=40&az=30'], size: [800, 600], outDir: tmp, name: () => 'gm0.png' }));
+gameDetail.push(...await shoot({ items: ['arcade_cabinet'], views: ['&target=0:1.12:0.2&d=1.05&el=8&az=22'], size: [800, 600], outDir: tmp, name: () => 'gm1.png' }));
+gameDetail.push(...await shoot({ items: ['foosball_table'], views: ['&target=0:0.8:0&d=1.0&el=45&az=20'], size: [800, 600], outDir: tmp, name: () => 'gm2.png' }));
+gameDetail.push(...await shoot({ items: ['neon_sign'], views: ['&az=40&el=20'], size: [800, 600], outDir: tmp, name: () => 'gm3.png' }));
+await grid(gameDetail, 2, [600, 450], path.join(out, 'game-detail.jpg'));
+
+const gameRoom = await shoot({ items: ['room'], views: ['&target=48.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'game-room.png' });
+await sharp(gameRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'game-room.jpg'));
+console.log('→ docs/previews/game-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

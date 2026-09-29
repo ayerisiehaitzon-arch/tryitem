@@ -21,6 +21,7 @@ import * as music from './music-textures.js';
 import * as tea from './tea-textures.js';
 import * as theater from './theater-textures.js';
 import * as gym2 from './gym2-textures.js';
+import * as game from './game-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -477,6 +478,11 @@ export const TEXTURES = {
   // —— 健身房二 ——
   // 健身房二图集：单车的触摸屏（自发光）、划船机的液晶表、配重片上的公斤数、立柱上的刻度、贴标、纯色格子
   gym2: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, emit: true, gen: (S) => gym2.gym2Atlas(S, { seed: 1001 }) },
+  // —— 游戏室 ——
+  // 游戏室图集：街机屏幕（像素游戏，自发光）、顶灯箱、侧板画、控制面板、投币门、桌上足球的场地、台球的展开图、纯色格子
+  game: { size: 2048, detail: 0.5, normalStrength: 2, v: 3, emit: true, gen: (S) => game.gameAtlas(S, { seed: 1101 }) },
+  // 台呢（和玄关的毡同一个生成器，台球绿，铺得更细）
+  baize: { size: 256, normalStrength: 1.2, v: 1, gen: (S) => entry.felt(S, { seed: 612, color: rgb(24, 106, 66), mottle: 0.035 }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB

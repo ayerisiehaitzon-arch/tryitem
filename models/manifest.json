@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T15:49:57.915Z",
+  "generated": "2026-09-29T01:53:47.628Z",
   "items": [
     {
       "id": "dining_chair",
@@ -3278,6 +3278,171 @@
         "az": 24
       },
       "fileKB": 1180
+    },
+    {
+      "id": "pool_table",
+      "name": "台球桌",
+      "nameEn": "Pool Table",
+      "category": "game",
+      "mount": "floor",
+      "size": [
+        2310,
+        822,
+        1320
+      ],
+      "lods": [
+        {
+          "tris": 7740,
+          "verts": 6807,
+          "drawCalls": 4
+        },
+        {
+          "tris": 4312,
+          "verts": 4389,
+          "drawCalls": 4
+        },
+        {
+          "tris": 2296,
+          "verts": 2765,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "台呢（台球绿）",
+        "红木（深红褐，擦漆）",
+        "游戏室器材（街机屏幕 / 灯箱 / 侧板画 / 足球场地 / 台球 / 金属 / 按键，图集）",
+        "植鞣皮（干邑色）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 236,
+      "lodDistances": null,
+      "view": {
+        "el": 30,
+        "az": 28
+      },
+      "fileKB": 2005
+    },
+    {
+      "id": "arcade_cabinet",
+      "name": "街机",
+      "nameEn": "Upright Arcade Cabinet",
+      "category": "game",
+      "mount": "floor",
+      "size": [
+        643,
+        1764,
+        828
+      ],
+      "lods": [
+        {
+          "tris": 2258,
+          "verts": 2246,
+          "drawCalls": 1
+        },
+        {
+          "tris": 1528,
+          "verts": 1654,
+          "drawCalls": 1
+        },
+        {
+          "tris": 778,
+          "verts": 1077,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "游戏室器材（街机屏幕 / 灯箱 / 侧板画 / 足球场地 / 台球 / 金属 / 按键，图集）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 265,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 32
+      },
+      "fileKB": 884
+    },
+    {
+      "id": "foosball_table",
+      "name": "桌上足球",
+      "nameEn": "Foosball Table",
+      "category": "game",
+      "mount": "floor",
+      "size": [
+        1414,
+        944,
+        1284
+      ],
+      "lods": [
+        {
+          "tris": 6044,
+          "verts": 5643,
+          "drawCalls": 2
+        },
+        {
+          "tris": 3624,
+          "verts": 3665,
+          "drawCalls": 2
+        },
+        {
+          "tris": 1876,
+          "verts": 2191,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "游戏室器材（街机屏幕 / 灯箱 / 侧板画 / 足球场地 / 台球 / 金属 / 按键，图集）",
+        "胡桃木（哑光清漆）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 330,
+      "lodDistances": null,
+      "view": {
+        "el": 26,
+        "az": 30
+      },
+      "fileKB": 1653
+    },
+    {
+      "id": "neon_sign",
+      "name": "霓虹灯牌",
+      "nameEn": "Neon Sign",
+      "category": "game",
+      "mount": "wall",
+      "size": [
+        1040,
+        330,
+        55
+      ],
+      "lods": [
+        {
+          "tris": 2378,
+          "verts": 1828,
+          "drawCalls": 2
+        },
+        {
+          "tris": 1490,
+          "verts": 1270,
+          "drawCalls": 2
+        },
+        {
+          "tris": 742,
+          "verts": 635,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "透明玻璃",
+        "游戏室器材（街机屏幕 / 灯箱 / 侧板画 / 足球场地 / 台球 / 金属 / 按键，图集）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 486,
+      "lodDistances": null,
+      "view": {
+        "el": 6,
+        "az": 18
+      },
+      "fileKB": 666
     }
   ]
 }

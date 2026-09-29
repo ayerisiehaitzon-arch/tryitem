@@ -65,12 +65,16 @@ import towerSpeaker from '../theater/speaker.js';
 import spinBike from '../gym2/spin-bike.js';
 import rowingMachine from '../gym2/rower.js';
 import cableCrossover from '../gym2/cable-crossover.js';
+import poolTable from '../game/pool-table.js';
+import arcadeCabinet from '../game/arcade.js';
+import foosballTable from '../game/foosball.js';
+import neonSign from '../game/neon-sign.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
 // 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）、
 // 阳台（category: 'balcony'）、书房（category: 'study'）、玄关（category: 'entry'）、儿童房（category: 'kids'）、
 // 洗衣房（category: 'laundry'）、衣帽间（category: 'closet'）、健身房（category: 'gym'）、书房二 / 琴房（category: 'music'）、
-// 茶室（category: 'tea'）、影音室（category: 'theater'）、健身房二（category: 'gym2'）
+// 茶室（category: 'tea'）、影音室（category: 'theater'）、健身房二（category: 'gym2'）、游戏室（category: 'game'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
@@ -90,4 +94,5 @@ export const FURNITURE = [
   teaTable, teaCushion, curioShelf,
   projectorScreen, theaterSofa, towerSpeaker,
   spinBike, rowingMachine, cableCrossover,
+  poolTable, arcadeCabinet, foosballTable, neonSign,
 ];
