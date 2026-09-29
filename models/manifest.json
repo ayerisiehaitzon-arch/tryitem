@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-29T12:45:20.168Z",
+  "generated": "2026-09-29T16:06:53.276Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1713,6 +1713,46 @@
         "az": 24
       },
       "fileKB": 631
+    },
+    {
+      "id": "floor_cork",
+      "name": "软木地板",
+      "nameEn": "Cork Tile Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "软木地板（40cm 软木砖）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 1741
     },
     {
       "id": "kitchen_base",
@@ -4059,6 +4099,177 @@
         "az": 38
       },
       "fileKB": 1684
+    },
+    {
+      "id": "cat_tree",
+      "name": "猫爬架",
+      "nameEn": "Cat Tree with Sleeping Cat",
+      "category": "pets",
+      "mount": "floor",
+      "size": [
+        710,
+        1338,
+        524
+      ],
+      "lods": [
+        {
+          "tris": 4141,
+          "verts": 2941,
+          "drawCalls": 3
+        },
+        {
+          "tris": 2321,
+          "verts": 1842,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1315,
+          "verts": 1150,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "短毛绒（猫爬架的平台、猫窝，浅暖灰）",
+        "宠物房（猫毛 / 猫脸 / 鱼 / 网球 / 狗粮袋 / 硅胶垫 / 狗粮 / 鱼缸背景 / 纯色零件，图集）",
+        "剑麻绳（猫爬架柱子上一圈圈缠着）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 165,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 24
+      },
+      "fileKB": 854
+    },
+    {
+      "id": "aquarium",
+      "name": "水草鱼缸",
+      "nameEn": "Planted Aquarium on Cabinet",
+      "category": "pets",
+      "mount": "floor",
+      "size": [
+        960,
+        1236,
+        462
+      ],
+      "lods": [
+        {
+          "tris": 9042,
+          "verts": 9837,
+          "drawCalls": 5
+        },
+        {
+          "tris": 5380,
+          "verts": 6224,
+          "drawCalls": 5
+        },
+        {
+          "tris": 2354,
+          "verts": 3034,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "宠物房（猫毛 / 猫脸 / 鱼 / 网球 / 狗粮袋 / 硅胶垫 / 狗粮 / 鱼缸背景 / 纯色零件，图集）",
+        "鱼缸玻璃（透着一点水的蓝绿）",
+        "水（划船机水箱）",
+        "鱼缸底砂（混色圆砾石）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 165,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 18
+      },
+      "fileKB": 1915
+    },
+    {
+      "id": "dog_bed",
+      "name": "狗窝",
+      "nameEn": "Donut Dog Bed with Toys",
+      "category": "pets",
+      "mount": "floor",
+      "size": [
+        898,
+        214,
+        929
+      ],
+      "lods": [
+        {
+          "tris": 3152,
+          "verts": 2071,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1744,
+          "verts": 1235,
+          "drawCalls": 3
+        },
+        {
+          "tris": 980,
+          "verts": 714,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "羊羔绒（狗窝，奶白）",
+        "宠物房（猫毛 / 猫脸 / 鱼 / 网球 / 狗粮袋 / 硅胶垫 / 狗粮 / 鱼缸背景 / 纯色零件，图集）",
+        "绳结玩具（棉绳三股拧，深蓝 / 米白 / 浅蓝）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 336,
+      "lodDistances": null,
+      "view": {
+        "el": 26,
+        "az": 18
+      },
+      "fileKB": 743
+    },
+    {
+      "id": "pet_feeder",
+      "name": "宠物餐桌",
+      "nameEn": "Raised Dog Feeder on Silicone Mat",
+      "category": "pets",
+      "mount": "floor",
+      "size": [
+        848,
+        283,
+        400
+      ],
+      "lods": [
+        {
+          "tris": 3870,
+          "verts": 2838,
+          "drawCalls": 4
+        },
+        {
+          "tris": 2586,
+          "verts": 2024,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1650,
+          "verts": 1319,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "宠物房（猫毛 / 猫脸 / 鱼 / 网球 / 狗粮袋 / 硅胶垫 / 狗粮 / 鱼缸背景 / 纯色零件，图集）",
+        "桦木胶合板的边（13 层）",
+        "桦木（旋切贴皮，水性哑光清漆）",
+        "水（划船机水箱）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 373,
+      "lodDistances": null,
+      "view": {
+        "el": 24,
+        "az": 22
+      },
+      "fileKB": 861
     }
   ]
 }

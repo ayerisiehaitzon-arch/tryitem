@@ -724,6 +724,55 @@ Object.assign(MATERIALS, {
     tex: 'sawdust', tile: [0.25, 0.25],
     roughness: 1, metallic: 0, normalScale: 0.8, castShadow: false,
   },
+  // —— 宠物房 ——
+  pet: {
+    label: '宠物房（猫毛 / 猫脸 / 鱼 / 网球 / 狗粮袋 / 硅胶垫 / 狗粮 / 鱼缸背景 / 纯色零件，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；红绿灯鱼的蓝纹和鱼缸灯自发光
+    tex: 'pet', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.6,
+    emissive: [1, 1, 1], emissiveStrength: 1.4,
+  },
+  sisal: {
+    label: '剑麻绳（猫爬架柱子上一圈圈缠着）',
+    tex: 'sisal', tile: [0.1, 0.1],
+    roughness: 1, metallic: 0, normalScale: 1,
+    sheen: { color: [0.42, 0.36, 0.26], roughness: 0.7 },
+  },
+  plush: {
+    label: '短毛绒（猫爬架的平台、猫窝，浅暖灰）',
+    tex: 'plush_gray', tile: [0.2, 0.2],
+    roughness: 1, metallic: 0, normalScale: 0.6,
+    sheen: { color: [0.6, 0.58, 0.54], roughness: 0.5 },
+  },
+  sherpa: {
+    label: '羊羔绒（狗窝，奶白）',
+    tex: 'sherpa', tile: [0.15, 0.15],
+    roughness: 1, metallic: 0, normalScale: 0.9,
+    sheen: { color: [0.7, 0.66, 0.6], roughness: 0.5 },
+  },
+  rope_toy: {
+    label: '绳结玩具（棉绳三股拧，深蓝 / 米白 / 浅蓝）',
+    // 贴图 u 是三个捻距（每股转回原位），v 正好绕绳子一圈（绳径 22mm → 周长 6.9cm）
+    tex: 'rope_toy', tile: [0.18, 0.0691],
+    roughness: 1, metallic: 0, normalScale: 1,
+    sheen: { color: [0.36, 0.36, 0.36], roughness: 0.6 },
+  },
+  gravel: {
+    label: '鱼缸底砂（混色圆砾石）',
+    tex: 'gravel', tile: [0.12, 0.12],
+    roughness: 1, metallic: 0, normalScale: 0.8,
+  },
+  aqua_glass: {
+    label: '鱼缸玻璃（透着一点水的蓝绿）',
+    // 和透明玻璃一样半透明混合、不参与 AO；缸里装满了水，所以带一点蓝绿
+    color: srgb(196, 230, 226, 0.14), metallic: 0, roughness: 0.04,
+    alphaMode: 'BLEND', aoStrength: 0,
+  },
+  floor_cork: {
+    label: '软木地板（40cm 软木砖）',
+    tex: 'cork_tiles', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.5,
+  },
 });
 
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];

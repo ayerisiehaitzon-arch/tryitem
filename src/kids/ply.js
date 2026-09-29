@@ -49,7 +49,7 @@ function run(P, pred) {
 }
 
 // 和 sweep 一样的标架与斜接：闭合平面折线在第 i 点往里缩 d 以后的位置
-function insetLoop(P, d) {
+export function insetLoop(P, d) {
   const n = P.length;
   return P.map((p, i) => {
     const a = n2([p[0] - P[(i - 1 + n) % n][0], p[1] - P[(i - 1 + n) % n][1]]);

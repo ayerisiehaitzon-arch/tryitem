@@ -858,3 +858,76 @@ export function workshopSwatch(name) {
   const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
   return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
 }
+
+// —— 宠物房图集：橘猫的身子（沿脊背展开）和脑袋（按脸朝向的球面展开）、三种鱼的侧面（红绿灯、鼠鱼、神仙鱼）、网球、
+//    一袋狗粮的正面、爪印硅胶垫、碗里的一堆狗粮、鱼缸的背景膜、纯色格子 ——
+export const PET_ATLAS = {
+  size: 2048,
+  regions: {
+    fur: [0, 0, 1024, 512], head: [1024, 0, 1536, 512], neon: [1536, 0, 1792, 128], cory: [1792, 0, 2048, 128],
+    angel: [1536, 128, 1792, 384], tennis: [1792, 128, 2048, 256], kibble: [1792, 256, 2048, 512],
+    tankBack: [0, 512, 1024, 1024], bag: [1024, 512, 1280, 896], mat: [1280, 512, 1792, 853],
+    swatch: [0, 1920, 2048, 2048],
+  },
+  // 猫身子：u 沿脊背（0 = 屁股、1 = 脖子），v 绕截面一圈（0 = 蜷起来的外侧，0.25 = 背，0.5 = 里侧，0.75 = 肚子）；
+  // 脑袋：u = 绕脸的朝向转的角（0.5 = 头顶、0 / 1 = 下巴），v = 离鼻尖的角度 / π
+  fur: { stripes: 13 },
+  // 鱼：侧面平面投影；红绿灯、鼠鱼 u 从尾到嘴、v 从背到肚子；神仙鱼按 0.16m 见方的侧面画（原点在中心、x 朝嘴、y 向上，鳍尖也在里面）
+  angel: { size: 0.16 },
+  // 网球：按车削展开（u 沿圆周、从 -z 开始，v 从顶到底）
+  tennis: {},
+  // 狗粮：一整碗按 0.14m 见方平面贴（碗口直径 0.14m 以内），颗粒按真实大小画
+  kibble: { period: 0.14 },
+  tankBack: { w: 0.9, h: 0.45 },
+  bag: { w: 0.2, h: 0.3 },
+  mat: { w: 0.6, h: 0.4 },
+  cols: 16,
+  swatches: [
+    { name: 'nosePink', c: [214, 128, 128], rough: 0.4 },
+    { name: 'earPink', c: [226, 160, 150], rough: 0.6 },
+    { name: 'eyeLine', c: [40, 26, 20], rough: 0.4 },
+    { name: 'catOrange', c: [214, 128, 60], rough: 0.8 },
+    { name: 'catCream', c: [240, 212, 172], rough: 0.8 },
+    { name: 'steel', c: [214, 216, 220], rough: 0.18, metal: 1 },
+    { name: 'rubberRed', c: [196, 44, 40], rough: 0.5 },
+    { name: 'black', c: [22, 22, 24], rough: 0.4 },
+    { name: 'frameBlack', c: [16, 16, 18], rough: 0.3 },
+    { name: 'silicone', c: [30, 32, 30], rough: 0.5 },
+    { name: 'led', c: [240, 244, 255], rough: 0.3, emit: [255, 255, 255] },
+    { name: 'driftwood', c: [104, 72, 46], rough: 0.85 },
+    { name: 'driftwoodDark', c: [70, 48, 32], rough: 0.85 },
+    { name: 'stoneA', c: [96, 92, 86], rough: 0.8 },
+    { name: 'stoneB', c: [128, 116, 100], rough: 0.8 },
+    { name: 'stoneC', c: [70, 68, 66], rough: 0.8 },
+    { name: 'vallis', c: [92, 150, 60], rough: 0.5 },
+    { name: 'vallisDark', c: [62, 116, 44], rough: 0.5 },
+    { name: 'sword', c: [70, 136, 48], rough: 0.45 },
+    { name: 'swordLight', c: [108, 164, 66], rough: 0.45 },
+    { name: 'fern', c: [44, 92, 40], rough: 0.5 },
+    { name: 'grass', c: [104, 170, 72], rough: 0.5 },
+    { name: 'bubble', c: [236, 244, 248], rough: 0.05 },
+    { name: 'fin', c: [220, 214, 196], rough: 0.4 },
+    { name: 'finRed', c: [206, 60, 50], rough: 0.4 },
+    { name: 'pomPom', c: [206, 54, 60], rough: 1 },
+    { name: 'string', c: [236, 230, 214], rough: 0.9 },
+    { name: 'heater', c: [60, 64, 66], rough: 0.3 },
+    { name: 'bagFold', c: [168, 132, 92], rough: 0.8 },
+    { name: 'clip', c: [220, 70, 60], rough: 0.4 },
+    { name: 'kibbleBrown', c: [138, 86, 46], rough: 0.7 },
+    { name: 'matGreen', c: [124, 156, 132], rough: 0.6 },
+    { name: 'hole', c: [30, 26, 24], rough: 0.95 },
+  ],
+};
+export function petUV(region, u, v) {
+  const [x0, y0, x1, y1] = PET_ATLAS.regions[region];
+  const S = PET_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function petSwatch(name) {
+  const A = PET_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`宠物房图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}

@@ -59,7 +59,10 @@
 //   docs/previews/workshop.jpg        木工房四件：木工桌、洞洞板工具墙、滚轮工具柜、锯木架
 //   docs/previews/workshop-detail.jpg 木工房特写：洞洞板上的工具和空着的轮廓、正在刨板的刨子、卡在锯口里的手锯、拉开的抽屉和电钻
 //   docs/previews/workshop-room.jpg   全屋陈列里的木工房
-//   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
+//   docs/previews/pets.jpg            宠物房四件：猫爬架、水草鱼缸、狗窝、宠物餐桌
+//   docs/previews/pets-detail.jpg     宠物房特写：圆窝里蜷着睡觉的橘猫、鱼缸里的水草和鱼、狗窝里的玩具、两只不锈钢碗
+//   docs/previews/pets-room.jpg       全屋陈列里的宠物房
+//   docs/previews/room.jpg           全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
 //   docs/previews/dining.jpg          书房与餐厅
@@ -78,7 +81,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -409,6 +412,23 @@ await grid(workshopDetail, 2, [600, 450], path.join(out, 'workshop-detail.jpg'))
 const workshopRoom = await shoot({ items: ['room'], views: ['&target=60.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'workshop-room.png' });
 await sharp(workshopRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'workshop-room.jpg'));
 console.log('→ docs/previews/workshop-room.jpg');
+
+// —— 宠物房 ——
+const petHero = await shoot({ items: petIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(petHero, 4, [360, 270], path.join(out, 'pets.jpg'));
+
+// 宠物房特写：猫爬架顶上圆窝里蜷着睡觉的橘猫（尾巴绕到鼻子前面）；鱼缸里的苦草、沉木上的铁皇冠、红绿灯鱼群和神仙鱼；
+// 狗窝里的磨牙骨头和网球；餐桌上一碗狗粮、一碗水
+const petDetail = [];
+petDetail.push(...await shoot({ items: ['cat_tree'], views: ['&target=0.06:1.27:0.0&d=0.62&el=34&az=22'], size: [800, 600], outDir: tmp, name: () => 'pd0.png' }));
+petDetail.push(...await shoot({ items: ['aquarium'], views: ['&target=-0.02:0.98:0.05&d=1.05&el=5&az=6'], size: [800, 600], outDir: tmp, name: () => 'pd1.png' }));
+petDetail.push(...await shoot({ items: ['dog_bed'], views: ['&target=0.02:0.1:-0.06&d=0.95&el=40&az=12'], size: [800, 600], outDir: tmp, name: () => 'pd2.png' }));
+petDetail.push(...await shoot({ items: ['pet_feeder'], views: ['&target=0:0.14:-0.03&d=0.75&el=30&az=15'], size: [800, 600], outDir: tmp, name: () => 'pd3.png' }));
+await grid(petDetail, 2, [600, 450], path.join(out, 'pets-detail.jpg'));
+
+const petRoom = await shoot({ items: ['room'], views: ['&target=64.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'pets-room.png' });
+await sharp(petRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'pets-room.jpg'));
+console.log('→ docs/previews/pets-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

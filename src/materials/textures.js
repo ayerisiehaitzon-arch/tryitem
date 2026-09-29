@@ -25,6 +25,7 @@ import * as game from './game-textures.js';
 import * as studio from './studio-textures.js';
 import * as band from './band-textures.js';
 import * as workshop from './workshop-textures.js';
+import * as pet from './pet-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -519,6 +520,13 @@ export const TEXTURES = {
   // 水泥地面（周期 2m，四边半道切缝）
   concrete: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => workshop.concrete(S, { seed: 1431 }) },
   sawdust: { size: 512, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => workshop.sawdust(S, { seed: 1441 }) },
+  pet: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, emit: true, gen: (S) => pet.petAtlas(S, { seed: 1501 }) },
+  sisal: { size: 512, detail: 0.5, normalStrength: 3, v: 1, gen: (S) => pet.sisal(S, { seed: 1511, color: rgb(198, 170, 120) }) },
+  plush_gray: { size: 512, detail: 0.5, normalStrength: 1.5, v: 1, gen: (S) => pet.plush(S, { seed: 1521, color: rgb(178, 174, 166) }) },
+  sherpa: { size: 512, detail: 0.5, normalStrength: 2.5, v: 1, gen: (S) => pet.sherpa(S, { seed: 1531, color: rgb(238, 228, 210) }) },
+  rope_toy: { size: 256, normalStrength: 4, v: 1, gen: (S) => pet.ropeToy(S, { seed: 1561, colors: [rgb(52, 98, 164), rgb(238, 232, 218), rgb(116, 168, 206)] }) },
+  gravel: { size: 512, detail: 0.5, normalStrength: 3, v: 1, gen: (S) => pet.gravel(S, { seed: 1541 }) },
+  cork_tiles: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => pet.corkTiles(S, { seed: 1551 }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB
