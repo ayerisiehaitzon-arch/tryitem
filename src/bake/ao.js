@@ -140,7 +140,8 @@ export async function bakeShadow(lod, { plane = 'floor', samples = 256, maxDist 
   const m = margin ?? Math.max(0.18, 0.22 * size);
   const u0 = min[M.u] - m, u1 = max[M.u] + m, v0 = min[M.v] - m, v1 = max[M.v] + m;
   const W = pot((u1 - u0) * density), H = pot((v1 - v0) * density);
-  const bvh = buildBVH(gatherTris(lod));
+  // castShadow: false 的材质（贴地的一堆锯末）不参与：又薄又平的东西在边上会压出一圈黑边
+  const bvh = buildBVH(gatherTris(lod, (mat) => MATERIALS[mat]?.castShadow !== false));
   const jobs = new Float32Array(W * H * 9);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const p = onPlane(M, u0 + ((x + 0.5) / W) * (u1 - u0), v0 + ((y + 0.5) / H) * (v1 - v0), 0.0005);

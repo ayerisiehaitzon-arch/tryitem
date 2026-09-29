@@ -56,6 +56,9 @@
 //   docs/previews/band.jpg            排练室四件：架子鼓、电吉他、吉他音箱、麦克风架
 //   docs/previews/band-detail.jpg     排练室特写：底鼓的鼓牌和出音孔、从鼓手位置看的镲和军鼓、吉他的琴身、音箱面板
 //   docs/previews/band-room.jpg       全屋陈列里的排练室
+//   docs/previews/workshop.jpg        木工房四件：木工桌、洞洞板工具墙、滚轮工具柜、锯木架
+//   docs/previews/workshop-detail.jpg 木工房特写：洞洞板上的工具和空着的轮廓、正在刨板的刨子、卡在锯口里的手锯、拉开的抽屉和电钻
+//   docs/previews/workshop-room.jpg   全屋陈列里的木工房
 //   docs/previews/room.jpg            全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -75,7 +78,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -389,6 +392,23 @@ await grid(bandDetail, 2, [600, 450], path.join(out, 'band-detail.jpg'));
 const bandRoom = await shoot({ items: ['room'], views: ['&target=56.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'band-room.png' });
 await sharp(bandRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'band-room.jpg'));
 console.log('→ docs/previews/band-room.jpg');
+
+// —— 木工房 ——
+const workshopHero = await shoot({ items: workshopIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(workshopHero, 4, [360, 270], path.join(out, 'workshop.jpg'));
+
+// 木工房特写：洞洞板（白漆画的轮廓，锯子和角尺那两块空着）；平刨正刨在松木板上、刨口冒出来一卷刨花；
+// 手锯卡在锯了一半的锯口里（铅笔线、1620、废料那边的叉）；工具柜拉开的抽屉里一排套筒，顶上的电钻
+const workshopDetail = [];
+workshopDetail.push(...await shoot({ items: ['pegboard'], views: ['&target=0:1.45:0.05&d=1.75&el=4&az=10'], size: [800, 600], outDir: tmp, name: () => 'wd0.png' }));
+workshopDetail.push(...await shoot({ items: ['workbench'], views: ['&target=0.06:0.95:0.2&d=0.55&el=32&az=38'], size: [800, 600], outDir: tmp, name: () => 'wd1.png' }));
+workshopDetail.push(...await shoot({ items: ['sawhorses'], views: ['&target=0.52:0.72:0.0&d=0.8&el=25&az=-40'], size: [800, 600], outDir: tmp, name: () => 'wd2.png' }));
+workshopDetail.push(...await shoot({ items: ['tool_chest'], views: ['&target=0.05:1.04:0.1&d=1.12&el=26&az=22'], size: [800, 600], outDir: tmp, name: () => 'wd3.png' }));
+await grid(workshopDetail, 2, [600, 450], path.join(out, 'workshop-detail.jpg'));
+
+const workshopRoom = await shoot({ items: ['room'], views: ['&target=60.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'workshop-room.png' });
+await sharp(workshopRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'workshop-room.jpg'));
+console.log('→ docs/previews/workshop-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

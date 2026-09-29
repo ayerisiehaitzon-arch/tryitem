@@ -796,3 +796,65 @@ export function bandSwatch(name) {
 }
 // 圆盘平面贴图：(a, b) ∈ [-1, 1]²（a 向右、b 向上）→ 区域里的 UV
 export const discUV = (region, a, b) => bandUV(region, (a + 1) / 2, (1 - b) / 2);
+
+// —— 木工房图集：洞洞板（孔 + 画上去的工具轮廓）、锯木架上那块木板（铅笔线、锯口、锯末）、水平尺、角尺的刻度、
+//    工具柜的铭牌、手锯的锯身、电钻的侧面、螺丝罐里的一堆螺丝、纯色格子 ——
+export const WORKSHOP_ATLAS = {
+  size: 2048,
+  regions: {
+    pegboard: [0, 0, 1280, 960], level: [1280, 0, 2048, 80], square: [1280, 80, 1792, 144], badge: [1792, 80, 2048, 160],
+    saw: [1280, 160, 2048, 360], drill: [1280, 368, 1536, 624], screws: [1536, 368, 1792, 624], plank: [0, 960, 2048, 1418],
+    swatch: [0, 1920, 2048, 2048],
+  },
+  // 木板：顶面（长 × 宽）、正面、背面（长 × 厚）、底面四条排在一个区域里；铅笔线离左端 1.62m，锯口从背边往前锯进 13cm（顶面）
+  plank: { len: 2.44, w: 0.235, t: 0.038, cut: 1.62, kerf: 0.13 },
+  level: { w: 0.45, h: 0.045 },
+  square: { w: 0.25, h: 0.03 },
+  badge: { w: 0.28, h: 0.07 },
+  saw: { w: 0.44, h: 0.115 },
+  drill: { w: 0.24, h: 0.24 },
+  cols: 16,
+  swatches: [
+    { name: 'toolRed', c: [176, 26, 22], rough: 0.35 },
+    { name: 'aluminum', c: [196, 198, 202], rough: 0.3, metal: 1 },
+    { name: 'steel', c: [200, 202, 206], rough: 0.25, metal: 1 },
+    { name: 'steelDark', c: [70, 72, 78], rough: 0.35, metal: 1 },
+    { name: 'chrome', c: [232, 232, 236], rough: 0.1, metal: 1 },
+    { name: 'castIron', c: [178, 180, 186], rough: 0.42, metal: 1 },
+    { name: 'japanned', c: [18, 18, 20], rough: 0.2 },
+    { name: 'rosewood', c: [96, 44, 30], rough: 0.3 },
+    { name: 'beech', c: [214, 176, 128], rough: 0.45 },
+    { name: 'hickory', c: [206, 164, 112], rough: 0.4 },
+    { name: 'brass', c: [205, 168, 92], rough: 0.25, metal: 1 },
+    { name: 'yellow', c: [238, 186, 30], rough: 0.4 },
+    { name: 'blackPlastic', c: [26, 26, 28], rough: 0.45 },
+    { name: 'rubber', c: [34, 34, 36], rough: 0.85 },
+    { name: 'redPlastic', c: [196, 34, 30], rough: 0.35 },
+    { name: 'bluePlastic', c: [40, 84, 170], rough: 0.35 },
+    { name: 'zinc', c: [176, 180, 186], rough: 0.3, metal: 1 },
+    { name: 'lid', c: [190, 160, 70], rough: 0.3, metal: 1 },
+    { name: 'canRed', c: [170, 34, 28], rough: 0.35 },
+    { name: 'shaving', c: [232, 206, 160], rough: 0.7 },
+    { name: 'sawdust', c: [220, 192, 146], rough: 0.95 },
+    { name: 'pencilYellow', c: [236, 190, 40], rough: 0.35 },
+    { name: 'graphite', c: [70, 72, 76], rough: 0.5 },
+    { name: 'pineEnd', c: [214, 180, 128], rough: 0.8 },
+    { name: 'holeDark', c: [20, 18, 16], rough: 0.9 },
+    { name: 'leather', c: [120, 72, 40], rough: 0.6 },
+    { name: 'hardboard', c: [96, 70, 48], rough: 0.8 },
+    { name: 'cordOrange', c: [226, 102, 26], rough: 0.5 },
+  ],
+};
+export function workshopUV(region, u, v) {
+  const [x0, y0, x1, y1] = WORKSHOP_ATLAS.regions[region];
+  const S = WORKSHOP_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function workshopSwatch(name) {
+  const A = WORKSHOP_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`木工房图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}

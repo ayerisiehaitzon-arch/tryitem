@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-29T08:28:04.135Z",
+  "generated": "2026-09-29T12:45:20.168Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1673,6 +1673,46 @@
         "az": 24
       },
       "fileKB": 206
+    },
+    {
+      "id": "floor_concrete",
+      "name": "水泥地面",
+      "nameEn": "Sealed Concrete Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "水泥地面（封闭剂，切缝）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 631
     },
     {
       "id": "kitchen_base",
@@ -3852,6 +3892,173 @@
         "az": 60
       },
       "fileKB": 367
+    },
+    {
+      "id": "workbench",
+      "name": "木工桌",
+      "nameEn": "Woodworking Workbench",
+      "category": "workshop",
+      "mount": "floor",
+      "size": [
+        1800,
+        1060,
+        1005
+      ],
+      "lods": [
+        {
+          "tris": 5655,
+          "verts": 5804,
+          "drawCalls": 4
+        },
+        {
+          "tris": 3550,
+          "verts": 3915,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1978,
+          "verts": 2361,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "山毛榉拼板（木工桌面，木蜡油）",
+        "木工工具（洞洞板 / 木板 / 水平尺 / 角尺 / 铭牌 / 锯身 / 电钻 / 螺丝 / 金属 / 塑料，图集）",
+        "胡桃木（哑光清漆）",
+        "松木（锯木架、木条）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 310,
+      "lodDistances": null,
+      "view": {
+        "el": 22,
+        "az": 30
+      },
+      "fileKB": 2526
+    },
+    {
+      "id": "pegboard",
+      "name": "洞洞板工具墙",
+      "nameEn": "Pegboard Tool Wall",
+      "category": "workshop",
+      "mount": "wall",
+      "size": [
+        1244,
+        944,
+        127
+      ],
+      "lods": [
+        {
+          "tris": 10646,
+          "verts": 9638,
+          "drawCalls": 3
+        },
+        {
+          "tris": 7562,
+          "verts": 7447,
+          "drawCalls": 3
+        },
+        {
+          "tris": 4060,
+          "verts": 4616,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "木工工具（洞洞板 / 木板 / 水平尺 / 角尺 / 铭牌 / 锯身 / 电钻 / 螺丝 / 金属 / 塑料，图集）",
+        "松木（锯木架、木条）",
+        "透明玻璃"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 531,
+      "lodDistances": null,
+      "view": {
+        "el": 6,
+        "az": 16
+      },
+      "fileKB": 2674
+    },
+    {
+      "id": "tool_chest",
+      "name": "滚轮工具柜",
+      "nameEn": "Rolling Tool Chest",
+      "category": "workshop",
+      "mount": "floor",
+      "size": [
+        774,
+        1245,
+        550
+      ],
+      "lods": [
+        {
+          "tris": 4902,
+          "verts": 4538,
+          "drawCalls": 1
+        },
+        {
+          "tris": 3232,
+          "verts": 3362,
+          "drawCalls": 1
+        },
+        {
+          "tris": 1946,
+          "verts": 2351,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "木工工具（洞洞板 / 木板 / 水平尺 / 角尺 / 铭牌 / 锯身 / 电钻 / 螺丝 / 金属 / 塑料，图集）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 327,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 28
+      },
+      "fileKB": 1626
+    },
+    {
+      "id": "sawhorses",
+      "name": "锯木架",
+      "nameEn": "Sawhorses with Plank and Handsaw",
+      "category": "workshop",
+      "mount": "floor",
+      "size": [
+        2440,
+        1107,
+        1017
+      ],
+      "lods": [
+        {
+          "tris": 1705,
+          "verts": 1525,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1102,
+          "verts": 1139,
+          "drawCalls": 3
+        },
+        {
+          "tris": 562,
+          "verts": 683,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "松木（锯木架、木条）",
+        "木工工具（洞洞板 / 木板 / 水平尺 / 角尺 / 铭牌 / 锯身 / 电钻 / 螺丝 / 金属 / 塑料，图集）",
+        "锯末（一堆细碎的木屑；贴地又平，不往地上投阴影）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 415,
+      "lodDistances": null,
+      "view": {
+        "el": 22,
+        "az": 38
+      },
+      "fileKB": 1684
     }
   ]
 }

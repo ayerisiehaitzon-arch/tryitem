@@ -697,5 +697,34 @@ Object.assign(MATERIALS, {
   },
 });
 
+// —— 木工房 ——
+Object.assign(MATERIALS, {
+  workshop: {
+    label: '木工工具（洞洞板 / 木板 / 水平尺 / 角尺 / 铭牌 / 锯身 / 电钻 / 螺丝 / 金属 / 塑料，图集）',
+    tex: 'workshop', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.6,
+  },
+  beech_block: {
+    label: '山毛榉拼板（木工桌面，木蜡油）',
+    tex: 'benchtop', tile: [2, 2],
+    roughness: 1, metallic: 0, normalScale: 0.5,
+  },
+  pine: {
+    label: '松木（锯木架、木条）',
+    tex: 'pine', tile: [0.8, 0.8],
+    roughness: 1, metallic: 0, normalScale: 0.6,
+  },
+  floor_concrete: {
+    label: '水泥地面（封闭剂，切缝）',
+    tex: 'concrete', tile: [2, 2], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 0.5,
+  },
+  sawdust: {
+    label: '锯末（一堆细碎的木屑；贴地又平，不往地上投阴影）',
+    tex: 'sawdust', tile: [0.25, 0.25],
+    roughness: 1, metallic: 0, normalScale: 0.8, castShadow: false,
+  },
+});
+
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
 export const noOffsetOf = (mat) => !!MATERIALS[mat]?.noOffset;

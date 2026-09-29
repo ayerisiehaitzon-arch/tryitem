@@ -24,6 +24,7 @@ import * as gym2 from './gym2-textures.js';
 import * as game from './game-textures.js';
 import * as studio from './studio-textures.js';
 import * as band from './band-textures.js';
+import * as workshop from './workshop-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -501,6 +502,23 @@ export const TEXTURES = {
   foam: { size: 256, normalStrength: 2.5, v: 1, gen: (S) => band.foam(S, { seed: 1331 }) },
   // 地毯拼块（50cm 一块，绒毛方向相邻转 90°，周期 2m）
   carpet: { size: 1024, detail: 0.5, normalStrength: 1.5, v: 1, gen: (S) => band.carpetTiles(S, { seed: 1341, base: rgb(54, 57, 64) }) },
+  // —— 木工房 ——
+  // 木工房图集：洞洞板（孔和工具的轮廓）、锯木架上的木板、水平尺、角尺、工具柜铭牌、手锯、电钻侧面、一堆螺丝、纯色格子
+  workshop: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => workshop.workshopAtlas(S, { seed: 1401 }) },
+  // 木工桌的山毛榉拼板（4cm 一条，周期 2m）
+  benchtop: { size: 1024, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => workshop.benchtop(S, { seed: 1411 }) },
+  // 松木（锯木架、搁板、木条）：和橡木同一个生成器，浅黄、年轮更疏更亮
+  pine: {
+    size: 1024, detail: 0.5, normalStrength: 2, v: 1,
+    gen: (S) => wood(S, {
+      seed: 1421, staves: 6, rings: 12, warp: 2.2, archChance: 0.5,
+      staveTint: 0.08, staveWarm: 0.05, pores: 0.2, lateMix: 1.1, colorVar: 0.06, fiberVar: 0.04,
+      early: rgb(232, 204, 158), late: rgb(198, 146, 88), pore: rgb(182, 132, 80), rough: 0.7,
+    }),
+  },
+  // 水泥地面（周期 2m，四边半道切缝）
+  concrete: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => workshop.concrete(S, { seed: 1431 }) },
+  sawdust: { size: 512, detail: 0.5, normalStrength: 2, v: 1, gen: (S) => workshop.sawdust(S, { seed: 1441 }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB
