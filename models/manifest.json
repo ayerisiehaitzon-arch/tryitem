@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-30T09:17:38.947Z",
+  "generated": "2026-09-30T11:58:45.392Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1963,6 +1963,88 @@
         "az": 30
       },
       "fileKB": 297
+    },
+    {
+      "id": "wall_whitebrick",
+      "name": "刷白砖墙",
+      "nameEn": "Whitewashed Brick Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        134
+      ],
+      "lods": [
+        {
+          "tris": 40,
+          "verts": 66,
+          "drawCalls": 3
+        },
+        {
+          "tris": 32,
+          "verts": 58,
+          "drawCalls": 3
+        },
+        {
+          "tris": 28,
+          "verts": 54,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "刷白的砖墙（石灰水，边角透出红砖）",
+        "白色哑光烤漆"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 124,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 30
+      },
+      "fileKB": 436
+    },
+    {
+      "id": "floor_terracotta",
+      "name": "陶土六角砖地面",
+      "nameEn": "Terracotta Hexagon Tile Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "陶土六角砖地面（手工烧制，半哑光的蜡面）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 936
     },
     {
       "id": "kitchen_base",
@@ -5179,6 +5261,184 @@
         "az": 28
       },
       "fileKB": 692
+    },
+    {
+      "id": "pottery_wheel",
+      "name": "拉坯机",
+      "nameEn": "Pottery Wheel with Stool",
+      "category": "pottery",
+      "mount": "floor",
+      "size": [
+        932,
+        678,
+        1063
+      ],
+      "lods": [
+        {
+          "tris": 4802,
+          "verts": 3798,
+          "drawCalls": 3
+        },
+        {
+          "tris": 3392,
+          "verts": 2800,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1925,
+          "verts": 1738,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "陶艺室（上釉的成品 / 窑内耐火砖 / 控制器 / 标签 / 帆布台面 / 纯色零件，图集）",
+        "湿泥（灰褐，泛着水光）",
+        "橡木（木蜡油）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 404,
+      "lodDistances": null,
+      "view": {
+        "el": 22,
+        "az": 30
+      },
+      "fileKB": 1855
+    },
+    {
+      "id": "electric_kiln",
+      "name": "电窑",
+      "nameEn": "Electric Kiln (Lid Open)",
+      "category": "pottery",
+      "mount": "floor",
+      "size": [
+        1153,
+        1612,
+        1211
+      ],
+      "lods": [
+        {
+          "tris": 5250,
+          "verts": 4820,
+          "drawCalls": 3
+        },
+        {
+          "tris": 3806,
+          "verts": 3672,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1970,
+          "verts": 2281,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "拉丝不锈钢",
+        "陶艺室（上釉的成品 / 窑内耐火砖 / 控制器 / 标签 / 帆布台面 / 纯色零件，图集）",
+        "素烧坯（粉白，哑光）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 310,
+      "lodDistances": null,
+      "view": {
+        "el": 30,
+        "az": 24
+      },
+      "fileKB": 1618
+    },
+    {
+      "id": "pottery_shelf",
+      "name": "作品架",
+      "nameEn": "Pottery Shelf with Greenware, Bisque and Glazed Ware",
+      "category": "pottery",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        1300,
+        1905,
+        390
+      ],
+      "lods": [
+        {
+          "tris": 16716,
+          "verts": 13403,
+          "drawCalls": 4
+        },
+        {
+          "tris": 10520,
+          "verts": 8807,
+          "drawCalls": 4
+        },
+        {
+          "tris": 4392,
+          "verts": 4451,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "橡木（木蜡油）",
+        "陶艺室（上釉的成品 / 窑内耐火砖 / 控制器 / 标签 / 帆布台面 / 纯色零件，图集）",
+        "生坯（没烧过的灰泥，哑光）",
+        "素烧坯（粉白，哑光）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 240,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 22
+      },
+      "fileKB": 2772
+    },
+    {
+      "id": "wedging_table",
+      "name": "揉泥台",
+      "nameEn": "Canvas Wedging Table",
+      "category": "pottery",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        1200,
+        1180,
+        724
+      ],
+      "lods": [
+        {
+          "tris": 3380,
+          "verts": 2909,
+          "drawCalls": 4
+        },
+        {
+          "tris": 2236,
+          "verts": 2073,
+          "drawCalls": 4
+        },
+        {
+          "tris": 1154,
+          "verts": 1247,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "陶艺室（上釉的成品 / 窑内耐火砖 / 控制器 / 标签 / 帆布台面 / 纯色零件，图集）",
+        "橡木（木蜡油）",
+        "湿泥（灰褐，泛着水光）",
+        "生坯（没烧过的灰泥，哑光）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 336,
+      "lodDistances": null,
+      "view": {
+        "el": 26,
+        "az": 24
+      },
+      "fileKB": 1786
     }
   ]
 }

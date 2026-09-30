@@ -1223,3 +1223,73 @@ export function barberSwatch(name) {
   const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
   return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
 }
+
+// —— 陶艺室图集（2048²）——
+// wares：上了釉的成品，每件一格（256²，u 绕一圈（0.5 是正面）、v 沿轮廓的弧长，见 pottery/pots.js）；
+// firebrick：电窑内壁一圈展开（轻质耐火砖、几道放电热丝的槽和槽里盘着的电热丝），窑底和窑盖的里面也贴这里；
+// controller：窑的控制器面板（红色数码管自发光）；kilnPlate：窑的铭牌；hotSticker：高温警示贴；clayBag：泥袋上的标签；
+// canvas：揉泥台的帆布台面（沾着泥和泥浆）；turntable：手转台 / 拉坯机转盘的铝面（一圈圈同心的刻线）
+export const POTTERY_ATLAS = {
+  size: 2048,
+  regions: {
+    wares: [0, 0, 2048, 512],
+    firebrick: [0, 512, 1024, 1024],
+    controller: [1024, 512, 1536, 768], kilnPlate: [1536, 512, 2048, 640], hotSticker: [1536, 640, 2048, 768],
+    clayBag: [1024, 768, 1536, 1024], turntable: [1536, 768, 2048, 1024],
+    canvas: [0, 1024, 1024, 1536],
+    swatch: [0, 1920, 2048, 2048],
+  },
+  // 各块区域代表的物理尺寸（米）：宽 × 高
+  sizes: {
+    firebrick: [2.0, 0.64], controller: [0.2, 0.1], kilnPlate: [0.16, 0.04], hotSticker: [0.1, 0.025],
+    clayBag: [0.3, 0.15], turntable: [0.36, 0.36], canvas: [1.2, 0.7],
+  },
+  wareCols: 8, wareRows: 2,
+  cols: 16,
+  swatches: [
+    { name: 'steel', c: [190, 194, 200], rough: 0.32, metal: 1 },
+    { name: 'alu', c: [210, 212, 216], rough: 0.25, metal: 1 },
+    { name: 'black', c: [22, 22, 24], rough: 0.4 },
+    { name: 'rubber', c: [28, 28, 30], rough: 0.85 },
+    { name: 'plaster', c: [236, 234, 228], rough: 0.85 },
+    { name: 'sponge', c: [226, 196, 90], rough: 0.95 },
+    { name: 'bucket', c: [232, 232, 228], rough: 0.4 },
+    { name: 'water', c: [118, 118, 112], rough: 0.04 },
+    { name: 'slip', c: [150, 146, 140], rough: 0.45 },
+    { name: 'toolWood', c: [184, 142, 96], rough: 0.6 },
+    { name: 'brass', c: [214, 172, 96], rough: 0.28, metal: 1 },
+    { name: 'red', c: [180, 30, 34], rough: 0.35 },
+    { name: 'led', c: [60, 220, 90], rough: 0.3, emit: [60, 230, 100] },
+    { name: 'cord', c: [24, 24, 26], rough: 0.5 },
+    { name: 'kilnShelf', c: [204, 198, 188], rough: 0.9 },
+    { name: 'post', c: [232, 228, 218], rough: 0.9 },
+    { name: 'wheelBody', c: [84, 110, 134], rough: 0.35 },
+    { name: 'panGrey', c: [120, 124, 128], rough: 0.5 },
+    { name: 'clayGrey', c: [150, 146, 140], rough: 0.8 },
+    { name: 'wire', c: [170, 170, 174], rough: 0.35, metal: 1 },
+    { name: 'bagClear', c: [196, 204, 210], rough: 0.2 },
+    { name: 'lid', c: [214, 216, 220], rough: 0.3, metal: 1 },
+    { name: 'yellow', c: [236, 192, 30], rough: 0.4 },
+    { name: 'seat', c: [60, 62, 66], rough: 0.7 },
+  ],
+};
+export function potteryUV(region, u, v) {
+  const [x0, y0, x1, y1] = POTTERY_ATLAS.regions[region];
+  const S = POTTERY_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+// 第 i 件上釉成品的格子：u 绕一圈（0.5 是正面）、v 沿轮廓的弧长（0 = 圈足底下的中心，1 = 内底中心）
+export function wareUV(i, u, v) {
+  const A = POTTERY_ATLAS, [x0, y0, x1, y1] = A.regions.wares, S = A.size, m = 3;
+  const cw = (x1 - x0) / A.wareCols, ch = (y1 - y0) / A.wareRows, cx = x0 + (i % A.wareCols) * cw, cy = y0 + Math.floor(i / A.wareCols) * ch;
+  const cl = (t) => Math.max(0, Math.min(1, t));
+  return [(cx + m + cl(u) * (cw - 2 * m)) / S, (cy + m + cl(v) * (ch - 2 * m)) / S];
+}
+export function potterySwatch(name) {
+  const A = POTTERY_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`陶艺室图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}

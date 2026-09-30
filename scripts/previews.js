@@ -74,6 +74,9 @@
 //   docs/previews/barber.jpg          理发店四件：理发椅、理发工作台、洗头台、灯柱
 //   docs/previews/barber-detail.jpg   理发店特写：理发椅的车线皮面和脚踏板、台面上的消毒液罐和推子、发蜡和剃须杯、灯柱
 //   docs/previews/barber-room.jpg     全屋陈列里的理发店
+//   docs/previews/pottery.jpg         陶艺室四件：拉坯机、电窑、作品架、揉泥台
+//   docs/previews/pottery-detail.jpg  陶艺室特写：转盘上的湿泥坯、架子上的釉色、开着盖的电窑和控制器、揉泥台的台面
+//   docs/previews/pottery-room.jpg    全屋陈列里的陶艺室
 //   docs/previews/room.jpg           全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -93,7 +96,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing'), barIds = byCat('bar'), machineIds = byCat('machine'), barberIds = byCat('barber');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing'), barIds = byCat('bar'), machineIds = byCat('machine'), barberIds = byCat('barber'), potteryIds = byCat('pottery');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -509,6 +512,23 @@ await grid(barberDetail, 2, [600, 450], path.join(out, 'barber-detail.jpg'));
 const barberRoom = await shoot({ items: ['room'], views: ['&target=80.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'barber-room.png' });
 await sharp(barberRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'barber-room.jpg'));
 console.log('→ docs/previews/barber-room.jpg');
+
+// —— 陶艺室 ——
+const potteryHero = await shoot({ items: potteryIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(potteryHero, 4, [360, 270], path.join(out, 'pottery.jpg'));
+
+// 陶艺室特写：转盘上正在拉的湿泥坯（一道道旋纹、泛着水光）和盆底的泥浆；作品架最上面两层的釉色（青瓷开片、天目、钴蓝的釉泪、志野、燕麦釉的铁点）；
+// 开着盖的电窑：窑膛里的耐火砖和电热丝、硼板上的素坯、控制器；揉泥台的帆布台面、湿泥团、切开的泥块、手转台和割泥线
+const potteryDetail = [];
+potteryDetail.push(...await shoot({ items: ['pottery_wheel'], views: ['&target=0:0.52:0&d=0.9&el=35&az=20'], size: [800, 600], outDir: tmp, name: () => 'pd0.png' }));
+potteryDetail.push(...await shoot({ items: ['pottery_shelf'], views: ['&target=0:1.45:0.2&d=1.3&el=8&az=12'], size: [800, 600], outDir: tmp, name: () => 'pd1.png' }));
+potteryDetail.push(...await shoot({ items: ['electric_kiln'], views: ['&target=0:0.5:0.1&d=1.3&el=45&az=15'], size: [800, 600], outDir: tmp, name: () => 'pd2.png' }));
+potteryDetail.push(...await shoot({ items: ['wedging_table'], views: ['&target=0:0.9:0.35&d=1.3&el=40&az=15'], size: [800, 600], outDir: tmp, name: () => 'pd3.png' }));
+await grid(potteryDetail, 2, [600, 450], path.join(out, 'pottery-detail.jpg'));
+
+const potteryRoom = await shoot({ items: ['room'], views: ['&target=84.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'pottery-room.png' });
+await sharp(potteryRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'pottery-room.jpg'));
+console.log('→ docs/previews/pottery-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

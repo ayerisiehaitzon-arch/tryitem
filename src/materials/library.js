@@ -518,6 +518,7 @@ Object.assign(MATERIALS, {
 });
 
 // —— 书房二（琴房）——
+const CLAY_BASE = [214, 210, 204]; // 泥坯贴图的平均色：生坯、素烧、湿泥用同一张图染出来
 const LEATHER_BASE = [122, 72, 46]; // 植鞣皮贴图的颜色：黑色的琴凳皮面用同一张图染出来
 Object.assign(MATERIALS, {
   lacquer: {
@@ -877,6 +878,45 @@ Object.assign(MATERIALS, {
     label: '墨绿色乳胶漆（理发店上半墙）',
     tex: 'plaster', tile: [0.5, 0.5], noOffset: true, color: tint([46, 74, 60], PLASTER_BASE),
     roughness: 1, metallic: 0, normalScale: 0.45,
+  },
+  // —— 陶艺室 ——
+  pottery: {
+    label: '陶艺室（上釉的成品 / 窑内耐火砖 / 控制器 / 标签 / 帆布台面 / 纯色零件，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；控制器的数码管和指示灯自发光
+    tex: 'pottery', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+    emissive: [1, 1, 1], emissiveStrength: 1.4,
+  },
+  clay_green: {
+    label: '生坯（没烧过的灰泥，哑光）',
+    // 泥坯贴图周期 0.2m：车削件的 v 沿轮廓，一道道拉坯的旋纹正好顺着器型走；生坯、素烧、湿泥共用一张图，染色不同
+    tex: 'claybody', tile: [0.2, 0.2], color: tint([164, 158, 150], CLAY_BASE),
+    roughness: 1, metallic: 0, normalScale: 0.6,
+  },
+  clay_bisque: {
+    label: '素烧坯（粉白，哑光）',
+    tex: 'claybody', tile: [0.2, 0.2], color: tint([236, 210, 188], CLAY_BASE),
+    roughness: 1, metallic: 0, normalScale: 0.5,
+  },
+  clay_wet: {
+    label: '湿泥（灰褐，泛着水光）',
+    // 粗糙度压低、再罩一层清漆：刚拉出来的坯和泥块表面一层泥浆水，亮晶晶的
+    tex: 'claybody', tile: [0.2, 0.2], color: tint([124, 106, 94], CLAY_BASE),
+    roughness: 0.45, metallic: 0, normalScale: 0.8,
+    clearcoat: { factor: 0.7, roughness: 0.18 },
+  },
+  brick_white: {
+    label: '刷白的砖墙（石灰水，边角透出红砖）',
+    // 周期 1 × 0.6m 整除 2m：墙模块按模块坐标贴，最下面一层是整砖
+    tex: 'brick_white', tile: [1, 0.6], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1.2,
+  },
+  floor_terracotta: {
+    label: '陶土六角砖地面（手工烧制，半哑光的蜡面）',
+    // 周期 1m 整除 2m：按模块坐标贴，六角砖在模块之间接得上
+    tex: 'terracotta', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    clearcoat: { factor: 0.15, roughness: 0.4 },
   },
 });
 

@@ -30,6 +30,7 @@ import * as sew from './sew-textures.js';
 import * as bar from './bar-textures.js';
 import * as mech from './mech-textures.js';
 import * as barber from './barber-textures.js';
+import * as pottery from './pottery-textures.js';
 import { DRAWING } from './atlas.js';
 
 const VERSION = 8;
@@ -542,6 +543,10 @@ export const TEXTURES = {
   galvanized: { size: 1024, detail: 0.5, normalStrength: 1.5, v: 1, gen: (S) => mech.galvanized(S, { seed: 1831 }) },
   barber: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, emit: true, gen: (S) => barber.barberAtlas(S, { seed: 1901 }) },
   subway: { size: 1024, detail: 0.5, normalStrength: 3, v: 1, gen: (S) => barber.subway(S, { seed: 1911 }) },
+  pottery: { size: 2048, detail: 0.5, normalStrength: 2, v: 1, emit: true, gen: (S) => pottery.potteryAtlas(S, { seed: 2001 }) },
+  claybody: { size: 1024, detail: 0.5, normalStrength: 2.5, v: 1, gen: (S) => pottery.claybody(S, { seed: 2011 }) },
+  brick_white: { size: 1024, detail: 0.5, normalStrength: 4, v: 1, gen: (S) => pottery.brickWhite(S, { seed: 2021 }) },
+  terracotta: { size: 2048, detail: 0.5, normalStrength: 3, v: 1, gen: (S) => pottery.terracottaHex(S, { seed: 2031 }) },
 };
 
 // 孩子画的画：草地、房子（和儿童床一样的尖顶）、太阳、彩虹、一朵花、一只小鸟。蜡笔颜色是 sRGB

@@ -21,10 +21,10 @@ import rug from '../decor/rug.js';
 import tableLamp from '../lighting/table-lamp.js';
 import pendant from '../lighting/pendant.js';
 import wallLamp from '../lighting/wall-lamp.js';
-import { wall, wallWainscot, wallSlat, wallMirror, wallFoam, wallPaper, wallBrick, wallCorrugated, wallSubway } from '../architecture/walls.js';
+import { wall, wallWainscot, wallSlat, wallMirror, wallFoam, wallPaper, wallBrick, wallCorrugated, wallSubway, wallWhiteBrick } from '../architecture/walls.js';
 import { wallDoor } from '../architecture/door.js';
 import { wallWindow } from '../architecture/window.js';
-import { floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, floorChecker, floorCement, floorRubber, floorBrick, floorPaint, floorCarpet, floorConcrete, floorCork, floorDiamond } from '../architecture/floors.js';
+import { floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, floorChecker, floorCement, floorRubber, floorBrick, floorPaint, floorCarpet, floorConcrete, floorCork, floorDiamond, floorTerracotta } from '../architecture/floors.js';
 import { railing } from '../architecture/railing.js';
 import kitchenBase from '../kitchen/base.js';
 import kitchenWall from '../kitchen/wall.js';
@@ -100,6 +100,10 @@ import barberChair from '../barber/barber-chair.js';
 import barberStation from '../barber/barber-station.js';
 import shampooStation from '../barber/shampoo-station.js';
 import barberPole from '../barber/barber-pole.js';
+import potteryWheel from '../pottery/pottery-wheel.js';
+import electricKiln from '../pottery/kiln.js';
+import potteryShelf from '../pottery/pottery-shelf.js';
+import wedgingTable from '../pottery/wedging-table.js';
 
 // 清单（顺序即展示顺序）：家具、摆件（category: 'decor'）、灯具（category: 'lighting'）、
 // 墙地门窗（category: 'architecture'，可拼接的建筑构件）、厨房（category: 'kitchen'）、浴室（category: 'bathroom'）、
@@ -107,13 +111,13 @@ import barberPole from '../barber/barber-pole.js';
 // 洗衣房（category: 'laundry'）、衣帽间（category: 'closet'）、健身房（category: 'gym'）、书房二 / 琴房（category: 'music'）、
 // 茶室（category: 'tea'）、影音室（category: 'theater'）、健身房二（category: 'gym2'）、游戏室（category: 'game'）、画室（category: 'studio'）、
 // 排练室（category: 'band'）、木工房（category: 'workshop'）、宠物房（category: 'pets'）、缝纫间（category: 'sewing'）、
-// 酒吧（category: 'bar'）、机械车间（category: 'machine'）、理发店（category: 'barber'）
+// 酒吧（category: 'bar'）、机械车间（category: 'machine'）、理发店（category: 'barber'）、陶艺室（category: 'pottery'）
 export const FURNITURE = [
   chair, table, sofa, armchair, coffeeTable, bookshelf, nightstand, bed, barStool, wardrobe, desk, officeChair,
   sideboard, bench, sideTable,
   books, vases, fiddleFig, snakePlant, rug,
   floorLamp, tableLamp, pendant, wallLamp,
-  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, railing, floorChecker, floorCement, floorRubber, floorBrick, wallSlat, wallMirror, floorPaint, wallFoam, floorCarpet, floorConcrete, floorCork, wallPaper, wallBrick, wallCorrugated, floorDiamond, wallSubway,
+  wall, wallWainscot, wallDoor, wallWindow, floorHerringbone, floorPlank, floorTerrazzo, floorHex, floorDeck, railing, floorChecker, floorCement, floorRubber, floorBrick, wallSlat, wallMirror, floorPaint, wallFoam, floorCarpet, floorConcrete, floorCork, wallPaper, wallBrick, wallCorrugated, floorDiamond, wallSubway, wallWhiteBrick, floorTerracotta,
   kitchenBase, kitchenWall, kitchenIsland,
   vanity, toilet, shower,
   loungeChair, gardenStool, oliveTree,
@@ -136,4 +140,5 @@ export const FURNITURE = [
   barCounter, backBar, barCart, wineRack,
   motorcycle, metalLathe, drillPress, benchGrinder,
   barberChair, barberStation, shampooStation, barberPole,
+  potteryWheel, electricKiln, potteryShelf, wedgingTable,
 ];
