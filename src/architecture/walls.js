@@ -317,3 +317,35 @@ export const wallCorrugated = {
     k.box({ name: 'flashing', mat: 'galvanized', size: [L + 2 * OVERLAP, 0.004, depth + 0.012], segs: 0, omit: ['ny'], xf: xf({ pos: [0, H + 0.002, T / 2 + (depth + 0.012) / 2 - 0.006] }) });
   },
 };
+
+// 地铁砖墙（理发店）：下半截白色斜边地铁砖（贴到 1.2m，按模块坐标贴，周期 1 × 0.6m 整除 2m，一行 7.5cm，
+// 1.2m 和 15cm 都正好落在砖缝上），最下面一道 15cm 高的黑色亮釉踢脚砖，砖顶压一道黑色的半圆腰线砖；
+// 上半截墨绿色的乳胶漆。背面还是白墙和踢脚线
+export const SUBWAY = { base: 0.15, top: 1.2 };
+export const wallSubway = {
+  id: 'wall_subway',
+  name: '地铁砖墙',
+  nameEn: 'Subway Tile Wainscot Wall',
+  category: 'architecture',
+  aoDensity: 80,
+  shadow: { margin: 0.32, maxDist: 0.9, density: 60 },
+  view: { el: 16, az: 30 },
+  build(k) {
+    const { L, H, T } = WALL;
+    const skin = 0.001, sm = { smooth: true };
+    wallBox(k, { name: 'wall', x0: -L / 2, x1: L / 2, z1: T / 2 - skin, omit: ['ny', 'pz'], ends: ['nx', 'px'] });
+    wallBox(k, { name: 'tile', mat: 'subway', x0: -L / 2, x1: L / 2, y0: SUBWAY.base, y1: SUBWAY.top, z0: T / 2 - skin, omit: ['ny', 'py', 'nz'], ends: ['nx', 'px'] });
+    wallBox(k, { name: 'paint', mat: 'plaster_green', x0: -L / 2, x1: L / 2, y0: SUBWAY.top, y1: H, z0: T / 2 - skin, omit: ['ny', 'nz'], ends: ['nx', 'px'] });
+    wallEnds(k);
+    skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
+    const q = (...v) => k.q(...v), d = L - 2 * TRIM_GAP;
+    // 踢脚砖：9mm 厚，上沿一道圆鼻
+    const base = shape([[0, 0], [0, SUBWAY.base], [-0.004, SUBWAY.base, { r: q(0.004, 0.003, 0), segs: q(2, 1, 1) }], [-0.009, SUBWAY.base - 0.005, { r: q(0.004, 0.003, 0), segs: q(2, 1, 1) }], [-0.009, 0]]);
+    k.extrude({ name: 'baseTile', mat: 'tile_black', shape: base, depth: d, axis: 'x', density: { cap0: 0.2, cap1: 0.2 }, xf: xf({ pos: [-L / 2 + TRIM_GAP, 0, T / 2] }) });
+    // 腰线砖：半圆截面，背面贴墙
+    const n = q(8, 6, 4), r = 0.012, pts = [[0, -r]];
+    for (let i = 1; i < n; i++) { const a = -Math.PI / 2 + (Math.PI * i) / n; pts.push([-r * Math.cos(a), r * Math.sin(a), sm]); }
+    pts.push([0, r]);
+    k.extrude({ name: 'liner', mat: 'tile_black', shape: shape(pts.reverse()), depth: d, axis: 'x', density: { cap0: 0.2, cap1: 0.2 }, xf: xf({ pos: [-L / 2 + TRIM_GAP, SUBWAY.top, T / 2] }) });
+  },
+};

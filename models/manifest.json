@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-30T05:55:47.323Z",
+  "generated": "2026-09-30T09:17:38.947Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1919,6 +1919,50 @@
         "az": 24
       },
       "fileKB": 772
+    },
+    {
+      "id": "wall_subway",
+      "name": "地铁砖墙",
+      "nameEn": "Subway Tile Wainscot Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        146
+      ],
+      "lods": [
+        {
+          "tris": 106,
+          "verts": 156,
+          "drawCalls": 5
+        },
+        {
+          "tris": 82,
+          "verts": 132,
+          "drawCalls": 5
+        },
+        {
+          "tris": 62,
+          "verts": 112,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "白色斜边地铁砖（深灰勾缝）",
+        "墨绿色乳胶漆（理发店上半墙）",
+        "白色哑光烤漆",
+        "黑色亮釉瓷砖（踢脚砖、腰线）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 124,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 30
+      },
+      "fileKB": 297
     },
     {
       "id": "kitchen_base",
@@ -4956,6 +5000,185 @@
         "az": 26
       },
       "fileKB": 935
+    },
+    {
+      "id": "barber_chair",
+      "name": "理发椅",
+      "nameEn": "Hydraulic Barber Chair",
+      "category": "barber",
+      "mount": "floor",
+      "size": [
+        733,
+        1396,
+        936
+      ],
+      "lods": [
+        {
+          "tris": 6632,
+          "verts": 4571,
+          "drawCalls": 2
+        },
+        {
+          "tris": 3624,
+          "verts": 2751,
+          "drawCalls": 2
+        },
+        {
+          "tris": 922,
+          "verts": 953,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "理发店（灯柱条纹 / 瓶子和标签 / 价目牌 / 脚踏板 / 毛巾 / 纯色零件，图集）",
+        "酒红色皮革（理发椅）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 383,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 28
+      },
+      "fileKB": 1597
+    },
+    {
+      "id": "barber_station",
+      "name": "理发工作台",
+      "nameEn": "Barber Station with Mirror",
+      "category": "barber",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        1420,
+        2245,
+        540
+      ],
+      "lods": [
+        {
+          "tris": 10716,
+          "verts": 8854,
+          "drawCalls": 7
+        },
+        {
+          "tris": 6890,
+          "verts": 6006,
+          "drawCalls": 7
+        },
+        {
+          "tris": 3760,
+          "verts": 3518,
+          "drawCalls": 7
+        }
+      ],
+      "materials": [
+        "理发店（灯柱条纹 / 瓶子和标签 / 价目牌 / 脚踏板 / 毛巾 / 纯色零件，图集）",
+        "胡桃木（哑光清漆）",
+        "白色大理石台面（抛光）",
+        "银镜",
+        "乳白玻璃（缎面，内置光源）",
+        "酒杯玻璃（比透明玻璃亮一点）",
+        "梳子消毒液（半透明的蓝）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 289,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 20
+      },
+      "fileKB": 2087
+    },
+    {
+      "id": "shampoo_station",
+      "name": "洗头台",
+      "nameEn": "Backwash Shampoo Unit",
+      "category": "barber",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        625,
+        1770,
+        1398
+      ],
+      "lods": [
+        {
+          "tris": 6596,
+          "verts": 4574,
+          "drawCalls": 3
+        },
+        {
+          "tris": 3708,
+          "verts": 2821,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1640,
+          "verts": 1460,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "理发店（灯柱条纹 / 瓶子和标签 / 价目牌 / 脚踏板 / 毛巾 / 纯色零件，图集）",
+        "白色耐火黏土（釉面，水槽）",
+        "酒红色皮革（理发椅）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 364,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 32
+      },
+      "fileKB": 1672
+    },
+    {
+      "id": "barber_pole",
+      "name": "理发店灯柱",
+      "nameEn": "Barber Pole",
+      "category": "barber",
+      "mount": "wall",
+      "size": [
+        172,
+        794,
+        216
+      ],
+      "lods": [
+        {
+          "tris": 1352,
+          "verts": 1038,
+          "drawCalls": 3
+        },
+        {
+          "tris": 826,
+          "verts": 680,
+          "drawCalls": 3
+        },
+        {
+          "tris": 444,
+          "verts": 403,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "理发店（灯柱条纹 / 瓶子和标签 / 价目牌 / 脚踏板 / 毛巾 / 纯色零件，图集）",
+        "透明玻璃",
+        "乳白玻璃（缎面，内置光源）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 508,
+      "lodDistances": null,
+      "view": {
+        "el": 8,
+        "az": 28
+      },
+      "fileKB": 692
     }
   ]
 }

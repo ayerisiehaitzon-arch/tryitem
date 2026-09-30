@@ -71,6 +71,9 @@
 //   docs/previews/machine.jpg         机械车间四件：摩托车、车床、立式钻床、砂轮机
 //   docs/previews/machine-detail.jpg  机械车间特写：摩托车的发动机和排气管、仪表和油箱、车床的卡盘和刀尖上卷出来的车屑、砂轮机
 //   docs/previews/machine-room.jpg    全屋陈列里的机械车间
+//   docs/previews/barber.jpg          理发店四件：理发椅、理发工作台、洗头台、灯柱
+//   docs/previews/barber-detail.jpg   理发店特写：理发椅的车线皮面和脚踏板、台面上的消毒液罐和推子、发蜡和剃须杯、灯柱
+//   docs/previews/barber-room.jpg     全屋陈列里的理发店
 //   docs/previews/room.jpg           全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -90,7 +93,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing'), barIds = byCat('bar'), machineIds = byCat('machine');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing'), barIds = byCat('bar'), machineIds = byCat('machine'), barberIds = byCat('barber');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -489,6 +492,23 @@ await grid(machineDetail, 2, [600, 450], path.join(out, 'machine-detail.jpg'));
 const machineRoom = await shoot({ items: ['room'], views: ['&target=76.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'machine-room.png' });
 await sharp(machineRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'machine-room.jpg'));
 console.log('→ docs/previews/machine-room.jpg');
+
+// —— 理发店 ——
+const barberHero = await shoot({ items: barberIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(barberHero, 4, [360, 270], path.join(out, 'barber.jpg'));
+
+// 理发店特写：理发椅的车线皮面、搪瓷扶手和铸造脚踏板；台面左边的毛巾、泡着梳子的消毒液罐、推子和一排瓶子；
+// 右边的两盒发蜡、剃须杯、剃刀、梳子和喷水壶；灯柱的条纹转筒和乳白球灯
+const barberDetail = [];
+barberDetail.push(...await shoot({ items: ['barber_chair'], views: ['&target=0:0.5:0.1&d=1.3&el=35&az=60'], size: [800, 600], outDir: tmp, name: () => 'bd0.png' }));
+barberDetail.push(...await shoot({ items: ['barber_station'], views: ['&target=-0.2:0.95:0.25&d=0.9&el=35&az=10'], size: [800, 600], outDir: tmp, name: () => 'bd1.png' }));
+barberDetail.push(...await shoot({ items: ['barber_station'], views: ['&target=0.35:0.95:0.25&d=0.8&el=40&az=-15'], size: [800, 600], outDir: tmp, name: () => 'bd2.png' }));
+barberDetail.push(...await shoot({ items: ['barber_pole'], views: ['&target=0:1.84:0.13&d=1.55&el=6&az=24'], size: [800, 600], outDir: tmp, name: () => 'bd3.png' }));
+await grid(barberDetail, 2, [600, 450], path.join(out, 'barber-detail.jpg'));
+
+const barberRoom = await shoot({ items: ['room'], views: ['&target=80.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'barber-room.png' });
+await sharp(barberRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'barber-room.jpg'));
+console.log('→ docs/previews/barber-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

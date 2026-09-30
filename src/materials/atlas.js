@@ -1147,3 +1147,79 @@ export function mechSwatch(name) {
   const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
   return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
 }
+
+// —— 理发店图集（2048²）——
+// pole：灯柱里那根转筒的一圈展开（u 绕一圈、v 沿高度）：红、白、蓝、白四道斜着绕上去的条纹（自发光）；
+// bottles：六种瓶子 / 罐子的瓶身展开（每种一格 512²：u 绕一圈（0.5 是正面）、v 从瓶盖顶到瓶底，见 barber/bottles.js）；
+// jarLabel：消毒液罐正面的标签；pomadeA / pomadeB：两盒发蜡的盖子；sign：价目牌（搪瓷牌）；
+// footplate：理发椅的铸造脚踏板（凸起的菱格和中间的椭圆铭牌）；towel：毛巾（毛圈、靠一头两道彩条）
+export const BARBER_ATLAS = {
+  size: 2048,
+  regions: {
+    pole: [0, 0, 512, 640],
+    bottles: [512, 0, 2048, 1024],
+    jarLabel: [0, 640, 512, 768],
+    pomadeA: [0, 768, 256, 1024], pomadeB: [256, 768, 512, 1024],
+    sign: [0, 1024, 1024, 1536],
+    footplate: [1024, 1024, 1536, 1280],
+    towel: [1024, 1280, 1536, 1536],
+    swatch: [0, 1920, 2048, 2048],
+  },
+  // 各块区域代表的物理尺寸（米）：宽 × 高
+  sizes: {
+    pole: [2 * Math.PI * 0.07, 0.45], jarLabel: [0.13, 0.032], pomadeA: [0.085, 0.085], pomadeB: [0.085, 0.085],
+    sign: [0.6, 0.3], footplate: [0.4, 0.2], towel: [0.3, 0.3],
+  },
+  bottleCols: 3, bottleRows: 2,
+  cols: 16,
+  swatches: [
+    { name: 'chrome', c: [236, 238, 242], rough: 0.08, metal: 1 },
+    { name: 'enamel', c: [240, 238, 230], rough: 0.12 },
+    { name: 'rubber', c: [28, 28, 30], rough: 0.85 },
+    { name: 'black', c: [22, 22, 24], rough: 0.35 },
+    { name: 'steel', c: [206, 210, 216], rough: 0.22, metal: 1 },
+    { name: 'brass', c: [214, 172, 96], rough: 0.28, metal: 1 },
+    { name: 'gold', c: [226, 186, 104], rough: 0.22, metal: 1 },
+    { name: 'blueLiquid', c: [30, 104, 204], rough: 0.04 },
+    { name: 'comb', c: [26, 26, 28], rough: 0.3 },
+    { name: 'ivory', c: [236, 226, 200], rough: 0.3 },
+    { name: 'lather', c: [248, 248, 246], rough: 0.6 },
+    { name: 'mug', c: [238, 236, 230], rough: 0.15 },
+    { name: 'badger', c: [64, 58, 52], rough: 0.8 },
+    { name: 'badgerTip', c: [226, 222, 212], rough: 0.8 },
+    { name: 'lamp', c: [255, 244, 222], rough: 0.3, emit: [255, 236, 200] },
+    { name: 'cord', c: [24, 24, 26], rough: 0.5 },
+    { name: 'clipperGold', c: [196, 160, 96], rough: 0.3, metal: 0.8 },
+    { name: 'clipperBlack', c: [30, 30, 32], rough: 0.25 },
+    { name: 'blade', c: [196, 200, 206], rough: 0.3, metal: 1 },
+    { name: 'red', c: [180, 30, 34], rough: 0.35 },
+    { name: 'navy', c: [34, 44, 80], rough: 0.4 },
+    { name: 'wood', c: [150, 100, 60], rough: 0.5 },
+    { name: 'bristle', c: [236, 220, 190], rough: 0.9 },
+    { name: 'hose', c: [32, 32, 34], rough: 0.4 },
+    { name: 'neckPad', c: [30, 30, 32], rough: 0.6 },
+    { name: 'white', c: [240, 240, 236], rough: 0.4 },
+    { name: 'sprayBlue', c: [60, 120, 190], rough: 0.3 },
+    { name: 'green', c: [40, 150, 70], rough: 0.35 },
+  ],
+};
+export function barberUV(region, u, v) {
+  const [x0, y0, x1, y1] = BARBER_ATLAS.regions[region];
+  const S = BARBER_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+// 第 i 种瓶子的格子：u 绕一圈（0.5 是正面）、v 从瓶盖顶（0）到瓶底（1）
+export function barberBottleUV(i, u, v) {
+  const A = BARBER_ATLAS, [x0, y0, x1, y1] = A.regions.bottles, S = A.size, m = 3;
+  const cw = (x1 - x0) / A.bottleCols, ch = (y1 - y0) / A.bottleRows, cx = x0 + (i % A.bottleCols) * cw, cy = y0 + Math.floor(i / A.bottleCols) * ch;
+  const cl = (t) => Math.max(0, Math.min(1, t));
+  return [(cx + m + cl(u) * (cw - 2 * m)) / S, (cy + m + cl(v) * (ch - 2 * m)) / S];
+}
+export function barberSwatch(name) {
+  const A = BARBER_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`理发店图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}

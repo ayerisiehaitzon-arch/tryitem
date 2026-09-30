@@ -840,6 +840,44 @@ Object.assign(MATERIALS, {
     tex: 'galvanized', tile: [1, 1.3], noOffset: true,
     roughness: 1, metallic: 1, normalScale: 0.5,
   },
+  // —— 理发店 ——
+  barber: {
+    label: '理发店（灯柱条纹 / 瓶子和标签 / 价目牌 / 脚踏板 / 毛巾 / 纯色零件，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；灯柱的转筒和镜前灯的灯泡自发光
+    tex: 'barber', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+    emissive: [1, 1, 1], emissiveStrength: 1.3,
+  },
+  leather_oxblood: {
+    label: '酒红色皮革（理发椅）',
+    // 和干邑色植鞣皮同一张贴图，染成酒红；罩一层清漆，像老式理发椅上擦得发亮的皮面
+    tex: 'leather', tile: [0.2, 0.2], color: tint([112, 24, 28], LEATHER_BASE),
+    roughness: 1, metallic: 0, normalScale: 0.7,
+    clearcoat: { factor: 0.35, roughness: 0.25 },
+  },
+  disinfectant: {
+    label: '梳子消毒液（半透明的蓝）',
+    // 和玻璃一样半透明混合、不参与 AO：泡在里面的梳子隔着液体看得见
+    color: srgb(18, 84, 200, 0.72), metallic: 0, roughness: 0.04,
+    alphaMode: 'BLEND', aoStrength: 0,
+  },
+  subway: {
+    label: '白色斜边地铁砖（深灰勾缝）',
+    // 周期 1 × 0.6m 整除 2m：墙模块按模块坐标贴，最下面一行从地面起算，砖缝在模块之间接得上
+    tex: 'subway', tile: [1, 0.6], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1,
+    clearcoat: { factor: 0.5, roughness: 0.06 },
+  },
+  tile_black: {
+    label: '黑色亮釉瓷砖（踢脚砖、腰线）',
+    color: srgb(22, 22, 24), metallic: 0, roughness: 0.14,
+    clearcoat: { factor: 0.6, roughness: 0.05 },
+  },
+  plaster_green: {
+    label: '墨绿色乳胶漆（理发店上半墙）',
+    tex: 'plaster', tile: [0.5, 0.5], noOffset: true, color: tint([46, 74, 60], PLASTER_BASE),
+    roughness: 1, metallic: 0, normalScale: 0.45,
+  },
 });
 
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
