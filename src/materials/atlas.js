@@ -1012,3 +1012,64 @@ export function sewSwatch(name) {
   const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
   return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
 }
+
+// —— 酒吧图集：十二种酒瓶的瓶身展开（每种一格 512²，u 绕一圈、v 沿轮廓从瓶底到瓶盖顶，见 bar/bottles.js）、
+//    柠檬 / 青柠的皮和切面、一块端面拼的小砧板、纯色格子 ——
+export const BAR_ATLAS = {
+  size: 2048,
+  regions: {
+    bottles: [0, 0, 2048, 1536],
+    lemonPeel: [0, 1536, 256, 1792], limePeel: [256, 1536, 512, 1792], lemonCut: [512, 1536, 768, 1792], limeCut: [768, 1536, 1024, 1792],
+    board: [1024, 1536, 1280, 1792],
+    swatch: [0, 1920, 2048, 2048],
+  },
+  bottleCols: 4, bottleRows: 3,
+  board: { w: 0.3, d: 0.2 },
+  cols: 16,
+  swatches: [
+    { name: 'brass', c: [214, 172, 96], rough: 0.28, metal: 1 },
+    { name: 'gold', c: [226, 186, 104], rough: 0.2, metal: 1 },
+    { name: 'steel', c: [212, 214, 218], rough: 0.25, metal: 1 },
+    { name: 'chrome', c: [228, 230, 234], rough: 0.1, metal: 1 },
+    { name: 'black', c: [24, 24, 26], rough: 0.5 },
+    { name: 'plinth', c: [30, 28, 26], rough: 0.8 },
+    { name: 'ice', c: [226, 238, 244], rough: 0.06 },
+    { name: 'whisky', c: [176, 96, 30], rough: 0.05 },
+    { name: 'negroni', c: [168, 26, 30], rough: 0.05 },
+    { name: 'martini', c: [226, 222, 188], rough: 0.05 },
+    { name: 'wine', c: [84, 12, 24], rough: 0.05 },
+    { name: 'olive', c: [112, 132, 44], rough: 0.4 },
+    { name: 'cherry', c: [150, 12, 24], rough: 0.2 },
+    { name: 'orangePeel', c: [232, 120, 30], rough: 0.5 },
+    { name: 'led', c: [255, 236, 206], rough: 0.3, emit: [255, 226, 180] },
+    { name: 'cork', c: [196, 156, 104], rough: 0.9 },
+    { name: 'bowlWhite', c: [240, 238, 232], rough: 0.15 },
+    { name: 'wineGlass', c: [30, 52, 34], rough: 0.08 },
+    { name: 'redFoil', c: [128, 22, 30], rough: 0.3, metal: 0.6 },
+    { name: 'goldFoil', c: [214, 180, 100], rough: 0.25, metal: 1 },
+    { name: 'blackFoil', c: [28, 28, 30], rough: 0.3, metal: 0.5 },
+    { name: 'handleBlack', c: [36, 34, 32], rough: 0.4 },
+    { name: 'pick', c: [214, 180, 100], rough: 0.3, metal: 1 },
+    { name: 'lemon', c: [238, 200, 60], rough: 0.5 },
+  ],
+};
+export function barUV(region, u, v) {
+  const [x0, y0, x1, y1] = BAR_ATLAS.regions[region];
+  const S = BAR_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+// 第 i 种酒瓶的格子：u 绕一圈（0.5 是正面）、v 从瓶盖顶（0）到瓶底（1）
+export function bottleUV(i, u, v) {
+  const A = BAR_ATLAS, [x0, y0, x1, y1] = A.regions.bottles, S = A.size, m = 3;
+  const cw = (x1 - x0) / A.bottleCols, ch = (y1 - y0) / A.bottleRows, cx = x0 + (i % A.bottleCols) * cw, cy = y0 + Math.floor(i / A.bottleCols) * ch;
+  const cl = (t) => Math.max(0, Math.min(1, t));
+  return [(cx + m + cl(u) * (cw - 2 * m)) / S, (cy + m + cl(v) * (ch - 2 * m)) / S];
+}
+export function barSwatch(name) {
+  const A = BAR_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`酒吧图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}

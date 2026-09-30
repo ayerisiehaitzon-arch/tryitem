@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-29T17:55:22.634Z",
+  "generated": "2026-09-30T03:09:51.489Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1795,6 +1795,48 @@
         "az": 30
       },
       "fileKB": 310
+    },
+    {
+      "id": "wall_brick",
+      "name": "红砖墙",
+      "nameEn": "Exposed Red Brick Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2600,
+        134
+      ],
+      "lods": [
+        {
+          "tris": 40,
+          "verts": 66,
+          "drawCalls": 3
+        },
+        {
+          "tris": 32,
+          "verts": 58,
+          "drawCalls": 3
+        },
+        {
+          "tris": 28,
+          "verts": 54,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "红砖（顺砖砌法、凹灰缝）",
+        "白色哑光烤漆"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 124,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 30
+      },
+      "fileKB": 332
     },
     {
       "id": "kitchen_base",
@@ -4483,6 +4525,186 @@
         "az": 24
       },
       "fileKB": 2150
+    },
+    {
+      "id": "bar_counter",
+      "name": "吧台",
+      "nameEn": "Reeded Walnut Bar Counter with Cocktails",
+      "category": "bar",
+      "mount": "floor",
+      "size": [
+        2130,
+        1221,
+        779
+      ],
+      "lods": [
+        {
+          "tris": 12374,
+          "verts": 9061,
+          "drawCalls": 4
+        },
+        {
+          "tris": 7444,
+          "verts": 5936,
+          "drawCalls": 4
+        },
+        {
+          "tris": 3324,
+          "verts": 3002,
+          "drawCalls": 4
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "酒吧（酒瓶和酒标 / 柠檬 / 砧板 / 纯色零件，图集）",
+        "白色大理石台面（抛光）",
+        "酒杯玻璃（比透明玻璃亮一点）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 321,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 24
+      },
+      "fileKB": 1952
+    },
+    {
+      "id": "back_bar",
+      "name": "背吧柜",
+      "nameEn": "Mirrored Back Bar with Bottles and Glassware",
+      "category": "bar",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        2240,
+        2450,
+        512
+      ],
+      "lods": [
+        {
+          "tris": 16152,
+          "verts": 11208,
+          "drawCalls": 6
+        },
+        {
+          "tris": 10952,
+          "verts": 8112,
+          "drawCalls": 6
+        },
+        {
+          "tris": 2616,
+          "verts": 2576,
+          "drawCalls": 5
+        }
+      ],
+      "materials": [
+        "酒吧（酒瓶和酒标 / 柠檬 / 砧板 / 纯色零件，图集）",
+        "墨绿色缎面烤漆（橱柜）",
+        "白色大理石台面（抛光）",
+        "银镜",
+        "胡桃木（哑光清漆）",
+        "酒杯玻璃（比透明玻璃亮一点）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 186,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 22
+      },
+      "fileKB": 2331
+    },
+    {
+      "id": "bar_cart",
+      "name": "酒水推车",
+      "nameEn": "Brass Bar Cart with Ice Bucket and Decanter",
+      "category": "bar",
+      "mount": "floor",
+      "size": [
+        866,
+        1110,
+        504
+      ],
+      "lods": [
+        {
+          "tris": 7360,
+          "verts": 5139,
+          "drawCalls": 3
+        },
+        {
+          "tris": 4812,
+          "verts": 3543,
+          "drawCalls": 3
+        },
+        {
+          "tris": 2672,
+          "verts": 2102,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "酒吧（酒瓶和酒标 / 柠檬 / 砧板 / 纯色零件，图集）",
+        "银镜",
+        "酒杯玻璃（比透明玻璃亮一点）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 469,
+      "lodDistances": null,
+      "view": {
+        "el": 18,
+        "az": 28
+      },
+      "fileKB": 1389
+    },
+    {
+      "id": "wine_rack",
+      "name": "酒架",
+      "nameEn": "Walnut Wine Rack with Bottles",
+      "category": "bar",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        522,
+        1374,
+        344
+      ],
+      "lods": [
+        {
+          "tris": 6484,
+          "verts": 4567,
+          "drawCalls": 3
+        },
+        {
+          "tris": 5104,
+          "verts": 3731,
+          "drawCalls": 3
+        },
+        {
+          "tris": 2038,
+          "verts": 1792,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "胡桃木（哑光清漆）",
+        "酒吧（酒瓶和酒标 / 柠檬 / 砧板 / 纯色零件，图集）",
+        "酒杯玻璃（比透明玻璃亮一点）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 308,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 26
+      },
+      "fileKB": 1564
     }
   ]
 }

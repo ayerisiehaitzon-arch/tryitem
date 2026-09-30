@@ -270,3 +270,23 @@ export const wallPaper = {
     skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
   },
 };
+
+// 红砖墙：和墙纸墙一样的做法 —— 抹灰墙体的正面换成一层 1mm 的“皮”，贴红砖（按模块坐标，周期 1 × 0.6m 整除 2m，
+// 最下面一层是整砖、从地面起砌），裸砖墙不做正面的踢脚线；背面还是白墙和踢脚线
+export const wallBrick = {
+  id: 'wall_brick',
+  name: '红砖墙',
+  nameEn: 'Exposed Red Brick Wall',
+  category: 'architecture',
+  aoDensity: 80,
+  shadow: { margin: 0.32, maxDist: 0.9, density: 60 },
+  view: { el: 16, az: 30 },
+  build(k) {
+    const { L, T } = WALL;
+    const skin = 0.001;
+    wallBox(k, { name: 'wall', x0: -L / 2, x1: L / 2, z1: T / 2 - skin, omit: ['ny', 'pz'], ends: ['nx', 'px'] });
+    wallBox(k, { name: 'brick', mat: 'brick', x0: -L / 2, x1: L / 2, z0: T / 2 - skin, omit: ['ny', 'nz'], ends: ['nx', 'px'] });
+    wallEnds(k);
+    skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
+  },
+};

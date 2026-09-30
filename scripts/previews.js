@@ -65,6 +65,9 @@
 //   docs/previews/sewing.jpg          缝纫间四件：缝纫机桌、人台、线轴架、裁剪台
 //   docs/previews/sewing-detail.jpg   缝纫间特写：缝纫机正面和压脚下的布、人台上的半身裙和软尺、四十轴线、裁剪台上的纸样
 //   docs/previews/sewing-room.jpg     全屋陈列里的缝纫间
+//   docs/previews/bar.jpg             酒吧四件：吧台、背吧柜、酒水推车、酒架
+//   docs/previews/bar-detail.jpg      酒吧特写：吧台上的两杯酒和调酒工具、背吧柜的一格酒、推车上的冰桶和醒酒瓶、酒架里的瓶口
+//   docs/previews/bar-room.jpg        全屋陈列里的酒吧
 //   docs/previews/room.jpg           全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -84,7 +87,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing'), barIds = byCat('bar');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -449,6 +452,23 @@ await grid(sewDetail, 2, [600, 450], path.join(out, 'sewing-detail.jpg'));
 const sewRoom = await shoot({ items: ['room'], views: ['&target=68.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'sewing-room.png' });
 await sharp(sewRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'sewing-room.jpg'));
 console.log('→ docs/previews/sewing-room.jpg');
+
+// —— 酒吧 ——
+const barHero = await shoot({ items: barIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(barHero, 4, [360, 270], path.join(out, 'bar.jpg'));
+
+// 酒吧特写：吧台上的 Negroni、马天尼、搅拌杯、雪克壶和砧板；背吧柜左边一格的酒、黄铜挡杆和灯带；
+// 推车上层的冰桶（插着香槟）、醒酒瓶和两杯加冰威士忌；酒架格子里露出来的瓶口和锡封
+const barDetail = [];
+barDetail.push(...await shoot({ items: ['bar_counter'], views: ['&target=0:0.95:0.1&d=1.3&el=22&az=10'], size: [800, 600], outDir: tmp, name: () => 'bd0.png' }));
+barDetail.push(...await shoot({ items: ['back_bar'], views: ['&target=-0.6:1.5:0.1&d=1.3&el=8&az=20'], size: [800, 600], outDir: tmp, name: () => 'bd1.png' }));
+barDetail.push(...await shoot({ items: ['bar_cart'], views: ['&target=0:0.9:0&d=0.9&el=25&az=20'], size: [800, 600], outDir: tmp, name: () => 'bd2.png' }));
+barDetail.push(...await shoot({ items: ['wine_rack'], views: ['&target=0:0.8:0.2&d=0.9&el=10&az=25'], size: [800, 600], outDir: tmp, name: () => 'bd3.png' }));
+await grid(barDetail, 2, [600, 450], path.join(out, 'bar-detail.jpg'));
+
+const barRoom = await shoot({ items: ['room'], views: ['&target=72.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'bar-room.png' });
+await sharp(barRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'bar-room.jpg'));
+console.log('→ docs/previews/bar-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

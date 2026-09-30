@@ -794,6 +794,26 @@ Object.assign(MATERIALS, {
     tex: 'wallpaper', tile: [0.5, 0.5], noOffset: true,
     roughness: 0.9, metallic: 0, normalScale: 0.3,
   },
+  // —— 酒吧 ——
+  bar: {
+    label: '酒吧（酒瓶和酒标 / 柠檬 / 砧板 / 纯色零件，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；酒瓶是不透明的，玻璃的光泽靠贴图里画的高光和低粗糙度；酒架上的灯条自发光
+    tex: 'bar', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+    emissive: [1, 1, 1], emissiveStrength: 1.3,
+  },
+  bar_glass: {
+    label: '酒杯玻璃（比透明玻璃亮一点）',
+    // 和透明玻璃一样半透明混合、不参与 AO；酒杯很小、高脚杯的柄很细，用透明玻璃几乎看不见，这里不透明度高一点、偏冷一点
+    color: srgb(232, 240, 244, 0.28), metallic: 0, roughness: 0.03,
+    alphaMode: 'BLEND', aoStrength: 0,
+  },
+  brick: {
+    label: '红砖（顺砖砌法、凹灰缝）',
+    // 周期 1 × 0.6m 整除 2m：墙模块按模块坐标贴，拼起来砖缝接得上
+    tex: 'brick', tile: [1, 0.6], noOffset: true,
+    roughness: 1, metallic: 0, normalScale: 1.2,
+  },
 });
 
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
