@@ -290,3 +290,30 @@ export const wallBrick = {
     skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
   },
 };
+
+// 瓦楞钢板墙：白墙前面钉一层镀锌瓦楞钢板 —— 真的起伏（每块模块 26 道波，周期 7.7cm 整除 2m，波谷贴着墙面、波峰凸出 1.8cm），
+// 贴图按模块坐标贴锌花；顶上一条镀锌的收边条盖住钢板的上沿，不做踢脚线；背面还是白墙和踢脚线
+export const wallCorrugated = {
+  id: 'wall_corrugated',
+  name: '瓦楞钢板墙',
+  nameEn: 'Corrugated Galvanized Steel Wall',
+  category: 'architecture',
+  aoDensity: 80,
+  shadow: { margin: 0.32, maxDist: 0.9, density: 60 },
+  view: { el: 16, az: 30 },
+  build(k) {
+    const { L, H, T } = WALL;
+    wallBox(k, { name: 'wall', x0: -L / 2, x1: L / 2, omit: ['ny', 'pz'], ends: ['nx', 'px'] });
+    wallEnds(k);
+    skirting(k, { name: 'skirtingB', x0: -L / 2, x1: L / 2, zFace: -T / 2, side: -1 });
+    // 波形：d(x) = 深 / 2 · (1 - cos)，一个周期 m 段；两头各多伸出 OVERLAP（和隔壁模块重叠）
+    const N = 26, P = L / N, depth = 0.018, m = k.q(8, 6, 4), n = N * m;
+    const pts = Array.from({ length: n + 1 }, (_, i) => {
+      const x = -L / 2 + (L * i) / n, d = (depth / 2) * (1 - Math.cos((2 * Math.PI * (x + L / 2)) / P));
+      return [x * (1 + (2 * OVERLAP) / L), -(T / 2 + d), { smooth: true }];
+    });
+    const sheet = k.extrude({ name: 'sheet', mat: 'galvanized', shape: shape(pts, { closed: false }), depth: H, axis: 'y', caps: [false, false], density: { side: 0.5 } });
+    sheet.T = sheet.P.map((p) => [p[0], p[1]]);
+    k.box({ name: 'flashing', mat: 'galvanized', size: [L + 2 * OVERLAP, 0.004, depth + 0.012], segs: 0, omit: ['ny'], xf: xf({ pos: [0, H + 0.002, T / 2 + (depth + 0.012) / 2 - 0.006] }) });
+  },
+};

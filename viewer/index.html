@@ -217,7 +217,7 @@
   </div>
   <p class="caption" id="caption"></p>
   <nav class="dock">
-    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具、墙地门窗、厨房、浴室、阳台、书房、玄关、儿童房、洗衣房、衣帽间、健身房、书房二、茶室、影音室、健身房二、游戏室、画室、排练室、木工房、宠物房、缝纫间与酒吧"></div>
+    <div class="items" id="items" role="toolbar" aria-label="家具、摆件、灯具、墙地门窗、厨房、浴室、阳台、书房、玄关、儿童房、洗衣房、衣帽间、健身房、书房二、茶室、影音室、健身房二、游戏室、画室、排练室、木工房、宠物房、缝纫间、酒吧与机械车间"></div>
     <div class="controls">
       <div class="seg" role="group" aria-label="显示">
         <button id="t-wire" aria-pressed="false">线框</button>
@@ -497,6 +497,7 @@ const WX = 58.06; // 排练室和木工房之间的隔墙（同样只有后半�
 const QX = 62.06; // 木工房和宠物房之间的隔墙（同样只有后半截）
 const VX = 66.06; // 宠物房和缝纫间之间的隔墙（同样只有后半截）
 const ZX = 70.06; // 缝纫间和酒吧之间的隔墙（同样只有后半截）
+const NX = 74.06; // 酒吧和机械车间之间的隔墙（同样只有后半截）
 const ROOM = [
   // —— 墙 ——
   ['wall_door', [-13, 0, WZ], 0],
@@ -543,6 +544,8 @@ const ROOM = [
   ['wall_window', [69, 0, WZ], 0],
   ['wall_brick', [71, 0, WZ], 0],
   ['wall_brick', [73, 0, WZ], 0],
+  ['wall_corrugated', [75, 0, WZ], 0],
+  ['wall_corrugated', [77, 0, WZ], 0],
   ['wall', [LX, 0, -1.12], Math.PI / 2],
   ['wall', [LX, 0, 0.88], Math.PI / 2],
   ['wall', [PX, 0, -1.0], Math.PI / 2],
@@ -561,6 +564,7 @@ const ROOM = [
   ['wall', [QX, 0, -1.0], Math.PI / 2],
   ['wall', [VX, 0, -1.0], Math.PI / 2],
   ['wall', [ZX, 0, -1.0], Math.PI / 2],
+  ['wall', [NX, 0, -1.0], Math.PI / 2],
   // —— 地面 ——
   ['floor_checker', [-13, 0, -1], 0],
   ['floor_checker', [-11, 0, -1], 0],
@@ -650,6 +654,10 @@ const ROOM = [
   ['floor_plank', [73, 0, -1], 0],
   ['floor_plank', [71, 0, 1], 0],
   ['floor_plank', [73, 0, 1], 0],
+  ['floor_diamond', [75, 0, -1], 0],
+  ['floor_diamond', [77, 0, -1], 0],
+  ['floor_diamond', [75, 0, 1], 0],
+  ['floor_diamond', [77, 0, 1], 0],
   ['floor_deck', [-1, 0, 3], 0],
   ['floor_deck', [1, 0, 3], 0],
   // —— 玄关 ——（鞋柜、穿衣镜的原点在墙根；衣帽架立在入户门左边，包和围巾朝着屋里；
@@ -812,6 +820,13 @@ const ROOM = [
   ['bar_stool', [71.55, 0, 0.32], 0.3],
   ['bar_stool', [72.3, 0, 0.32], -0.2],
   ['bar_cart', [70.55, 0, -0.95], Math.PI / 2],
+  // —— 机械车间 ——（瓦楞钢板墙前，车床靠墙摆在左边，旁边一台立柱砂轮机，右后角一台立式钻床稍微朝屋里转；
+  //    摩托车斜停在屋子中间、车头朝右前方，歪在侧撑上，右边（排气管和铭牌那一侧）朝着门口；隔墙边一台红色工具车）
+  ['metal_lathe', [75.12, 0, -2.0], 0],
+  ['bench_grinder', [76.38, 0, -1.72], 0],
+  ['drill_press', [77.45, 0, -1.52], -0.35],
+  ['motorcycle', [76.05, 0, 0.2], -0.32],
+  ['tool_chest', [74.45, 0, -0.35], Math.PI / 2],
   // —— 阳台 ——（栏杆 2m 一个模块：前面两块，左右各一块转 90°）
   ['railing', [-1, 0, 4], 0],
   ['railing', [1, 0, 4], 0],
@@ -1155,7 +1170,8 @@ $('items').innerHTML = `
   + group('木工房', mf.items.filter((s) => s.category === 'workshop'))
   + group('宠物房', mf.items.filter((s) => s.category === 'pets'))
   + group('缝纫间', mf.items.filter((s) => s.category === 'sewing'))
-  + group('酒吧', mf.items.filter((s) => s.category === 'bar'));
+  + group('酒吧', mf.items.filter((s) => s.category === 'bar'))
+  + group('机械车间', mf.items.filter((s) => s.category === 'machine'));
 for (const b of document.querySelectorAll('.item')) b.onclick = () => select(b.dataset.id);
 const wanted = params.get('item') || location.hash.slice(1);
 const first = wanted === 'room' || mf.items.find((s) => s.id === wanted) ? wanted : mf.items[0].id;

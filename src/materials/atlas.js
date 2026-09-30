@@ -1073,3 +1073,77 @@ export function barSwatch(name) {
   const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
   return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
 }
+
+// —— 机械车间图集（2048²）——
+// tire：轮胎一圈展开（u 绕一圈、v 沿截面从一侧胎唇到另一侧；中间是胎面花纹、两边胎侧上印字）；chain：链条一圈展开（98 节）；
+// collar：手轮刻度环（一圈 100 格）；scale：钢尺刻度；chip：一卷车屑的回火色（沿车屑从草黄到蓝）；
+// tank：油箱 / 尾罩的漆面（u 从前往后、v 绕截面一圈，0.5 是正上方：奶油色的中线条纹、金色勾线、两侧黑色的护膝胶垫）；
+// gauges：速度表、转速表；disc：打孔的刹车盘；engine：发动机边盖上的圆形铭牌；speedDial：车床调速旋钮的刻度盘；
+// drillChart：台钻的转速表；lathePlate：车床主轴箱上的螺纹 / 进给表；badge：油箱上的椭圆徽章；maker：机床铭牌；
+// warning：黄色警示贴；switches：开关面板；wheelGray / wheelWhite：两片砂轮的端面（中间一圈纸标）
+export const MECH_ATLAS = {
+  size: 2048,
+  regions: {
+    tire: [0, 0, 2048, 256],
+    chain: [0, 256, 2048, 288],
+    collar: [0, 288, 1024, 320], scale: [1024, 288, 1536, 320], chip: [1536, 288, 1792, 320],
+    tank: [0, 320, 512, 832],
+    gauges: [512, 320, 1024, 576],
+    disc: [1024, 320, 1280, 576], engine: [1280, 320, 1536, 576], speedDial: [1536, 320, 1792, 576], drillChart: [1792, 320, 2048, 576],
+    lathePlate: [512, 576, 1024, 832],
+    badge: [1024, 576, 1280, 704], maker: [1024, 704, 1280, 832],
+    warning: [1280, 576, 1536, 704], switches: [1280, 704, 1536, 832],
+    wheelGray: [1536, 576, 1792, 832], wheelWhite: [1792, 576, 2048, 832],
+    swatch: [0, 1920, 2048, 2048],
+  },
+  // 各块区域代表的物理尺寸（米）：宽 × 高
+  sizes: {
+    tire: [2.0, 0.235], chain: [1.548, 0.048], collar: [0.19, 0.012], scale: [0.1, 0.008], chip: [0.2, 0.004],
+    tank: [0.56, 0.8], gauges: [0.18, 0.09], disc: [0.31, 0.31], engine: [0.13, 0.13], speedDial: [0.08, 0.08], drillChart: [0.12, 0.12],
+    lathePlate: [0.2, 0.1], badge: [0.12, 0.06], maker: [0.12, 0.06], warning: [0.1, 0.05], switches: [0.1, 0.05],
+    wheelGray: [0.2, 0.2], wheelWhite: [0.2, 0.2],
+  },
+  cols: 16,
+  swatches: [
+    { name: 'chrome', c: [236, 238, 242], rough: 0.08, metal: 1 },
+    { name: 'steel', c: [190, 194, 200], rough: 0.32, metal: 1 },
+    { name: 'alu', c: [216, 218, 222], rough: 0.18, metal: 1 },
+    { name: 'castAlu', c: [168, 170, 174], rough: 0.5, metal: 1 },
+    { name: 'blackGloss', c: [16, 16, 18], rough: 0.22 },
+    { name: 'blackMatte', c: [26, 26, 28], rough: 0.65 },
+    { name: 'rubber', c: [28, 28, 30], rough: 0.9 },
+    { name: 'paint', c: [158, 20, 26], rough: 0.14 },
+    { name: 'cream', c: [236, 226, 196], rough: 0.3 },
+    { name: 'brass', c: [214, 172, 96], rough: 0.28, metal: 1 },
+    { name: 'copper', c: [200, 118, 76], rough: 0.3, metal: 1 },
+    { name: 'lens', c: [226, 232, 236], rough: 0.05 },
+    { name: 'tail', c: [176, 18, 22], rough: 0.12 },
+    { name: 'amber', c: [232, 140, 30], rough: 0.15 },
+    { name: 'knobRed', c: [186, 28, 28], rough: 0.3 },
+    { name: 'bakelite', c: [22, 20, 20], rough: 0.3 },
+    { name: 'yellow', c: [236, 192, 30], rough: 0.4 },
+    { name: 'lamp', c: [255, 244, 222], rough: 0.3, emit: [255, 236, 200] },
+    { name: 'oil', c: [44, 36, 26], rough: 0.25 },
+    { name: 'bright', c: [226, 230, 236], rough: 0.12, metal: 1 },
+    { name: 'millScale', c: [84, 86, 92], rough: 0.55, metal: 1 },
+    { name: 'gold', c: [226, 186, 104], rough: 0.22, metal: 1 },
+    { name: 'belt', c: [42, 40, 38], rough: 0.7 },
+    { name: 'green', c: [40, 150, 70], rough: 0.35 },
+    { name: 'machine', c: [92, 112, 100], rough: 0.45 },
+    { name: 'orange', c: [230, 110, 30], rough: 0.4 },
+    { name: 'blue', c: [40, 70, 150], rough: 0.4 },
+  ],
+};
+export function mechUV(region, u, v) {
+  const [x0, y0, x1, y1] = MECH_ATLAS.regions[region];
+  const S = MECH_ATLAS.size, m = 2;
+  return [(x0 + m + u * (x1 - x0 - 2 * m)) / S, (y0 + m + v * (y1 - y0 - 2 * m)) / S];
+}
+export function mechSwatch(name) {
+  const A = MECH_ATLAS;
+  const i = A.swatches.findIndex((s) => s.name === name);
+  if (i < 0) throw new Error(`机械图集里没有 ${name}`);
+  const [x0, y0, x1, y1] = A.regions.swatch;
+  const w = (x1 - x0) / A.cols, h = (y1 - y0) / Math.ceil(A.swatches.length / A.cols);
+  return [(x0 + ((i % A.cols) + 0.5) * w) / A.size, (y0 + (Math.floor(i / A.cols) + 0.5) * h) / A.size];
+}

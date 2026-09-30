@@ -31,3 +31,4 @@ export const floorPaint = floorModule({ id: 'floor_paint', name: '溅满颜料�
 export const floorCarpet = floorModule({ id: 'floor_carpet', name: '地毯拼块地面', nameEn: 'Carpet Tile Floor', mat: 'floor_carpet' });
 export const floorConcrete = floorModule({ id: 'floor_concrete', name: '水泥地面', nameEn: 'Sealed Concrete Floor', mat: 'floor_concrete' });
 export const floorCork = floorModule({ id: 'floor_cork', name: '软木地板', nameEn: 'Cork Tile Floor', mat: 'floor_cork' });
+export const floorDiamond = floorModule({ id: 'floor_diamond', name: '花纹钢板地面', nameEn: 'Aluminium Diamond Plate Floor', mat: 'floor_diamond' });

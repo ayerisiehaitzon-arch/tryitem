@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-30T03:09:51.489Z",
+  "generated": "2026-09-30T05:55:47.323Z",
   "items": [
     {
       "id": "dining_chair",
@@ -1837,6 +1837,88 @@
         "az": 30
       },
       "fileKB": 332
+    },
+    {
+      "id": "wall_corrugated",
+      "name": "瓦楞钢板墙",
+      "nameEn": "Corrugated Galvanized Steel Wall",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        2604,
+        158
+      ],
+      "lods": [
+        {
+          "tris": 462,
+          "verts": 500,
+          "drawCalls": 3
+        },
+        {
+          "tris": 350,
+          "verts": 388,
+          "drawCalls": 3
+        },
+        {
+          "tris": 242,
+          "verts": 280,
+          "drawCalls": 3
+        }
+      ],
+      "materials": [
+        "乳胶漆（暖白）",
+        "白色哑光烤漆",
+        "镀锌钢板（锌花）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 163,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 30
+      },
+      "fileKB": 425
+    },
+    {
+      "id": "floor_diamond",
+      "name": "花纹钢板地面",
+      "nameEn": "Aluminium Diamond Plate Floor",
+      "category": "architecture",
+      "mount": "floor",
+      "size": [
+        2002,
+        20,
+        2002
+      ],
+      "lods": [
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        },
+        {
+          "tris": 10,
+          "verts": 20,
+          "drawCalls": 1
+        }
+      ],
+      "materials": [
+        "铝花纹钢板地面（1m 一块，沉头螺丝）"
+      ],
+      "aoAtlas": 0,
+      "aoDensity": 0,
+      "lodDistances": null,
+      "view": {
+        "el": 50,
+        "az": 24
+      },
+      "fileKB": 772
     },
     {
       "id": "kitchen_base",
@@ -4705,6 +4787,175 @@
         "az": 26
       },
       "fileKB": 1564
+    },
+    {
+      "id": "motorcycle",
+      "name": "咖啡骑士摩托车",
+      "nameEn": "Café Racer Motorcycle",
+      "category": "machine",
+      "mount": "floor",
+      "size": [
+        2086,
+        1027,
+        708
+      ],
+      "lods": [
+        {
+          "tris": 18690,
+          "verts": 14568,
+          "drawCalls": 2
+        },
+        {
+          "tris": 12186,
+          "verts": 10228,
+          "drawCalls": 2
+        },
+        {
+          "tris": 5070,
+          "verts": 4530,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "机械（轮胎 / 链条 / 油箱漆面 / 仪表 / 铭牌 / 纯色零件，图集）",
+        "植鞣皮（干邑色）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 302,
+      "lodDistances": null,
+      "view": {
+        "el": 10,
+        "az": 30
+      },
+      "fileKB": 2789
+    },
+    {
+      "id": "metal_lathe",
+      "name": "车床",
+      "nameEn": "Metal Lathe on Cabinet Stand",
+      "category": "machine",
+      "mount": "floor",
+      "planes": [
+        "floor",
+        "wall"
+      ],
+      "size": [
+        1520,
+        1628,
+        563
+      ],
+      "lods": [
+        {
+          "tris": 8164,
+          "verts": 7186,
+          "drawCalls": 2
+        },
+        {
+          "tris": 5240,
+          "verts": 5036,
+          "drawCalls": 2
+        },
+        {
+          "tris": 2912,
+          "verts": 3154,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "机械（轮胎 / 链条 / 油箱漆面 / 仪表 / 铭牌 / 纯色零件，图集）",
+        "锤纹漆（机床灰绿）"
+      ],
+      "aoAtlas": 1024,
+      "aoDensity": 256,
+      "lodDistances": null,
+      "view": {
+        "el": 16,
+        "az": 20
+      },
+      "fileKB": 1742
+    },
+    {
+      "id": "drill_press",
+      "name": "立式钻床",
+      "nameEn": "Floor Drill Press with Vise",
+      "category": "machine",
+      "mount": "floor",
+      "size": [
+        460,
+        1715,
+        651
+      ],
+      "lods": [
+        {
+          "tris": 2986,
+          "verts": 2841,
+          "drawCalls": 2
+        },
+        {
+          "tris": 2048,
+          "verts": 2125,
+          "drawCalls": 2
+        },
+        {
+          "tris": 1464,
+          "verts": 1641,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "锤纹漆（机床灰绿）",
+        "机械（轮胎 / 链条 / 油箱漆面 / 仪表 / 铭牌 / 纯色零件，图集）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 243,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 30
+      },
+      "fileKB": 1011
+    },
+    {
+      "id": "bench_grinder",
+      "name": "砂轮机",
+      "nameEn": "Pedestal Bench Grinder",
+      "category": "machine",
+      "mount": "floor",
+      "size": [
+        380,
+        1065,
+        380
+      ],
+      "lods": [
+        {
+          "tris": 2448,
+          "verts": 2438,
+          "drawCalls": 3
+        },
+        {
+          "tris": 1764,
+          "verts": 1830,
+          "drawCalls": 3
+        },
+        {
+          "tris": 996,
+          "verts": 1132,
+          "drawCalls": 2
+        }
+      ],
+      "materials": [
+        "锤纹漆（机床灰绿）",
+        "机械（轮胎 / 链条 / 油箱漆面 / 仪表 / 铭牌 / 纯色零件，图集）",
+        "酒杯玻璃（比透明玻璃亮一点）"
+      ],
+      "aoAtlas": 512,
+      "aoDensity": 336,
+      "lodDistances": null,
+      "view": {
+        "el": 12,
+        "az": 26
+      },
+      "fileKB": 935
     }
   ]
 }

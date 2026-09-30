@@ -68,6 +68,9 @@
 //   docs/previews/bar.jpg             酒吧四件：吧台、背吧柜、酒水推车、酒架
 //   docs/previews/bar-detail.jpg      酒吧特写：吧台上的两杯酒和调酒工具、背吧柜的一格酒、推车上的冰桶和醒酒瓶、酒架里的瓶口
 //   docs/previews/bar-room.jpg        全屋陈列里的酒吧
+//   docs/previews/machine.jpg         机械车间四件：摩托车、车床、立式钻床、砂轮机
+//   docs/previews/machine-detail.jpg  机械车间特写：摩托车的发动机和排气管、仪表和油箱、车床的卡盘和刀尖上卷出来的车屑、砂轮机
+//   docs/previews/machine-room.jpg    全屋陈列里的机械车间
 //   docs/previews/room.jpg           全屋陈列（墙地门窗拼出来的“剖开的公寓”）
 //   docs/previews/living.jpg          客厅
 //   docs/previews/bedroom.jpg         卧室：护墙板墙上的一对壁灯
@@ -87,7 +90,7 @@ const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'tryitem-'));
 await fs.mkdir(out, { recursive: true });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'models', 'manifest.json'), 'utf8'));
 const byCat = (c) => manifest.items.filter((i) => (i.category ?? 'furniture') === c).map((i) => i.id);
-const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing'), barIds = byCat('bar');
+const ids = byCat('furniture'), decorIds = byCat('decor'), lampIds = byCat('lighting'), archIds = byCat('architecture'), kitchenIds = byCat('kitchen'), bathIds = byCat('bathroom'), balconyIds = byCat('balcony'), studyIds = byCat('study'), entryIds = byCat('entry'), kidsIds = byCat('kids'), laundryIds = byCat('laundry'), closetIds = byCat('closet'), gymIds = byCat('gym'), musicIds = byCat('music'), teaIds = byCat('tea'), theaterIds = byCat('theater'), gym2Ids = byCat('gym2'), gameIds = byCat('game'), studioIds = byCat('studio'), bandIds = byCat('band'), workshopIds = byCat('workshop'), petIds = byCat('pets'), sewIds = byCat('sewing'), barIds = byCat('bar'), machineIds = byCat('machine');
 
 async function grid(files, cols, cell, dest) {
   const rows = Math.ceil(files.length / cols);
@@ -469,6 +472,23 @@ await grid(barDetail, 2, [600, 450], path.join(out, 'bar-detail.jpg'));
 const barRoom = await shoot({ items: ['room'], views: ['&target=72.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'bar-room.png' });
 await sharp(barRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'bar-room.jpg'));
 console.log('→ docs/previews/bar-room.jpg');
+
+// —— 机械车间 ——
+const machineHero = await shoot({ items: machineIds, views: ['hero'], size: [800, 600], outDir: tmp, name: (id) => `h_${id}.png` });
+await grid(machineHero, 4, [360, 270], path.join(out, 'machine.jpg'));
+
+// 机械车间特写：摩托车右边的发动机（散热片、边盖上的圆铭牌、绕到前面的排气管）；上联板上的两块表和油箱的条纹；
+// 车床的三爪卡盘、四方刀架和刀尖上卷出来的回火色车屑；砂轮机的两片砂轮、托刀板和护目挡板
+const machineDetail = [];
+machineDetail.push(...await shoot({ items: ['motorcycle'], views: ['&target=0.05:0.45:0.1&d=1.0&el=12&az=10'], size: [800, 600], outDir: tmp, name: () => 'md0.png' }));
+machineDetail.push(...await shoot({ items: ['motorcycle'], views: ['&target=0.45:0.9:0&d=0.6&el=40&az=-100'], size: [800, 600], outDir: tmp, name: () => 'md1.png' }));
+machineDetail.push(...await shoot({ items: ['metal_lathe'], views: ['&target=-0.1:1.1:0.35&d=0.9&el=18&az=12'], size: [800, 600], outDir: tmp, name: () => 'md2.png' }));
+machineDetail.push(...await shoot({ items: ['bench_grinder'], views: ['&target=0:0.93:0.05&d=0.6&el=15&az=25'], size: [800, 600], outDir: tmp, name: () => 'md3.png' }));
+await grid(machineDetail, 2, [600, 450], path.join(out, 'machine-detail.jpg'));
+
+const machineRoom = await shoot({ items: ['room'], views: ['&target=76.0:0.9:-0.4&d=7.4&el=22&az=14'], size: [1600, 900], outDir: tmp, name: () => 'machine-room.png' });
+await sharp(machineRoom[0]).jpeg({ quality: 84, mozjpeg: true }).toFile(path.join(out, 'machine-room.jpg'));
+console.log('→ docs/previews/machine-room.jpg');
 
 // 全屋里的近景都用绝对距离 d（米）：全屋再加区域，这些图的取景不变。
 // 客厅、餐厅的相机在阳台上空 / 侧上方，往下看 —— 阳台不挡在画面下沿

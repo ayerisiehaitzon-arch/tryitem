@@ -814,6 +814,32 @@ Object.assign(MATERIALS, {
     tex: 'brick', tile: [1, 0.6], noOffset: true,
     roughness: 1, metallic: 0, normalScale: 1.2,
   },
+  // —— 机械车间 ——
+  mech: {
+    label: '机械（轮胎 / 链条 / 油箱漆面 / 仪表 / 铭牌 / 纯色零件，图集）',
+    // 图集：颜色、粗糙度、金属度都在贴图里；工作灯的灯泡自发光
+    tex: 'mech', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+    emissive: [1, 1, 1], emissiveStrength: 1.3,
+  },
+  hammertone: {
+    label: '锤纹漆（机床灰绿）',
+    // 周期 0.3m：一个个浅浅的锤击坑和闪光的金属片，颜色直接烘在贴图里
+    tex: 'hammertone', tile: [0.3, 0.3],
+    roughness: 1, metallic: 1, normalScale: 0.4,
+  },
+  floor_diamond: {
+    label: '铝花纹钢板地面（1m 一块，沉头螺丝）',
+    // 周期 1m 整除 2m：按模块坐标贴，板缝和螺丝在模块之间接得上
+    tex: 'diamond_plate', tile: [1, 1], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 1,
+  },
+  galvanized: {
+    label: '镀锌钢板（锌花）',
+    // 周期 1 × 1.3m，整除 2m 宽、2.6m 高的墙模块：按模块坐标贴
+    tex: 'galvanized', tile: [1, 1.3], noOffset: true,
+    roughness: 1, metallic: 1, normalScale: 0.5,
+  },
 });
 
 export const tileOf = (mat) => MATERIALS[mat]?.tile ?? [1, 1];
