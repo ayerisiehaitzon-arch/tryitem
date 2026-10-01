@@ -472,7 +472,9 @@ function updateCharacter({ face = true, hairNow = false } = {}) {
   setGeo(M.brows, CH.toWorld(CH.browMesh(r.head.F, r.head.sdf, p), r.head.O, r.head.g));
   updateGlasses(r);
   const cn = CH.cageNormals(body.topo.faces, r.target);
-  for (const [, g] of garments) setGeo(g.mesh, CH.evalGarment(g.gm, r.target, cn), { uv: true });
+  // 穿长裤时靴筒收进裤腿里
+  const ctx = { long: !!CH.GARMENTS[S.outfit.bottom]?.long };
+  for (const [, g] of garments) setGeo(g.mesh, CH.evalGarment(g.gm, r.target, cn, { ctx }), { uv: true });
   // 头发重算要 20~60ms：拖脸型滑杆时先只更新身体，停手 140ms 后再换头发
   if (face) {
     clearTimeout(hairTimer);
@@ -538,18 +540,30 @@ const FOCUS = {
   bust: { t: (H) => [0, H - 0.28, 0], span: () => [0.66, 0.62], el: 8 },
   face: { t: (H) => [0, H - 0.1, 0.02], span: () => [0.34, 0.3], el: 4 },
   side: { t: (H) => [0, H - 0.1, 0], span: () => [0.34, 0.34], el: 4, az: 70 },
+  waist: { t: (H) => [0, H * 0.6, 0], span: () => [0.8, 0.8], el: 6 },
+  mouth: { t: (H) => [0, H - 0.175, 0.06], span: () => [0.11, 0.11], el: 2 },
 };
-function visible() {
+// 屏幕上留给人物的那块区域（像素）：桌面是面板左边；手机是标题下面、底部抽屉（和抽屉上方那排按钮）上面
+function band() {
   const w = innerWidth, h = innerHeight;
+  if (document.body.classList.contains('bare')) return { x0: 0, x1: w, y0: 0, y1: h };
   const pr = document.querySelector('.panel').getBoundingClientRect();
-  if (document.body.classList.contains('bare')) return { fw: 1, fh: 1 };
-  if (w <= 760) return { fw: 1, fh: Math.max(0.3, pr.top / h) };
-  return { fw: Math.max(0.3, (pr.left - 16) / w), fh: 1 };
+  const hb = document.querySelector('.head').getBoundingClientRect().bottom + 8;
+  const ar = document.querySelector('.actions').getBoundingClientRect();
+  if (w <= 760) return { x0: 0, x1: w, y0: hb, y1: (ar.height > 0 ? ar.top : pr.top) - 8 };
+  // 桌面上标题和按钮在左边角上；只有留给人物的那一栏比较窄时才会和人重叠，这时也避开它们
+  const x1 = pr.left - 16, narrow = x1 < 720;
+  return { x0: 0, x1, y0: narrow ? hb : 0, y1: narrow && ar.height > 0 ? ar.top - 8 : h };
+}
+function visible() {
+  const b = band();
+  return { fw: Math.max(0.3, (b.x1 - b.x0) / innerWidth), fh: Math.max(0.25, (b.y1 - b.y0) / innerHeight) };
 }
 let camAnim = null;
 function focus(kind, instant = false) {
   const f = FOCUS[kind] ?? FOCUS.full;
-  const H = S.p.height / 100 + lift;
+  // 截图时可以固定取景高度（frameH，米），几张图里的人才能比身高
+  const H = SHOT && params.has('frameH') ? Number(params.get('frameH')) : S.p.height / 100 + lift;
   const t = new THREE.Vector3(...f.t(H));
   const dir = camera.position.clone().sub(controls.target);
   let az = Math.atan2(dir.x, dir.z) * 180 / Math.PI;
@@ -568,10 +582,9 @@ function resize() {
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   // 面板挡住的那部分：把画面中心挪到空出来的区域里
-  const pr = document.querySelector('.panel').getBoundingClientRect();
+  const b = band();
   if (document.body.classList.contains('bare')) camera.clearViewOffset();
-  else if (w <= 760) camera.setViewOffset(w, h, 0, pr.height * 0.5, w, h);
-  else camera.setViewOffset(w, h, (w - pr.left) * 0.5 + 6, 0, w, h);
+  else camera.setViewOffset(w, h, w / 2 - (b.x0 + b.x1) / 2, h / 2 - (b.y0 + b.y1) / 2, w, h);
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);

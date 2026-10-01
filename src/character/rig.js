@@ -80,9 +80,12 @@ export function skinWeights(topo) {
 // j：躯干、头、腿的关节旋转（度，绕世界坐标轴 x 前后、y 拧、z 侧摆；左边写了、右边没写的自动镜像）
 // ik：胳膊用两段式反向运动学 —— 只说手腕放在哪（身体坐标，B 是量体数据）、手肘朝哪边（pole），
 //     肩、肘的旋转自己解出来；twist 是手腕绕前臂再拧多少度（打招呼时掌心朝前）
-const mirrorIK = (o) => ({ hand: (B) => { const h = o.hand(B); return [-h[0], h[1], h[2]]; }, pole: [-o.pole[0], o.pole[1], o.pole[2]], twist: -(o.twist ?? 0) });
-const HIPS = { hand: (B) => [B.waistW + 0.035, B.waistY - 0.035, 0.03], pole: [1, 0.1, -0.55] };
-const POCKET = { hand: (B) => [B.hipW * 0.98, B.crotch + 0.07, 0.045], pole: [0.75, -0.1, -1] };
+//     dir / palm：手腕再弯一下，手指指向 dir、掌心朝 palm（胸腔坐标，左手；右手镜像）
+const flipX = (v) => v && [-v[0], v[1], v[2]];
+const mirrorIK = (o) => ({ ...o, hand: (B) => { const h = o.hand(B); return [-h[0], h[1], h[2]]; }, pole: flipX(o.pole), twist: -(o.twist ?? 0), dir: flipX(o.dir), palm: flipX(o.palm) });
+const HIPS = { hand: (B) => [B.waistW + 0.035, B.waistY - 0.04, -0.015], pole: [1, 0.1, -0.55], dir: [-0.3, -0.55, 0.78], palm: [-1, 0, 0.1] };
+// 插兜：手腕停在裤兜口（胯前外侧的表面上），手往下、往里斜着插进去 —— 手指藏在裤子下面，只露出手腕和手背
+const POCKET = { hand: (B) => [B.hipW * 0.81 - 0.011, B.crotch + 0.13, B.hipDF * 0.68 - 0.015], pole: [0.75, -0.1, -1], dir: [-0.35, -1, -0.34], palm: [-0.6, 0, -0.8] };
 export const POSES = {
   stand: { label: '站立', j: {} },
   relaxed: {
@@ -194,7 +197,23 @@ export function poseTransforms(rest, poseId, B = null, amount = 1) {
       const Rb = frameRot(nrm3(f0), on(n0, nrm3(f0)), f1, on(n1, f1));
       R[sh] = mm(Ra, Rc); P[sh] = S;
       R[el] = mm(Rb, Rc); P[el] = E;
-      R[wr] = spec.twist ? mm(axisAngle(f1, spec.twist * amount), R[el]) : R[el]; P[wr] = W;
+      let Rw = spec.twist ? mm(axisAngle(f1, spec.twist * amount), R[el]) : R[el];
+      // 手腕弯：手指转向 dir（胸腔坐标），再绕手的方向拧，让掌心尽量朝 palm
+      if (spec.dir) {
+        const want = nrm3(mv(Rc, spec.dir));
+        const ax = cross3(f1, want), sn = Math.hypot(...ax);
+        const ang = Math.min(Math.atan2(sn, dot3(f1, want)) / D2R, spec.maxBend ?? 80) * amount;
+        if (sn > 1e-6) Rw = mm(axisAngle(ax, ang), Rw);
+        if (spec.palm) {
+          const hd = nrm3(mv(Rw, sub3(rest[wr], rest[el])));
+          const on2 = (n) => nrm3(sub3(n, sc3(hd, dot3(n, hd))));
+          const sd = side === 'L' ? 1 : -1;
+          const p0 = on2(mv(Rw, [-sd, 0, 0])), p1 = on2(mv(Rc, spec.palm));
+          const tw = Math.atan2(dot3(cross3(p0, p1), hd), dot3(p0, p1)) / D2R;
+          Rw = mm(axisAngle(hd, tw * amount), Rw);
+        }
+      }
+      R[wr] = Rw; P[wr] = W;
     }
   }
   return { R, P, rest };
@@ -203,7 +222,7 @@ export function poseTransforms(rest, poseId, B = null, amount = 1) {
 // 量体数据里给反向运动学用的几个数
 export function bodyMarks(L) {
   const tor = (t) => L.crotch + t * (L.notch - L.crotch);
-  return { shoulderW: L.shoulderW, waistW: L.waistW, hipW: L.hipW, waistY: tor(0.43), chestY: tor(0.74), crotch: L.crotch, notch: L.notch, chin: L.chin, crown: L.crown };
+  return { shoulderW: L.shoulderW, waistW: L.waistW, hipW: L.hipW, hipDF: L.hipDF + 0.3 * (L.belly ?? 0), waistY: tor(0.43), chestY: tor(0.74), crotch: L.crotch, notch: L.notch, chin: L.chin, crown: L.crown };
 }
 
 // 线性混合蒙皮（控制点 / 目标点数组，就地改写成摆好姿势的位置）

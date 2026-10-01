@@ -118,7 +118,8 @@ export function cageColors(topo, look) {
       if (h > 6) continue;
       const v = H[r][j];
       if (v < 0) continue;
-      const k = (r <= 1 ? 0.8 : r <= 3 ? 1 : r === 5 ? (h <= 2 ? 0.9 : 0.4) : r === 6 ? (h <= 1 ? 0 : 0.15) : 0.6) * (h >= 5 ? 0.6 : 1);
+      // 上唇、下巴、两腮差不多一样浓（只有上唇重会像画上去的一撇小胡子），鼻翼旁边淡出去
+      const k = (r <= 1 ? 0.75 : r <= 4 ? 0.85 : r === 5 ? (h <= 2 ? 0.7 : 0.6) : r === 6 ? (h <= 1 ? 0 : 0.12) : 0.6) * (h >= 5 ? 0.7 : 1);
       shade(v, tone, stubble * k * 0.75);
     }
     topo.mouth[0].forEach((v, k) => shade(v, tone, stubble * (k >= 6 && k <= 10 ? 0.7 : 0.6)));

@@ -21,16 +21,35 @@ function smin(a, b, k) {
 const smax = (a, b, k) => -smin(-a, -b, k);
 
 function ell(x, y, z, rx, ry, rz) {
-  const k0 = Math.hypot(x / rx, y / ry, z / rz);
-  const k1 = Math.hypot(x / (rx * rx), y / (ry * ry), z / (rz * rz));
+  const ux = x / rx, uy = y / ry, uz = z / rz, vx = ux / rx, vy = uy / ry, vz = uz / rz;
+  const k0 = Math.sqrt(ux * ux + uy * uy + uz * uz);
+  const k1 = Math.sqrt(vx * vx + vy * vy + vz * vz);
   return k1 < 1e-9 ? -Math.min(rx, ry, rz) : (k0 * (k0 - 1)) / k1;
+}
+// “方圆”的形体：横截面（x–z）和竖直方向都用 2 范数和 4 范数的加权和代替超椭圆（w = 1 是椭圆，w 越小越方；
+// w = 0.45 ≈ 指数 2.7，0.52 ≈ 2.6，0.65 ≈ 2.4 —— 在坐标轴上和对角线上都一样）。只用乘法和开方，比 Math.pow 快得多。
+// 距离取一阶近似 f/|∇f|
+function sell(x, y, z, rx, ry, rz, wn, wm) {
+  const ax = Math.abs(x) / rx, az = Math.abs(z) / rz, ay = Math.abs(y) / ry;
+  const ax2 = ax * ax, az2 = az * az;
+  const l2 = Math.sqrt(ax2 + az2), l4 = Math.sqrt(Math.sqrt(ax2 * ax2 + az2 * az2));
+  const g = wn * l2 + (1 - wn) * l4;
+  const g2 = g * g, ay2 = ay * ay;
+  const m2 = Math.sqrt(g2 + ay2), m4 = Math.sqrt(Math.sqrt(g2 * g2 + ay2 * ay2));
+  const f = wm * m2 + (1 - wm) * m4;
+  if (l2 < 1e-9 || m2 < 1e-9) return (f - 1) * Math.min(rx, ry, rz);
+  const kg = (1 - wn) / (l4 * l4 * l4), kf = (1 - wm) / (m4 * m4 * m4);
+  const fg = wm * g / m2 + kf * g2 * g, fy = wm * ay / m2 + kf * ay2 * ay;
+  const dx = fg * (wn * ax / l2 + kg * ax2 * ax) / rx, dz = fg * (wn * az / l2 + kg * az2 * az) / rz, dy = fy / ry;
+  return (f - 1) / Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 // 两端半径不同的胶囊
 function cone(px, py, pz, a, b, ra, rb) {
   const bx = b[0] - a[0], by = b[1] - a[1], bz = b[2] - a[2];
   const qx = px - a[0], qy = py - a[1], qz = pz - a[2];
   const h = clamp((qx * bx + qy * by + qz * bz) / (bx * bx + by * by + bz * bz), 0, 1);
-  return Math.hypot(qx - bx * h, qy - by * h, qz - bz * h) - lerp(ra, rb, h);
+  const dx = qx - bx * h, dy = qy - by * h, dz = qz - bz * h;
+  return Math.sqrt(dx * dx + dy * dy + dz * dz) - lerp(ra, rb, h);
 }
 
 // —— 由参数得到五官的位置、尺寸（头部局部坐标，未缩放）——
@@ -48,8 +67,8 @@ export function headFeatures(p) {
     R,
     // 睑裂的半宽（方位角，弧度）、上下睑的高度（仰角）、外眼角上挑
     w: 1.22 + 0.1 * p.eyeSize + 0.05 * s,
-    hu: 0.52 + 0.07 * p.eyeSize + 0.1 * p.eyeOpen + 0.05 * s,
-    hl: 0.4 + 0.05 * p.eyeSize + 0.06 * p.eyeOpen + 0.02 * s,
+    hu: 0.47 + 0.07 * p.eyeSize + 0.1 * p.eyeOpen + 0.05 * s,
+    hl: 0.46 + 0.05 * p.eyeSize + 0.06 * p.eyeOpen + 0.02 * s,
     tilt: 0.09 * p.eyeTilt + 0.03 * s,
     lid: p.lid,
   };
@@ -59,23 +78,23 @@ export function headFeatures(p) {
     bridgeY: 0.013,
     tipY: -0.031 * nl * fl,
     baseY: -0.043 * nl * fl,
-    rootH: 0.0045 + 0.004 * p.noseBridge,                         // 鼻根（两眼之间）的高度
-    tipH: (0.0175 + 0.0035 * p.noseBridge + 0.002 * p.noseSize) * (1 - 0.14 * s), // 鼻尖处鼻梁的高度
-    ball: 0.0042 * (1 + 0.35 * p.noseSize),                        // 鼻头
-    tipR: 0.0078 * (1 + 0.14 * p.noseSize) * (1 - 0.06 * s),
-    alaX: 0.0138 * (1 + 0.16 * p.noseWidth) * (1 - 0.1 * s),
-    alaH: 0.0105 * (1 + 0.1 * p.noseWidth),
+    rootH: 0.003 + 0.004 * p.noseBridge,                          // 鼻根（两眼之间）的高度
+    tipH: (0.0145 + 0.0035 * p.noseBridge + 0.002 * p.noseSize) * (1 - 0.14 * s), // 鼻尖处鼻梁的高度
+    ball: 0.0047 * (1 + 0.35 * p.noseSize),                        // 鼻头
+    tipR: 0.0068 * (1 + 0.14 * p.noseSize) * (1 - 0.06 * s),
+    alaX: 0.0108 * (1 + 0.18 * p.noseWidth) * (1 - 0.1 * s),
+    alaH: 0.0062 * (1 + 0.12 * p.noseWidth),
     up: 0.003 * p.noseTip,
   };
   // 嘴
-  const chinY = -0.105 * fl * (1 + 0.06 * p.chin) * (1 - 0.035 * s);
+  const chinY = -0.11 * fl * (1 + 0.06 * p.chin) * (1 - 0.035 * s);
   F.mouth = {
     // 嘴在鼻底和下巴之间按比例放（鼻子、下巴怎么变，嘴都不会跑到它们外面去）
     y: lerp(F.nose.baseY, chinY, 0.36 - 0.04 * p.mouthHeight),
     w: 0.0242 * (1 + 0.13 * p.mouthWidth) * (1 - 0.03 * s),
-    up: 0.0084 * (1 + 0.28 * p.lips + 0.12 * s) * (1 + 0.22 * p.upperLip),
-    lo: 0.0102 * (1 + 0.3 * p.lips + 0.12 * s) * (1 - 0.18 * p.upperLip),
-    full: 0.0042 * (1 + 0.45 * p.lips + 0.25 * s),
+    up: 0.0092 * (1 + 0.28 * p.lips + 0.12 * s) * (1 + 0.22 * p.upperLip),
+    lo: 0.0108 * (1 + 0.3 * p.lips + 0.12 * s) * (1 - 0.18 * p.upperLip),
+    full: 0.0046 * (1 + 0.45 * p.lips + 0.25 * s),
     corner: 0.0025 * p.mouthCorner,
   };
   // 下巴、下颌
@@ -109,17 +128,18 @@ export function headSDF(F, neckR) {
   const bump = (c, s, a, m = true) => { if (a) B.push({ c, k: s.map((v) => 1 / (2 * v * v)), a, m }); };
   const ridge = F.brow.ridge;
   bump([0.029, 0.025, 0.08], [0.019, 0.0075, 0.03], 0.0034 * ridge);              // 眉弓
-  bump([0, 0.02, 0.085], [0.011, 0.008, 0.03], 0.0018 * ridge, false);            // 眉间
+  bump([0, 0.02, 0.085], [0.012, 0.008, 0.03], 0.003 * ridge, false);             // 眉间
   bump([E.x, E.y + 0.001, 0.085], [0.0155, 0.0115, 0.03], -0.0095);               // 眼窝
   bump([E.x + 0.01, E.y - 0.014, 0.08], [0.014, 0.006, 0.03], 0.0016);            // 下眼眶
   bump([0.05 * fw, -0.014, 0.06], [0.015, 0.011, 0.03], 0.0046 * F.cheekbone);    // 颧骨
   bump([0.033, -0.03, 0.075], [0.014, 0.014, 0.03], 0.003 * F.cheek);              // 苹果肌
   bump([0.052 * fw, -0.052, 0.05], [0.012, 0.014, 0.03], -0.0034 * (1.6 - F.cheek)); // 颧下的凹
   bump([0.069, 0.03, 0.03], [0.01, 0.02, 0.025], -0.0026);                         // 太阳穴
-  bump([0, M.y + 0.003, 0.08], [0.022, 0.016, 0.03], 0.003, false);                // 口鼻部
-  bump([0, C.y + 0.017, 0.078], [0.013 * (C.w / 0.019), 0.011, 0.03], 0.0095 + 0.006 * (C.z - 0.082) / 0.009, false); // 下巴
-  bump([0, 0.056, 0.075], [0.034, 0.02, 0.03], 0.0032 * F.forehead, false);       // 额头
-  bump([0, M.y - M.lo - 0.007, 0.085], [0.012, 0.0045, 0.03], -0.0022, false);    // 颏唇沟
+  bump([0, M.y + 0.013, 0.08], [0.026, 0.017, 0.03], 0.0045, false);               // 口鼻部（牙弓）：鼻翼下面那块往前，朝前受光
+  bump([0, C.y + 0.017, 0.078], [0.013 * (C.w / 0.019), 0.011, 0.03], 0.012 + 0.006 * (C.z - 0.082) / 0.009, false);  // 下巴
+  bump([0, 0.058, 0.075], [0.04, 0.024, 0.03], 0.0035 * F.forehead, false);       // 额头
+  bump([0, 0.008, 0.09], [0.011, 0.008, 0.03], -0.005, false);                     // 鼻根的凹（眉间和鼻梁之间）
+  bump([0, M.y - M.lo - 0.007, 0.085], [0.014, 0.0055, 0.03], -0.0034, false);    // 颏唇沟
   bump([J.x, J.y + 0.004, J.z + 0.02], [0.008, 0.012, 0.025], 0.0032 * F.jawK);   // 下颌角
   bump([0, -0.006, -0.1], [0.04, 0.03, 0.025], 0.0055, false);                     // 后脑勺
   // 鼻子：鼻梁（越往下越高、越宽）+ 鼻头 + 两侧鼻翼
@@ -127,23 +147,28 @@ export function headSDF(F, neckR) {
     if (z < 0.05 || y > N.bridgeY + 0.02 || y < N.baseY - 0.012) return 0;
     const t = clamp((N.bridgeY - y) / (N.bridgeY - N.tipY), 0, 1);
     const win = sstep(N.bridgeY + 0.012, N.bridgeY - 0.002, y) * sstep(N.baseY - 0.003, N.tipY - 0.004, y);
-    const w = lerp(0.0062, 0.0088, t);
+    const w = lerp(0.005, 0.0066, t);
     let h = lerp(N.rootH, N.tipH, t ** 1.15) * Math.exp(-(x * x) / (2 * w * w)) * win;
     const dy = y - N.tipY - N.up;
     h += N.ball * Math.exp(-(x * x) / (2 * N.tipR ** 2) - (dy * dy) / (2 * (N.tipR * 0.9) ** 2));
     const ay = y - N.baseY - 0.0045, ax2 = ax - N.alaX;
-    h += N.alaH * Math.exp(-(ax2 * ax2) / (2 * 0.0052 ** 2) - (ay * ay) / (2 * 0.0056 ** 2));
+    // 鼻翼：上面缓、下面陡（鼻底是窄窄一条阴影，而不是一大片朝下的斜面）
+    const sy = ay > 0 ? 0.0058 : 0.0034;
+    h += N.alaH * Math.exp(-(ax2 * ax2) / (2 * 0.0046 ** 2) - (ay * ay) / (2 * sy * sy));
     return h;
   };
   return (x, y, z) => {
     const ax = Math.abs(x);
-    let d = ell(x, y - 0.021, z + 0.014, 0.0768 * Math.sqrt(fw), 0.095 * F.forehead, 0.1);
+    // 颅骨：竖直方向略“方”的超椭圆 —— 头顶比椭球宽，额头更直
+    let d = sell(x, y - 0.021, z + 0.014, 0.0768 * Math.sqrt(fw), 0.095 * F.forehead, 0.1, 1, 0.65);
     d = smin(d, ell(x, y + 0.018, z - 0.013, 0.067 * fw, 0.066, 0.075), 0.03);
     // 下脸：从下颌角往下巴收窄（宽度按高度插值），下巴才是尖的 / 方的，而不是一个圆盘
+    // 截面是超椭圆：下巴前面一整片是平的，两腮沿下颌往后收，而不是一个往前伸的尖嘴
     {
-      const t = sstep(J.y + 0.03, C.y + 0.002, y); // 光滑的过渡（夹断的线性插值会在下颌那一圈留下一道棱）
-      const k = lerp(1, (C.w * 1.25 + 0.007) / (J.x + 0.008), t);
-      d = smin(d, ell(x / k, y + 0.062 * fl, z - 0.014, J.x + 0.008, 0.057 * fl, 0.07) * k, 0.04);
+      const t = sstep(J.y + 0.03, C.y - 0.004, y); // 光滑的过渡（夹断的线性插值会在下颌那一圈留下一道棱）
+      const rx = lerp(J.x + 0.008, C.w * 1.1 + 0.009, t);
+      const bot = C.y - 0.014, cy = (bot - 0.025) / 2, ry = (-0.025 - bot) / 2;
+      d = smin(d, sell(x, y - cy, z - 0.014, rx, ry, 0.07, 0.45, 0.52), 0.04);
     }
     d = smin(d, cone(x, y, z, [0, -0.04, -0.03], [0, -0.26, -0.02], neckR, neckR * 1.04), 0.03);
     let h = nose(ax, x, y, z);
@@ -235,8 +260,10 @@ function frontRows(F) {
   // 下唇下面那一行（嘴洞的下沿）和下巴最前面那一行：始终按比例夹在嘴和下巴底之间
   const y3 = Math.max(M.y - M.lo - 0.0072, C.y + 0.017), y2 = Math.max(lerp(C.y, y3, 0.42), C.y + 0.0095);
   const y2s = Math.max(J.y - 0.002, Math.min(J.y - 0.0005, M.y - 0.012));
-  rows[2] = [y2, [0.0135, y2 + 0.0015], [0.028, lerp(y2, y3, 0.3) + 0.002], [0.042 * fw, Math.min(lerp(C.y, J.y, 0.5) + 0.004, y3 - 0.006)], [0, y2s]];
-  rows[3] = [y3, [0.011, y3 + 0.0004], [M.w + 0.005, Math.max(M.y - M.lo * 0.75 - 0.005, y3 + 0.002)], [0.046 * fw, Math.max(M.y - 0.012, y3 + 0.001)], [0, Math.max(M.y - 0.006, y2s + 0.004)]];
+  // 第 3 列在下颌的侧面：H2 取 H3 和下颌下缘（H1，约在下巴和下颌角连线上）中间，两行不会挤到同一高度
+  const y3c3 = Math.max(M.y - 0.012, y3 + 0.001);
+  rows[2] = [y2, [0.0135, y2 + 0.0015], [0.028, lerp(y2, y3, 0.3) + 0.002], [0.042 * fw, Math.min(y3c3 - 0.0068, lerp(C.y, J.y, 0.5) + 0.009)], [0, y2s]];
+  rows[3] = [y3, [0.011, y3 + 0.0004], [M.w + 0.005, Math.max(M.y - M.lo * 0.75 - 0.005, y3 + 0.002)], [0.046 * fw, y3c3], [0, Math.max(M.y - 0.006, y2s + 0.004)]];
   rows[4] = [null, [null, null], [M.w + 0.0065, M.y + M.corner], [0.048 * fw, M.y], [0, M.y + 0.005]];
   // 上唇上面那一行（嘴洞的上沿）不能高过鼻底
   const y5 = Math.min(M.y + M.up + 0.0072, N.baseY - 0.003);
@@ -411,7 +438,7 @@ function placeMouth(topo, F, sdf, set) {
   const specs = [
     { yk: 1.0, zk: 0.0012, xk: 1.0 },        // 唇线
     { yk: 0.52, zk: M.full, xk: 0.96 },      // 唇峰
-    { yk: 0.0, zk: 0.0012, xk: 0.9 },        // 唇内缘
+    { yk: 0.0, zk: M.full * 0.55, xk: 0.9 }, // 唇内缘：上下唇在前面合上（不往嘴里卷，侧面看不会像张着嘴）
   ];
   specs.forEach((sp, i) => {
     const ring = rings[i + 1];
@@ -432,7 +459,6 @@ function placeMouth(topo, F, sdf, set) {
         y = M.y + h + cornerUp * Math.abs(X[k]) * 0.6;
         z = zAt(x, M.y + M.up * 0.5) + sp.zk * (1 - 0.35 * Math.abs(X[k]) ** 2);
       }
-      if (i === 2) z -= 0.0012;
       set(ring[k], [x, y, z]);
     }
   });

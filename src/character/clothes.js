@@ -35,13 +35,13 @@ export const GARMENTS = {
     fold: 0.012, rough: 0.9, sheen: 0.6, rib: true,
   },
   jeans: {
-    label: '牛仔裤', slot: 'bottom', layer: 1,
+    label: '牛仔裤', slot: 'bottom', layer: 1, long: true,
     select: (t) => (t.part === 'torso' && t.r <= 2) || (t.part === 'leg' && t.r <= 9),
     ease: (q) => 0.0045 + 0.005 * q.legEnd + 0.001 * q.waist,
     fold: 0.008, rough: 0.85, sheen: 0.15,
   },
   chinos: {
-    label: '休闲裤', slot: 'bottom', layer: 1,
+    label: '休闲裤', slot: 'bottom', layer: 1, long: true,
     select: (t) => (t.part === 'torso' && t.r <= 2) || (t.part === 'leg' && t.r <= 9),
     ease: (q) => 0.0065 + 0.007 * q.legEnd + 0.001 * q.waist,
     fold: 0.008, rough: 0.8, sheen: 0.25,
@@ -69,7 +69,8 @@ export const GARMENTS = {
   boots: {
     label: '短靴', slot: 'shoes', layer: 1, sole: 0.03, heel: 0.012,
     select: (t) => t.part === 'foot' || (t.part === 'leg' && t.r >= 7),
-    ease: (q) => 0.006 + 0.004 * q.legEnd,
+    // 穿长裤的时候裤腿罩在靴筒外面：脚踝以上的靴筒收进裤腿里
+    ease: (q, ctx) => (ctx?.long && !q.foot ? 0.0032 + 0.0007 * Math.max(0, q.ring - 7) : 0.006 + 0.004 * q.legEnd),
     fold: 0.006, rough: 0.5, sheen: 0,
   },
 };
@@ -138,7 +139,7 @@ export function buildGarment(body, id, specIn = null) {
 
 // 一个身体点的位置特征（0 … 1）
 function quality(topo, v) {
-  const q = { hem: 0, sleeveEnd: 0, legEnd: 0, waist: 0, low: 0 };
+  const q = { hem: 0, sleeveEnd: 0, legEnd: 0, waist: 0, low: 0, ring: -1, foot: 0 };
   const T = topo.T;
   if (T[1].includes(v)) q.hem = 1; else if (T[2].includes(v)) q.hem = 0.35;
   if (T[0].includes(v) || T[1].includes(v)) q.waist = 1;
@@ -150,8 +151,9 @@ function quality(topo, v) {
   }
   for (const l of topo.legs) {
     const i = l.L.findIndex((r) => r.includes(v));
-    if (i >= 0) q.legEnd = Math.max(0, (i - 3) / 7);
-    if (l.F.some((r) => r.includes(v))) q.legEnd = 1;
+    if (i >= 0) { q.legEnd = Math.max(0, (i - 3) / 7); q.ring = i; }
+    if (l.F.some((r) => r.includes(v))) { q.legEnd = 1; if (i < 0) q.foot = 1; }
+    if (i < 0 && l.toe.some((r) => r.includes(v))) q.foot = 1;
   }
   return q;
 }

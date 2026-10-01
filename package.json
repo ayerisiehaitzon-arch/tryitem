@@ -9,6 +9,7 @@
     "serve": "node scripts/serve.js",
     "shots": "node scripts/shots.js",
     "previews": "node scripts/previews.js",
+    "creator-previews": "node scripts/creator-previews.js",
     "inspect": "node scripts/inspect.js"
   },
   "license": "MIT",

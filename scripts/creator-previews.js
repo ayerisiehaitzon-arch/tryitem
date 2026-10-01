@@ -45,19 +45,20 @@ async function shoot(list, size) {
   return files;
 }
 
-// 拼图：cols 列，每格 w × h，格子之间留 gap
+// 拼图：cols 列，每格 w × h，格子之间留 gap；有标题时每格上面多一条 40px 的标题栏（不压在人身上）
 async function grid(files, cols, w, h, file, { gap = 0, bg = '#e3e2dd', labels = null } = {}) {
   const rows = Math.ceil(files.length / cols);
-  const W = cols * w + (cols - 1) * gap, H = rows * h + (rows - 1) * gap;
+  const lh = labels ? 40 : 0, th = h + lh;
+  const W = cols * w + (cols - 1) * gap, H = rows * th + (rows - 1) * gap;
   const parts = await Promise.all(files.map(async (f, i) => ({
     input: await sharp(f).resize(w, h, { fit: 'cover' }).toBuffer(),
-    left: (i % cols) * (w + gap), top: Math.floor(i / cols) * (h + gap),
+    left: (i % cols) * (w + gap), top: Math.floor(i / cols) * (th + gap) + lh,
   })));
   if (labels) {
     labels.forEach((t, i) => {
       if (!t) return;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="40"><text x="16" y="28" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="20" fill="#3a3d40">${t}</text></svg>`;
-      parts.push({ input: Buffer.from(svg), left: (i % cols) * (w + gap), top: Math.floor(i / cols) * (h + gap) });
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="40"><text x="16" y="30" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="20" fill="#3a3d40">${t}</text></svg>`;
+      parts.push({ input: Buffer.from(svg), left: (i % cols) * (w + gap), top: Math.floor(i / cols) * (th + gap) });
     });
   }
   await sharp({ create: { width: W, height: H, channels: 3, background: bg } }).composite(parts).jpeg({ quality: 86, mozjpeg: true }).toFile(file);
@@ -76,7 +77,8 @@ try {
       .jpeg({ quality: 86, mozjpeg: true }).toFile(path.join(out, 'creator.jpg'));
   }
   const presets = [0, 1, 2, 3, 4, 5, 6, 7];
-  const full = await shoot(presets.map((i) => [`full${i}`, `preset=${i}&bare=1&az=20`]), [420, 720]);
+  // 全身图按同一个取景高度拍，高矮能直接比
+  const full = await shoot(presets.map((i) => [`full${i}`, `preset=${i}&bare=1&az=20&frameH=1.86`]), [420, 720]);
   await grid(full, 8, 300, 520, path.join(out, 'creator-presets.jpg'));
   const faces = await shoot(presets.map((i) => [`face${i}`, `preset=${i}&bare=1&cam=face&az=18`]), [520, 560]);
   await grid(faces, 4, 360, 388, path.join(out, 'creator-faces.jpg'), { gap: 4 });
@@ -85,12 +87,12 @@ try {
   await grid(ps, 6, 300, 520, path.join(out, 'creator-poses.jpg'), { labels: ['站立', '稍息', '叉腰', '插兜', '打招呼', '托腮'] });
   // 同一个人，拉不同的滑杆
   const sl = [
-    ['s-base', 'preset=0&bare=1&az=20'],
-    ['s-fem', 'preset=0&bare=1&az=20&sex=1'],
-    ['s-fat', 'preset=0&bare=1&az=20&weight=1'],
-    ['s-thin', 'preset=0&bare=1&az=20&weight=-1'],
-    ['s-mus', 'preset=0&bare=1&az=20&muscle=1&shoulders=1'],
-    ['s-tall', 'preset=0&bare=1&az=20&height=196&legs=1'],
+    ['s-base', 'preset=0&bare=1&az=20&frameH=1.98'],
+    ['s-fem', 'preset=0&bare=1&az=20&frameH=1.98&sex=1'],
+    ['s-fat', 'preset=0&bare=1&az=20&frameH=1.98&weight=1'],
+    ['s-thin', 'preset=0&bare=1&az=20&frameH=1.98&weight=-1'],
+    ['s-mus', 'preset=0&bare=1&az=20&frameH=1.98&muscle=1&shoulders=1'],
+    ['s-tall', 'preset=0&bare=1&az=20&frameH=1.98&height=196&legs=1'],
   ];
   const sls = await shoot(sl, [420, 720]);
   await grid(sls, 6, 300, 520, path.join(out, 'creator-sliders.jpg'), { labels: ['默认', '性别特征 → 女性', '胖瘦 → 胖', '胖瘦 → 瘦', '肌肉、肩宽', '身高 196、腿长'] });
