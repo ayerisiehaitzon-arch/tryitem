@@ -12,7 +12,7 @@ import zlib from 'node:zlib';
 import { parseObj, parseTarget, parseMhclo, parseMhmat, parseThreeJson } from './mhparse.mjs';
 import { flowMap, removeLogo, uvCoverage, edgePad } from './texfx.mjs';
 import { hairAO } from './hairao.mjs';
-import { islands, classify, partMask } from './parts.mjs';
+import { islands, classify, classifyShoe, partMask } from './parts.mjs';
 const require = createRequire(import.meta.url);
 const sharp = require('sharp');
 
@@ -439,8 +439,9 @@ const LOGOS = {
   female_casualsuit01: [{ box: [1455, 300, 1770, 645], from: [-330, 0] }],
   female_casualsuit02: [{ box: [1455, 300, 1770, 645], from: [-330, 0] }],
 };
-// 配色：每套分几个部位（按裁片在身上的高度分上衣 / 下装；西装、帽子整件一个部位），每个部位可以换颜色。
-// 种类决定权重图的宽严：牛仔布洗白的地方更亮、更灰，放宽才能一起换色
+// 配色：每套分几个部位（衣服按裁片在身上的高度分上衣 / 下装，西装、帽子整件一个部位；鞋分鞋面、鞋底、袜子），每个部位可以换颜色。
+// 种类决定网页里的色板和权重图的宽严：牛仔布洗白的地方更亮、更灰，皮面有磨旧的浅色、高光和很深的褶子，都要放宽才能一起换色；
+// 鞋面上颜色杂，主色按“覆盖面积”取，不用中位数。第三项是这一个部位自己的参数
 const PARTS = {
   male_casualsuit06: [['T 恤', 'top'], ['牛仔裤', 'denim']], male_casualsuit04: [['T 恤', 'top'], ['牛仔裤', 'denim']],
   male_casualsuit02: [['长袖 T 恤', 'top'], ['牛仔裤', 'denim']], male_casualsuit01: [['衬衫', 'top'], ['牛仔裤', 'denim']],
@@ -449,38 +450,53 @@ const PARTS = {
   female_casualsuit01: [['T 恤', 'top'], ['牛仔裤', 'denim']], female_casualsuit02: [['T 恤', 'top'], ['热裤', 'denim']],
   female_elegantsuit01: [['衬衫', 'top'], ['半裙', 'bottom']], female_sportsuit01: [['运动背心', 'top'], ['紧身裤', 'bottom']],
   fedora01: [['礼帽', 'hat']],
+  shoes01: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], shoes03: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']],
+  shoes04: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], shoes06: [['鞋面', 'sneaker'], ['鞋底', 'sole'], ['袜子', 'sock']],
+  // 旧运动鞋：鞋面是磨旧的皮，按皮面的宽严；鞋舌那块浅色帆布（贴图上的两个框，u0 v0 u1 v1）不换色
+  shoes02: [['鞋面', 'sneaker', { tol: 0.12, qmax: 4.5, exclude: [[0.285, 0.24, 0.715, 0.455], [0.31, 0.45, 0.69, 0.495]] }], ['鞋底', 'sole'], ['袜子', 'sock']],
+  // 白球鞋：鞋里子、鞋口的深色网布在贴图上占的地方比白色还大（穿着看不见），直接说从白色找主色
+  shoes05: [['鞋面', 'sneaker', { pick: '#f0f0f0' }], ['鞋底', 'sole'], ['袜子', 'sock']],
 };
-const KIND = { top: { tol: 0.07, qmax: 3.3 }, denim: { tol: 0.15, qmax: 7 }, bottom: { tol: 0.08, qmax: 3.3 }, suit: { tol: 0.07, qmax: 3.3 }, hat: { tol: 0.07, qmax: 3.3 } };
-// texCloth 的 onData：算部位、主色和权重图（size²，R/G/B = 部位 0/1/2，无损 WebP），结果放进 out
-const partsJob = (n, clo, out, size = 1024) => async (rgba, W, H, r) => {
-  const def = PARTS[n], isl = islands(r), cls = classify(r, restProxy(parseMhclo(clo)), isl);
+const KIND = {
+  top: { tol: 0.07, qmax: 3.3 }, denim: { tol: 0.15, qmax: 7 }, bottom: { tol: 0.08, qmax: 3.3 }, suit: { tol: 0.07, qmax: 3.3 }, hat: { tol: 0.07, qmax: 3.3 },
+  leather: { tol: 0.12, qmax: 4.5, qmin: 0.12, pick: 'coverage' }, sneaker: { tol: 0.07, qmax: 3.3, pick: 'coverage' }, sole: { tol: 0.08, qmax: 3.3, pick: 'coverage' }, sock: { tol: 0.08, qmax: 3.3, pick: 'coverage' },
+};
+// texCloth 的 onData：算部位、主色和权重图（size²，R/G/B = 部位 0/1/2，无损 WebP，文件名跟着贴图：<file>-parts.webp），结果放进 out
+const partsJob = (n, clo, out, { size = 1024, file, shoe = false }) => async (rgba, W, H, r) => {
+  const def = PARTS[n], isl = islands(r), pos = restProxy(parseMhclo(clo));
+  const cls = shoe ? classifyShoe(r, pos, isl) : classify(r, pos, isl);
   const triPart = Int8Array.from(isl.triIsl, (k) => Math.min(cls[k], def.length - 1));
   size = Math.min(size, W);
-  const { mask, dom } = partMask(rgba, W, H, r, triPart, def.length, { tol: def.map(([, k]) => KIND[k].tol), qmax: def.map(([, k]) => KIND[k].qmax), out: size });
-  out.file = `tex/cloth-${n}-parts.webp`;
+  const opt = def.map(([, k, o]) => ({ ...KIND[k], ...o }));
+  const { mask, dom } = partMask(rgba, W, H, r, triPart, def.length, {
+    tol: opt.map((o) => o.tol), qmax: opt.map((o) => o.qmax), qmin: opt.map((o) => o.qmin), pick: opt.map((o) => o.pick), exclude: opt.flatMap((o, p) => (o.exclude ?? []).map((b) => [p, ...b])), out: size,
+  });
+  out.file = `tex/${file}-parts.webp`;
   await sharp(Buffer.from(mask), { raw: { width: size, height: size, channels: 3 } }).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${out.file}`);
   out.parts = def.map(([label, kind], p) => ({ label, kind, dom: dom[p] }));
 };
 for (const [n, [label, sex]] of Object.entries(OUTFIT)) {
   const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
-  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `cloth-${n}`, 2048, { q: 80, geom: npmDir('clothes', n), logos: LOGOS[n] ?? [], onData: partsJob(n, clo, pj) }) };
+  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `cloth-${n}`, 2048, { q: 80, geom: npmDir('clothes', n), logos: LOGOS[n] ?? [], onData: partsJob(n, clo, pj, { file: `cloth-${n}` }) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, `cloth-${n}-n`, 1024, { q: 85 });
   if (mm.aomapTexture) maps.ao = tex(`${mm.dir}/${mm.aomapTexture}`, `cloth-${n}-ao`, 512, { q: 80 });
   maps.parts = pj.file;
   await proxy('outfit', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { sex, parts: pj.parts } });
   log('outfit', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
 }
-const SHOES = { shoes05: '白色运动鞋', shoes06: '蓝色运动鞋', shoes02: '旧帆布鞋', shoes01: '棕色皮鞋', shoes04: '棕色休闲鞋', shoes03: '黑色皮鞋' };
+const SHOES = { shoes05: '白色运动鞋', shoes06: '蓝色运动鞋', shoes02: '旧运动鞋', shoes01: '棕色皮鞋', shoes04: '黑色休闲皮鞋', shoes03: '黑色皮鞋' };
 for (const [n, label] of Object.entries(SHOES)) {
-  const mm = mat('clothes', n);
-  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `shoe-${n}`, 1024, { q: 84, geom: npmDir('clothes', n) }) };
+  const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
+  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `shoe-${n}`, 1024, { q: 84, geom: npmDir('clothes', n), onData: partsJob(n, clo, pj, { size: 512, file: `shoe-${n}`, shoe: true }) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, `shoe-${n}-n`, 1024, { q: 85 });
-  await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo: `${DEB}/clothes/${n}/${n}.mhclo`, maps });
+  maps.parts = pj.file;
+  await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { parts: pj.parts } });
+  log('shoes', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
 }
 {
   const cf = `${DEB}/clothes/fedora01/fedora.mhclo`, clo = parseMhclo(cf), pj = {};
   const mm = parseMhmat(`${DEB}/clothes/fedora01/${clo.material}`);
-  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, 'hat-fedora01', 1024, { q: 84, geom: npmDir('clothes', 'fedora'), onData: partsJob('fedora01', cf, pj, 512) }) };
+  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, 'hat-fedora01', 1024, { q: 84, geom: npmDir('clothes', 'fedora'), onData: partsJob('fedora01', cf, pj, { size: 512, file: 'hat-fedora01' }) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, 'hat-fedora01-n', 512, { q: 85 });
   maps.parts = pj.file;
   await proxy('hat', 'fedora01', { label: '礼帽', geom: npmDir('clothes', 'fedora'), clo: cf, maps, extra: { parts: pj.parts } });

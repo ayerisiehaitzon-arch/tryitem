@@ -6,6 +6,7 @@
 //   docs/previews/creator-expressions.jpg  表情
 //   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
+//   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
 //   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上）
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -117,6 +118,19 @@ try {
   ];
   const cs = await shoot(col.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.9&anim=idle&t=0.6`]), [420, 720]);
   await grid(cs, 8, 300, 520, path.join(out, 'creator-colors.jpg'), { labels: col.map((c) => c[2]) });
+  // 鞋的配色：穿热裤的小满，袜子也看得见
+  const shoe = [
+    ['shoe-0', 'shoes=shoes05', '白色运动鞋 · 原色'],
+    ['shoe-1', 'shoes=shoes05&sc=2b59c3,,1c1c1e', '蓝鞋面 · 黑袜子'],
+    ['shoe-2', 'shoes=shoes06&sc=b0262c,,', '蓝色运动鞋换红色'],
+    ['shoe-3', 'shoes=shoes02&sc=c9b38f,1c1c1e,f2f0eb', '旧运动鞋换米色'],
+    ['shoe-4', 'shoes=shoes01', '棕色皮鞋 · 原色'],
+    ['shoe-5', 'shoes=shoes01&sc=1f2a40,1c1c1e,b0262c', '藏青皮鞋 · 红袜子'],
+    ['shoe-6', 'shoes=shoes03&sc=8e4a1e,c9a77d,f2f0eb', '黑皮鞋换焦糖色'],
+    ['shoe-7', 'shoes=shoes04&sc=9a6a3c,,1f2f52', '黑休闲皮鞋换棕色'],
+  ];
+  const ss = await shoot(shoe.map(([n, q]) => [n, `preset=1&${q}&bare=1&cam=feet&az=25&el=16&anim=idle&t=0.5`]), [480, 420]);
+  await grid(ss, 4, 360, 315, path.join(out, 'creator-shoes.jpg'), { labels: shoe.map((c) => c[2]) });
   // 动作
   const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话']];
   const ms = await shoot(mo.map(([a, t]) => [`mo-${a}`, `preset=5&bare=1&az=30&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);
