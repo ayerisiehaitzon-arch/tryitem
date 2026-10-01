@@ -4,6 +4,8 @@
 // 静止姿势就是建模时的姿势：站直，两臂自然下垂。姿势 = 各关节相对静止姿势的旋转（度，绕世界坐标轴：
 // x 前后弯、y 拧转、z 侧摆；左边的关节写好以后右边镜像）。
 
+import { subdivide } from './subdiv.js';
+
 export const JOINTS = ['pelvis', 'spine', 'chest', 'neck', 'head', 'shoulderL', 'elbowL', 'wristL', 'shoulderR', 'elbowR', 'wristR', 'hipL', 'kneeL', 'ankleL', 'hipR', 'kneeR', 'ankleR'];
 const J = Object.fromEntries(JOINTS.map((n, i) => [n, i]));
 const PARENT = [-1, J.pelvis, J.spine, J.chest, J.neck, J.chest, J.shoulderL, J.elbowL, J.chest, J.shoulderR, J.elbowR, J.pelvis, J.hipL, J.kneeL, J.pelvis, J.hipR, J.kneeR];
@@ -86,6 +88,7 @@ const mirrorIK = (o) => ({ ...o, hand: (B) => { const h = o.hand(B); return [-h[
 const HIPS = { hand: (B) => [B.waistW + 0.035, B.waistY - 0.04, -0.015], pole: [1, 0.1, -0.55], dir: [-0.3, -0.55, 0.78], palm: [-1, 0, 0.1] };
 // 插兜：手腕停在裤兜口（胯前外侧的表面上），手往下、往里斜着插进去 —— 手指藏在裤子下面，只露出手腕和手背
 const POCKET = { hand: (B) => [B.hipW * 0.81 - 0.011, B.crotch + 0.13, B.hipDF * 0.68 - 0.015], pole: [0.75, -0.1, -1], dir: [-0.35, -1, -0.34], palm: [-0.6, 0, -0.8] };
+// （静止姿势都 ground：骨盆一歪、一条腿一弯，最低的那只脚还是踩在地上）
 export const POSES = {
   stand: { label: '站立', j: {} },
   relaxed: {
@@ -108,6 +111,8 @@ export const POSES = {
     },
   },
 };
+
+for (const p of Object.values(POSES)) p.ground = true;
 
 const D2R = Math.PI / 180;
 function rotXYZ([ax, ay, az]) {
@@ -145,11 +150,41 @@ function axisAngle(axis, deg) {
   return [t * x * x + c, t * x * y - s * z, t * x * z + s * y, t * x * y + s * z, t * y * y + c, t * y * z - s * x, t * x * z - s * y, t * y * z + s * x, t * z * z + c];
 }
 
-// 每个关节的世界变换：x' = R·(x − rest) + P。B：量体数据（反向运动学的目标点用）
-export function poseTransforms(rest, poseId, B = null, amount = 1) {
-  const pose = POSES[poseId] ?? POSES.stand;
+// 两段式反向运动学：a（根，位置 S 不动）→ b → c，Rp 是 a 的父骨头的世界旋转。
+// hinge 是中间关节的转轴（父骨头的静止坐标里：膝盖 +x，手肘 −x），弯向 pole 那一边；
+// 弯曲平面的法线直接取 pole × 肢体方向，伸直时也不会翻面。返回 a、b 的世界旋转和 b、c 的位置。
+function twoBone(rest, Rp, ja, jb, jc, S, target, pole, hinge) {
+  const u0 = mv(Rp, sub3(rest[jb], rest[ja])), f0 = mv(Rp, sub3(rest[jc], rest[jb]));
+  const a = Math.hypot(...u0), b = Math.hypot(...f0);
+  const n0 = nrm3(mv(Rp, hinge));
+  const toT = sub3(target, S);
+  let d = Math.hypot(...toT);
+  d = Math.min(Math.max(d, Math.abs(a - b) + 1e-3), a + b - 1e-4);
+  const u = nrm3(toT);
+  const v = nrm3(sub3(pole, sc3(u, dot3(pole, u))));
+  const alpha = Math.acos(Math.min(1, Math.max(-1, (a * a + d * d - b * b) / (2 * a * d))));
+  const E = add3(S, add3(sc3(u, a * Math.cos(alpha)), sc3(v, a * Math.sin(alpha))));
+  const W = add3(S, sc3(u, d));
+  const u1 = nrm3(sub3(E, S)), f1 = nrm3(sub3(W, E));
+  const n1 = nrm3(cross3(v, u));
+  const on = (n, a2) => nrm3(sub3(n, sc3(a2, dot3(n, a2))));
+  const Ra = frameRot(nrm3(u0), on(n0, nrm3(u0)), u1, on(n1, u1));
+  const Rb = frameRot(nrm3(f0), on(n0, nrm3(f0)), f1, on(n1, f1));
+  return { Ra: mm(Ra, Rp), Rb: mm(Rb, Rp), E, W, f1 };
+}
+
+// 每个关节的世界变换：x' = R·(x − rest) + P。B：量体数据（反向运动学的目标点用）。
+// pose：POSES 里的名字，或者一个姿势对象（动画每一帧给的就是这个）：
+//   j      各关节相对父骨头的旋转（度）
+//   ik     胳膊：手腕放在哪（胸腔坐标）、手肘朝哪、手腕怎么弯
+//   feet   腿：踝关节放在哪（世界坐标）、脚掌的朝向（度）—— 脚踩住不动，骨盆怎么动膝盖都自己弯
+//   root   整个人挪多少（米）；ground：先把最低的那只脚放回地面（走路、跑步）
+// feet（参数）：两只脚着地的点（静止姿势下的世界坐标，跟着踝关节走），ground 要用
+export function poseTransforms(rest, poseIn = 'stand', B = null, amount = 1, { feet = null } = {}) {
+  const pose = typeof poseIn === 'string' ? (POSES[poseIn] ?? POSES.stand) : (poseIn ?? POSES.stand);
   const local = JOINTS.map(() => [0, 0, 0]);
   for (const [name, a] of Object.entries(pose.j ?? {})) {
+    if (J[name] === undefined) continue;
     local[J[name]] = a.map((x) => x * amount);
     if (pose.sym !== false && name.endsWith('L')) {
       const r = J[name.slice(0, -1) + 'R'];
@@ -157,46 +192,50 @@ export function poseTransforms(rest, poseId, B = null, amount = 1) {
     }
   }
   const R = new Array(JOINTS.length), P = new Array(JOINTS.length);
-  const fk = (j) => {
+  for (let j = 0; j < JOINTS.length; j++) {
     const r = rotXYZ(local[j]);
     const p = PARENT[j];
-    if (p < 0) { R[j] = r; P[j] = rest[j]; return; }
+    if (p < 0) { R[j] = r; P[j] = rest[j].slice(); continue; }
     R[j] = mm(R[p], r);
     P[j] = add3(P[p], mv(R[p], sub3(rest[j], rest[p])));
-  };
-  for (let j = 0; j < JOINTS.length; j++) fk(j);
+  }
+  // 落地：最低的那只脚（脚跟或脚尖）回到静止姿势时的高度
+  const shift = [0, 0, 0];
+  if (pose.ground && feet) {
+    const low = (jn, pts) => Math.min(...pts.map((q) => mv(R[J[jn]], sub3(q, rest[J[jn]]))[1] + P[J[jn]][1]));
+    const was = Math.min(...feet.L.map((q) => q[1]), ...feet.R.map((q) => q[1]));
+    shift[1] = was - Math.min(low('ankleL', feet.L), low('ankleR', feet.R));
+  }
+  if (pose.root) for (let k = 0; k < 3; k++) shift[k] += pose.root[k] * amount;
+  if (shift[0] || shift[1] || shift[2]) for (let j = 0; j < JOINTS.length; j++) P[j] = add3(P[j], shift);
+  // 腿的反向运动学：踝关节放到给定的位置，膝盖朝前（略朝外），脚掌按给定的朝向
+  if (pose.feet) {
+    for (const side of ['L', 'R']) {
+      const f = pose.feet[side];
+      if (!f) continue;
+      const [hp, kn, an] = side === 'L' ? [J.hipL, J.kneeL, J.ankleL] : [J.hipR, J.kneeR, J.ankleR];
+      const sd = side === 'L' ? 1 : -1;
+      const pole = mv(R[J.pelvis], f.pole ?? [0.15 * sd, 0, 1]);
+      const sol = twoBone(rest, R[J.pelvis], hp, kn, an, P[hp], f.at, pole, [1, 0, 0]);
+      R[hp] = sol.Ra; R[kn] = sol.Rb; P[kn] = sol.E; P[an] = sol.W;
+      R[an] = rotXYZ(f.rot ?? [0, 0, 0]);
+    }
+  }
   // 胳膊的反向运动学
   if (pose.ik && B) {
     for (const [side, spec] of Object.entries(pose.ik)) {
+      if (!spec) continue;
       const [sh, el, wr] = side === 'L' ? [J.shoulderL, J.elbowL, J.wristL] : [J.shoulderR, J.elbowR, J.wristR];
       const Rc = R[J.chest], Pc = P[J.chest], rc = rest[J.chest];
       const S = P[sh];
-      const u0 = mv(Rc, sub3(rest[el], rest[sh])), f0 = mv(Rc, sub3(rest[wr], rest[el]));
-      const a = Math.hypot(...u0), b = Math.hypot(...f0);
-      let n0 = cross3(u0, f0);
-      n0 = Math.hypot(...n0) < 1e-6 ? mv(Rc, [1, 0, 0]) : nrm3(n0);
       // 目标点在胸腔的坐标里（躯干弯了，手跟着走）
       const h = spec.hand(B);
       let T = add3(Pc, mv(Rc, sub3(h, rc)));
       T = add3(S, sc3(sub3(T, S), amount)); // amount < 1 时往静止位置插值（近似）
-      const toT = sub3(T, S);
-      let d = Math.hypot(...toT);
-      d = Math.min(Math.max(d, Math.abs(a - b) + 1e-3), a + b - 1e-3);
-      const u = nrm3(toT);
-      const pole = mv(Rc, spec.pole);
-      const v = nrm3(sub3(pole, sc3(u, dot3(pole, u))));
-      const alpha = Math.acos(Math.min(1, Math.max(-1, (a * a + d * d - b * b) / (2 * a * d))));
-      const E = add3(S, add3(sc3(u, a * Math.cos(alpha)), sc3(v, a * Math.sin(alpha))));
-      const W = add3(S, sc3(u, d));
-      const u1 = nrm3(sub3(E, S)), f1 = nrm3(sub3(W, E));
-      let n1 = cross3(u1, f1);
-      n1 = Math.hypot(...n1) < 1e-6 ? nrm3(cross3(u1, v)) : nrm3(n1);
-      // n0 和 u0 不一定正交（静止时胳膊几乎是直的），先正交化
-      const on = (n, a2) => nrm3(sub3(n, sc3(a2, dot3(n, a2))));
-      const Ra = frameRot(nrm3(u0), on(n0, nrm3(u0)), u1, on(n1, u1));
-      const Rb = frameRot(nrm3(f0), on(n0, nrm3(f0)), f1, on(n1, f1));
-      R[sh] = mm(Ra, Rc); P[sh] = S;
-      R[el] = mm(Rb, Rc); P[el] = E;
+      const sol = twoBone(rest, Rc, sh, el, wr, S, T, mv(Rc, spec.pole), [-1, 0, 0]);
+      const f1 = sol.f1;
+      R[sh] = sol.Ra; P[sh] = S;
+      R[el] = sol.Rb; P[el] = sol.E;
       let Rw = spec.twist ? mm(axisAngle(f1, spec.twist * amount), R[el]) : R[el];
       // 手腕弯：手指转向 dir（胸腔坐标），再绕手的方向拧，让掌心尽量朝 palm
       if (spec.dir) {
@@ -207,17 +246,57 @@ export function poseTransforms(rest, poseId, B = null, amount = 1) {
         if (spec.palm) {
           const hd = nrm3(mv(Rw, sub3(rest[wr], rest[el])));
           const on2 = (n) => nrm3(sub3(n, sc3(hd, dot3(n, hd))));
-          const sd = side === 'L' ? 1 : -1;
-          const p0 = on2(mv(Rw, [-sd, 0, 0])), p1 = on2(mv(Rc, spec.palm));
+          const sdd = side === 'L' ? 1 : -1;
+          const p0 = on2(mv(Rw, [-sdd, 0, 0])), p1 = on2(mv(Rc, spec.palm));
           const tw = Math.atan2(dot3(cross3(p0, p1), hd), dot3(p0, p1)) / D2R;
           Rw = mm(axisAngle(hd, tw * amount), Rw);
         }
       }
-      R[wr] = Rw; P[wr] = W;
+      R[wr] = Rw; P[wr] = sol.W;
     }
   }
   return { R, P, rest };
 }
+
+// —— 显卡蒙皮用的权重 ——
+// 控制点的权重（每点最多三根骨头）摊成稠密的 17 列，按同样的细分规则算到细分点上（权重是线性的量，细分出来自然是光滑的），
+// 每个点再取最大的四根骨头、归一化 —— 和 three.js / glTF 的 4 骨蒙皮对得上。map 给了就按它挑点（衣服的渲染顶点）
+export function denseWeights(W, n, pick = (v) => v) {
+  const NJ = JOINTS.length;
+  const D = new Float32Array(n * NJ);
+  for (let i = 0; i < n; i++) {
+    const v = pick(i);
+    if (v < 0) continue;
+    for (let k = 0; k < 3; k++) { const w = W.w[v * 3 + k]; if (w) D[i * NJ + W.idx[v * 3 + k]] += w; }
+  }
+  return D;
+}
+export function top4(D, map = null) {
+  const NJ = JOINTS.length;
+  const m = map ? map.length : D.length / NJ;
+  const skinIndex = new Uint16Array(m * 4), skinWeight = new Float32Array(m * 4);
+  const bi = [0, 0, 0, 0], bw = [0, 0, 0, 0];
+  for (let i = 0; i < m; i++) {
+    const o = (map ? map[i] : i) * NJ;
+    bi.fill(0); bw.fill(0);
+    for (let j = 0; j < NJ; j++) {
+      const w = D[o + j];
+      if (w <= bw[3]) continue;
+      let k = 3;
+      while (k > 0 && w > bw[k - 1]) { bw[k] = bw[k - 1]; bi[k] = bi[k - 1]; k--; }
+      bw[k] = w; bi[k] = j;
+    }
+    const sum = bw[0] + bw[1] + bw[2] + bw[3] || 1;
+    for (let k = 0; k < 4; k++) { skinIndex[i * 4 + k] = bi[k]; skinWeight[i * 4 + k] = bw[k] / sum; }
+  }
+  return { skinIndex, skinWeight };
+}
+// 身体细分网格每个顶点的四根骨头
+export function bodySkin(body) {
+  body.weights ??= skinWeights(body.topo);
+  return top4(subdivide(body.plan, denseWeights(body.weights, body.topo.n), JOINTS.length));
+}
+export const PARENTS = PARENT;
 
 // 量体数据里给反向运动学用的几个数
 export function bodyMarks(L) {

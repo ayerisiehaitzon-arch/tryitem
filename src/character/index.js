@@ -4,6 +4,10 @@ import { landmarks, placeBody } from './body.js';
 import { withDefaults } from './params.js';
 import { cageColors } from './face.js';
 import { restJoints, skinWeights, poseTransforms, applyPose, bodyMarks } from './rig.js';
+export { bodySkin, poseTransforms, bodyMarks, PARENTS } from './rig.js';
+export { garmentSkin, garmentFolds } from './clothes.js';
+export { hoodieExtras } from './hoodie.js';
+export { CLIPS, clipPose, breathe } from './motion.js';
 
 export { PARAMS, DEFAULTS, withDefaults } from './params.js';
 export { eyeballGeometry, eyeTexture, eyePlacement } from './eyes.js';
@@ -38,7 +42,15 @@ export function evalCage(body, params) {
 // look（可选）：皮肤、嘴唇、腮红、胡茬……给了就连顶点色一起细分（每个点 6 个数：位置 + 颜色）
 export function evalBody(body, params, { fit = 14, look = null, pose = 'stand' } = {}) {
   const { p, L, cage: target, head } = evalCage(body, params);
+  // 两只脚着地的点（静止姿势）：脚上最低的那些控制点 —— 动画里“把最低的脚放回地面”用
+  const feet = {};
+  body.topo.legs.forEach((l, i) => {
+    const vs = [...l.F.slice(1).flat(), ...l.toe.flat()].filter((v) => v >= 0);
+    const lo = Math.min(...vs.map((v) => target[v * 3 + 1]));
+    feet[i === 0 ? 'L' : 'R'] = vs.filter((v) => target[v * 3 + 1] < lo + 0.012).map((v) => [target[v * 3], target[v * 3 + 1], target[v * 3 + 2]]);
+  });
   // 姿势：在“曲面上的目标点”这一层蒙皮，之后的拟合、细分、衣服都在摆好姿势的身体上做
+  // （创建器里改用显卡蒙皮：这里只算静止姿势，骨骼的变换每帧另算）
   body.weights ??= skinWeights(body.topo);
   const rig = poseTransforms(restJoints(L, head), pose, bodyMarks(L));
   if (pose && pose !== 'stand') applyPose(target, body.weights, rig);
@@ -63,5 +75,5 @@ export function evalBody(body, params, { fit = 14, look = null, pose = 'stand' }
     }
   } else positions = subdivide(body.plan, cage, 3);
   const normals = quadNormals(body.plan.quads, positions);
-  return { p, L, cage, target, head, rig, positions, normals, colors, index: body.plan.tris };
+  return { p, L, cage, target, head, rig, feet, marks: bodyMarks(L), positions, normals, colors, index: body.plan.tris };
 }

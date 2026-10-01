@@ -319,13 +319,13 @@ function bun(ctx) {
 export function buildHair(body, id) {
   const style = HAIRSTYLES[id];
   if (!style || !style.vol) return null;
-  return { id, style };
+  return { id, style, topo: body.topo };
 }
 
 export function evalHair(h, target, targetN, head, L) {
   const { O, g, sdf, F } = head;
   const style = h.style;
-  const ctx = { sdf, ears: earsSDF(F), body: bodySDF(L, O, g) };
+  const ctx = { sdf, ears: earsSDF(F), body: bodySDF(L, O, g, h.topo && target ? stackSDF(h.topo, target, O, g) : null) };
   const sh = shell(ctx, style);
   const out = { P: [...sh.P], UV: [...sh.UV], C: [...sh.C], Q: [...sh.Q], T: [...sh.T] };
   const locks = style.locks ? style.locks(ctx) : [];
@@ -447,10 +447,10 @@ function earsSDF(F) {
 }
 
 // 头部局部坐标里的“身体”：脖子（胶囊）+ 上半身（椭球）+ 两个肩膀（胶囊）
-function bodySDF(L, O, g) {
+function bodySDF(L, O, g, stack = null) {
   const loc = (y) => (y - O[1]) / g;
   const sw = L.shoulderW / g, cd = L.chestD / g, bd = L.backD / g, nr = L.neckR / g;
-  const yN = loc(L.notch), yC = loc(L.notch - 0.2);
+  const yN = loc(L.notch), yC = loc(L.notch - 0.14);
   const cap = (p, a, b, r) => {
     const ba = sub(b, a), pa = sub(p, a);
     const h = clamp(dot(pa, ba) / dot(ba, ba), 0, 1);
@@ -458,11 +458,57 @@ function bodySDF(L, O, g) {
   };
   return (x, y, z) => {
     const p = [x, y, z];
-    let d = cap(p, [0, yN - 0.02, -0.02 / g], [0, yN + 0.12, -0.02 / g], nr * 1.02);
-    const ex = sw * 0.92, ey = 0.2 / g, ez = (cd + bd) / 2, zc = (cd - bd) / 2;
-    const k0 = Math.hypot(x / ex, (y - yC) / ey, (z - zc) / ez), k1 = Math.hypot(x / (ex * ex), (y - yC) / (ey * ey), (z - zc) / (ez * ez));
-    d = Math.min(d, (k0 * (k0 - 1)) / (k1 || 1));
+    let d;
+    if (stack) d = stack(x, y, z);
+    else {
+      // 没有躯干截面时的近似：脖子一根胶囊、上身一个椭球（中心在锁骨窝下 14cm，上背到脖子根都还是厚的）
+      d = cap(p, [0, yN - 0.02, -0.02 / g], [0, yN + 0.12, -0.02 / g], nr * 1.02);
+      const ex = sw * 0.92, ey = 0.26 / g, ez = ((cd + bd) / 2) * 1.06, zc = (cd - bd) / 2;
+      const k0 = Math.hypot(x / ex, (y - yC) / ey, (z - zc) / ez), k1 = Math.hypot(x / (ex * ex), (y - yC) / (ey * ey), (z - zc) / (ez * ez));
+      d = Math.min(d, (k0 * (k0 - 1)) / (k1 || 1));
+    }
     for (const s of [1, -1]) d = Math.min(d, cap(p, [s * 0.05 / g, yN + 0.01, -0.02 / g], [s * (sw - 0.03 / g), yN - 0.02, -0.01 / g], 0.048 / g));
+    return d - 0.012 / g; // 衣服的厚度：头发搭在衣服外面
+  };
+}
+
+// 按真实的躯干、脖子截面算的上身 SDF（头部局部坐标）：腰到脖子的每一圈控制点是一个多边形（胳膊洞那几个空位用左右邻点补上），
+// 查询点所在的高度上，把上下两圈按高度插值成一个多边形，算水平面上的有符号距离；最上、最下两圈之外再加上竖直方向的距离
+function stackSDF(topo, target, O, g) {
+  const loc = (v) => [(target[v * 3] - O[0]) / g, (target[v * 3 + 1] - O[1]) / g, (target[v * 3 + 2] - O[2]) / g];
+  const rings = [...topo.T.slice(3), ...topo.N].map((ring) => {
+    const pts = ring.map((v) => (v >= 0 ? loc(v) : null));
+    const n = pts.length;
+    for (let k = 0; k < n; k++) {
+      if (pts[k]) continue;
+      let a = (k + n - 1) % n, b = (k + 1) % n;
+      while (!pts[a]) a = (a + n - 1) % n;
+      while (!pts[b]) b = (b + 1) % n;
+      pts[k] = [(pts[a][0] + pts[b][0]) / 2, (pts[a][1] + pts[b][1]) / 2, (pts[a][2] + pts[b][2]) / 2];
+    }
+    return { y: pts.reduce((s2, q) => s2 + q[1], 0) / n, x: pts.map((q) => q[0]), z: pts.map((q) => q[2]) };
+  }).sort((a, b) => a.y - b.y);
+  const R = rings.length, n = rings[0].x.length;
+  const px = new Float64Array(n), pz = new Float64Array(n);
+  return (x, y, z) => {
+    let i = 0;
+    while (i < R - 2 && rings[i + 1].y < y) i++;
+    const A = rings[i], B = rings[i + 1];
+    const t = Math.min(1, Math.max(0, (y - A.y) / (B.y - A.y)));
+    for (let k = 0; k < n; k++) { px[k] = A.x[k] + (B.x[k] - A.x[k]) * t; pz[k] = A.z[k] + (B.z[k] - A.z[k]) * t; }
+    let dm = Infinity, inside = false;
+    for (let k = 0, m = n - 1; k < n; m = k++) {
+      const ax = px[m], az = pz[m], bx = px[k], bz = pz[k];
+      const ex = bx - ax, ez = bz - az, wx = x - ax, wz = z - az;
+      const h = Math.min(1, Math.max(0, (wx * ex + wz * ez) / (ex * ex + ez * ez || 1)));
+      const dx = wx - ex * h, dz = wz - ez * h, dd = dx * dx + dz * dz;
+      if (dd < dm) dm = dd;
+      if ((az > z) !== (bz > z) && x < ((bx - ax) * (z - az)) / (bz - az) + ax) inside = !inside;
+    }
+    let d = inside ? -Math.sqrt(dm) : Math.sqrt(dm);
+    const below = rings[0].y - y, above = y - rings[R - 1].y;
+    if (below > 0) d = d > 0 ? Math.hypot(d, below) : Math.max(d, below);
+    if (above > 0) d = d > 0 ? Math.hypot(d, above) : Math.max(d, above);
     return d;
   };
 }

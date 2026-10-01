@@ -1,4 +1,5 @@
 import { buildPlan, subdivide, quadNormals, subdivideCorners, fitLimit } from './subdiv.js';
+import { JOINTS, skinWeights, denseWeights, top4 } from './rig.js';
 
 // 衣服：直接取身体控制网格上被它盖住的那些面（T 恤 = 躯干 T1 … T11 + 两只袖子的头三圈），
 // 每个点沿身体的法线往外推一个“松量”，再按衣服自己的拓扑细分 —— 体型滑杆怎么拉，衣服都贴着身体走，
@@ -15,50 +16,57 @@ export const GARMENTS = {
     select: (t) => (t.part === 'torso' && t.r >= 1) || (t.part === 'arm' && t.r <= 2),
     ease: (q) => 0.0065 + 0.007 * q.hem + 0.004 * q.sleeveEnd,
     fold: 0.007, rough: 0.82, sheen: 0.4,
+    folds: { cuff: 0.0009, armpit: 0.0016, drape: 0.0016 },
   },
   longtee: {
     label: '长袖T恤', slot: 'top', layer: 2,
     select: (t) => (t.part === 'torso' && t.r >= 1) || (t.part === 'arm' && t.r <= 8),
     ease: (q) => 0.0065 + 0.007 * q.hem + 0.002 * q.sleeveEnd,
     fold: 0.007, rough: 0.82, sheen: 0.4,
+    folds: { elbow: 0.0018, cuff: 0.0022, armpit: 0.0016, drape: 0.0014 },
   },
   tank: {
     label: '背心', slot: 'top', layer: 2,
     select: (t) => (t.part === 'torso' && t.r >= 1 && t.r <= 9) || (t.part === 'torso' && t.r === 10 && strap(t.j)),
     ease: (q) => 0.005 + 0.006 * q.hem,
     fold: 0.005, rough: 0.8, sheen: 0.3,
+    folds: { drape: 0.0012 },
   },
   hoodie: {
     label: '卫衣', slot: 'top', layer: 3,
     select: (t) => (t.part === 'torso' && t.r >= 0) || (t.part === 'arm' && t.r <= 8) || (t.part === 'neck' && t.r <= 0),
     ease: (q) => 0.014 + 0.004 * q.hem + 0.002 * q.sleeveEnd,
-    fold: 0.012, rough: 0.9, sheen: 0.6, rib: true,
+    fold: 0.012, rough: 0.9, sheen: 0.6, rib: true, extras: 'hoodie', // 帽子、抽绳、袋鼠兜：hoodie.js
+    folds: { elbow: 0.0024, cuff: 0.0028, armpit: 0.0018, hem: 0.003 },
   },
   jeans: {
     label: '牛仔裤', slot: 'bottom', layer: 1, long: true,
     select: (t) => (t.part === 'torso' && t.r <= 2) || (t.part === 'leg' && t.r <= 9),
     ease: (q) => 0.0045 + 0.005 * q.legEnd + 0.001 * q.waist,
     fold: 0.008, rough: 0.85, sheen: 0.15,
+    folds: { knee: 0.0018, stack: 0.0026, crotch: 0.0013 },
   },
   chinos: {
     label: '休闲裤', slot: 'bottom', layer: 1, long: true,
     select: (t) => (t.part === 'torso' && t.r <= 2) || (t.part === 'leg' && t.r <= 9),
     ease: (q) => 0.0065 + 0.007 * q.legEnd + 0.001 * q.waist,
     fold: 0.008, rough: 0.8, sheen: 0.25,
+    folds: { knee: 0.0016, stack: 0.0022, crotch: 0.0008 },
   },
   shorts: {
     label: '短裤', slot: 'bottom', layer: 1,
     select: (t) => (t.part === 'torso' && t.r <= 2) || (t.part === 'leg' && t.r <= 2),
     ease: (q) => 0.006 + 0.012 * q.legEnd,
     fold: 0.008, rough: 0.8, sheen: 0.25,
+    folds: { stack: 0.0012, crotch: 0.0008 },
   },
   skirt: {
     label: '半身裙', slot: 'bottom', layer: 1, loft: { len: 0.6, flare: 0.16 },
-    fold: 0.008, rough: 0.8, sheen: 0.3,
+    fold: 0.008, rough: 0.8, sheen: 0.3, folds: { drape: 0.0045 },
   },
   mini: {
     label: '短裙', slot: 'bottom', layer: 1, loft: { len: 0.3, flare: 0.22 },
-    fold: 0.007, rough: 0.8, sheen: 0.3,
+    fold: 0.007, rough: 0.8, sheen: 0.3, folds: { drape: 0.0035 },
   },
   sneakers: {
     label: '运动鞋', slot: 'shoes', layer: 1, sole: 0.026,
@@ -401,4 +409,125 @@ function evalLoft(g, cage, cageN, { fit = 8 } = {}) {
     nr[i * 3] = fn[s]; nr[i * 3 + 1] = fn[s + 1]; nr[i * 3 + 2] = fn[s + 2];
   }
   return { position: pos, normal: nr, uv: Rm.uv, index: Rm.index };
+}
+
+// —— 显卡蒙皮的权重：衣服跟着身体的骨头走 ——
+// 每个控制点用它底下那个身体控制点的权重（折边那圈跟着开口），细分以后按渲染顶点取出来；
+// 裙子上面四圈是腰胯（跟着骨盆），往下越来越多地跟着同侧的大腿（左右正中间两条腿各一半）
+export function garmentSkin(g, body) {
+  body.weights ??= skinWeights(body.topo);
+  const NJ = JOINTS.length;
+  if (g.loft) {
+    const { R, NC, n, nMain } = g;
+    const D = new Float32Array(n * NJ);
+    const W = body.weights;
+    const iP = JOINTS.indexOf('pelvis'), iL = JOINTS.indexOf('hipL'), iR = JOINTS.indexOf('hipR');
+    for (let r = 0; r < R; r++) for (let j = 0; j < NC; j++) {
+      const i = r * NC + j;
+      if (r < SKIRT_TOP.length) {
+        const v = g.T[SKIRT_TOP[r]][j];
+        for (let k = 0; k < 3; k++) { const w = W.w[v * 3 + k]; if (w) D[i * NJ + W.idx[v * 3 + k]] += w; }
+        continue;
+      }
+      const t = (r - SKIRT_TOP.length + 1) / (R - SKIRT_TOP.length);
+      const x = Math.sin((j * Math.PI * 2) / NC);
+      const u = Math.min(1, Math.max(0, (x + 0.45) / 0.9)), sL = u * u * (3 - 2 * u);
+      const leg = 0.45 + 0.4 * t;
+      D[i * NJ + iP] = 1 - leg; D[i * NJ + iL] = leg * sL; D[i * NJ + iR] = leg * (1 - sL);
+    }
+    for (let j = 0; j < NC; j++) {
+      D.copyWithin((nMain + j) * NJ, ((R - 1) * NC + j) * NJ, ((R - 1) * NC + j + 1) * NJ);
+      D.copyWithin((nMain + NC + j) * NJ, j * NJ, (j + 1) * NJ);
+    }
+    return top4(subdivide(g.plan, D, NJ), g.render.pos);
+  }
+  const src = new Int32Array(g.n).fill(-1);
+  for (let i = 0; i < g.nBase; i++) { src[i] = g.verts[i]; if (g.foldOf[i] >= 0) src[g.foldOf[i]] = g.verts[i]; }
+  const D = denseWeights(body.weights, g.n, (i) => src[i]);
+  return top4(subdivide(g.plan, D, NJ), g.render.pos);
+}
+
+// —— 褶皱坐标（给着色器算褶皱用）——
+// 网格只细分了两级（顶点隔 1.5~2 厘米），真的褶皱只有两三厘米宽，做成几何起伏会是一个个棱角；
+// 所以每个顶点只给一组“褶皱坐标”，褶皱的高度在片元着色器里按这组坐标算，再用屏幕空间的导数扰动法线（凹凸贴图的做法）。
+//   a = (部位, s, e, top)：部位 0 躯干、1 胳膊、2 腿、3 裙子；
+//       s：胳膊、腿从手肘 / 膝盖量起的距离（往手、脚的方向为正），躯干是离腋下的高度，裙子是离腰往下多深；
+//       e：离这块布的开口（袖口、裤脚、下摆；裤子的躯干部分是腰头）还有多远；top：离这一块的上缘多远（裆下的“猫须”用）
+//   b = (cos θ, sin θ)：绕肢体（躯干、裙子绕身体的竖轴）的方向，正前方 cos = 1，往外侧 sin > 0
+const JX = Object.fromEntries(JOINTS.map((n, i) => [n, i]));
+const LIMBS = [
+  { code: 1, side: 1, j: ['shoulderL', 'elbowL', 'wristL'] }, { code: 1, side: -1, j: ['shoulderR', 'elbowR', 'wristR'] },
+  { code: 2, side: 1, j: ['hipL', 'kneeL', 'ankleL'] }, { code: 2, side: -1, j: ['hipR', 'kneeR', 'ankleR'] },
+];
+export function garmentFolds(g, pos, skin, rest) {
+  const n = pos.length / 3;
+  const A = new Float32Array(n * 4), Bv = new Float32Array(n * 2);
+  const yArm = (rest[JX.shoulderL][1] + rest[JX.shoulderR][1]) / 2 - 0.075, zc = rest[JX.spine][2];
+  if (g.loft) {
+    let y0 = -Infinity, y1 = Infinity;
+    for (let i = 0; i < n; i++) { y0 = Math.max(y0, pos[i * 3 + 1]); y1 = Math.min(y1, pos[i * 3 + 1]); }
+    for (let i = 0; i < n; i++) {
+      const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2] - zc, l = Math.hypot(x, z) || 1;
+      A[i * 4] = 3; A[i * 4 + 1] = y0 - y; A[i * 4 + 2] = y - y1;
+      Bv[i * 2] = z / l; Bv[i * 2 + 1] = x / l;
+    }
+    return { a: A, b: Bv };
+  }
+  // 每个顶点属于哪一块（看它最重的那根骨头）只和拓扑有关，算一次
+  if (!g.limbOf || g.limbOf.length !== n) {
+    g.limbOf = new Int8Array(n).fill(-1);
+    for (let i = 0; i < n; i++) {
+      const j = JOINTS[skin.skinIndex[i * 4]];
+      LIMBS.forEach((L, k) => { if (L.j.includes(j)) g.limbOf[i] = k; });
+    }
+  }
+  const limbOf = g.limbOf;
+  const limb = LIMBS.map((L) => {
+    const [S, E, W] = L.j.map((nm) => rest[JX[nm]]);
+    const lU = Math.hypot(E[0] - S[0], E[1] - S[1], E[2] - S[2]), lL = Math.hypot(W[0] - E[0], W[1] - E[1], W[2] - E[2]);
+    const dU = [(E[0] - S[0]) / lU, (E[1] - S[1]) / lU, (E[2] - S[2]) / lU], dL = [(W[0] - E[0]) / lL, (W[1] - E[1]) / lL, (W[2] - E[2]) / lL];
+    // 每一段的“正前方”和“外侧”（垂直于这一段）
+    const frame = (d) => {
+      const f = [-d[2] * d[0], -d[2] * d[1], 1 - d[2] * d[2]], fl = Math.hypot(...f) || 1;
+      const o = [L.side - L.side * d[0] * d[0], -L.side * d[0] * d[1], -L.side * d[0] * d[2]], ol = Math.hypot(...o) || 1;
+      return [f.map((x) => x / fl), o.map((x) => x / ol)];
+    };
+    return { code: L.code, S, E, W, dU, dL, lU, lL, fU: frame(dU), fL: frame(dL), sMin: Infinity, sMax: -Infinity };
+  });
+  let ty0 = Infinity, ty1 = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2], k = limbOf[i];
+    if (k < 0) {
+      const dz = z - zc, l = Math.hypot(x, dz) || 1;
+      A[i * 4 + 1] = y - yArm;
+      Bv[i * 2] = dz / l; Bv[i * 2 + 1] = Math.abs(x) / l;
+      if (y < ty0) ty0 = y;
+      if (y > ty1) ty1 = y;
+      continue;
+    }
+    const L = limb[k];
+    // 投到 肩—肘—腕（髋—膝—踝）这条折线上，取近的那一段
+    let t1 = ((x - L.S[0]) * L.dU[0] + (y - L.S[1]) * L.dU[1] + (z - L.S[2]) * L.dU[2]) / L.lU;
+    let t2 = ((x - L.E[0]) * L.dL[0] + (y - L.E[1]) * L.dL[1] + (z - L.E[2]) * L.dL[2]) / L.lL;
+    t1 = t1 < 0 ? 0 : t1 > 1 ? 1 : t1; t2 = t2 < 0 ? 0 : t2 > 1 ? 1 : t2;
+    const r1x = x - (L.S[0] + L.dU[0] * t1 * L.lU), r1y = y - (L.S[1] + L.dU[1] * t1 * L.lU), r1z = z - (L.S[2] + L.dU[2] * t1 * L.lU);
+    const r2x = x - (L.E[0] + L.dL[0] * t2 * L.lL), r2y = y - (L.E[1] + L.dL[1] * t2 * L.lL), r2z = z - (L.E[2] + L.dL[2] * t2 * L.lL);
+    const lower = r2x * r2x + r2y * r2y + r2z * r2z <= r1x * r1x + r1y * r1y + r1z * r1z;
+    const [rx, ry, rz] = lower ? [r2x, r2y, r2z] : [r1x, r1y, r1z];
+    const rl = Math.hypot(rx, ry, rz) || 1;
+    const [F, O] = lower ? L.fL : L.fU;
+    const sv = lower ? t2 * L.lL : -(1 - t1) * L.lU;
+    A[i * 4] = L.code; A[i * 4 + 1] = sv;
+    Bv[i * 2] = (rx * F[0] + ry * F[1] + rz * F[2]) / rl; Bv[i * 2 + 1] = (rx * O[0] + ry * O[1] + rz * O[2]) / rl;
+    if (sv < L.sMin) L.sMin = sv;
+    if (sv > L.sMax) L.sMax = sv;
+  }
+  const top = g.spec.slot === 'top';
+  for (let i = 0; i < n; i++) {
+    const k = limbOf[i];
+    if (k < 0) { const y = pos[i * 3 + 1]; A[i * 4 + 2] = top ? y - ty0 : ty1 - y; continue; }
+    const L = limb[k], sv = A[i * 4 + 1];
+    A[i * 4 + 2] = L.sMax - sv; A[i * 4 + 3] = sv - L.sMin;
+  }
+  return { a: A, b: Bv };
 }
