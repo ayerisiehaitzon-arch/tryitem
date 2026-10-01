@@ -10,6 +10,8 @@
     "shots": "node scripts/shots.js",
     "previews": "node scripts/previews.js",
     "creator-previews": "node scripts/creator-previews.js",
+    "fetch-human": "bash scripts/human/fetch.sh",
+    "build-human": "node scripts/human/build.mjs && node scripts/human/anims.mjs",
     "inspect": "node scripts/inspect.js"
   },
   "license": "MIT",

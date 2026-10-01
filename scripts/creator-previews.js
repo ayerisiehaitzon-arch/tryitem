@@ -1,9 +1,10 @@
 // 角色创建器的预览图：node scripts/creator-previews.js
-//   docs/previews/creator.jpg          创建器界面（桌面 + 手机）
-//   docs/previews/creator-presets.jpg  八个预设角色的全身
-//   docs/previews/creator-faces.jpg    八个预设角色的脸
-//   docs/previews/creator-poses.jpg    六个姿势
-//   docs/previews/creator-sliders.jpg  同一个人拉不同的滑杆（性别特征、胖瘦、肌肉、脸型、五官）
+//   docs/previews/creator.jpg              创建器界面（桌面 + 手机）
+//   docs/previews/creator-presets.jpg      八个预设角色的全身（待机动作里的一帧）
+//   docs/previews/creator-faces.jpg        八个预设角色的脸
+//   docs/previews/creator-heritage.jpg     遗传：同一对父母，“长相”从像母亲拉到像父亲
+//   docs/previews/creator-expressions.jpg  表情
+//   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上）
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -46,7 +47,7 @@ async function shoot(list, size) {
 }
 
 // 拼图：cols 列，每格 w × h，格子之间留 gap；有标题时每格上面多一条 40px 的标题栏（不压在人身上）
-async function grid(files, cols, w, h, file, { gap = 0, bg = '#e3e2dd', labels = null } = {}) {
+async function grid(files, cols, w, h, file, { gap = 0, bg = '#dedcd6', labels = null } = {}) {
   const rows = Math.ceil(files.length / cols);
   const lh = labels ? 40 : 0, th = h + lh;
   const W = cols * w + (cols - 1) * gap, H = rows * th + (rows - 1) * gap;
@@ -66,9 +67,9 @@ async function grid(files, cols, w, h, file, { gap = 0, bg = '#e3e2dd', labels =
 }
 
 try {
-  // 界面：桌面 1440×900 + 手机 390×844
-  const [desk] = await shoot([['ui-desk', 'preset=1&tab=feature&feat=eyes&cam=bust']], [1440, 900]);
-  const [phone] = await shoot([['ui-phone', 'preset=4&tab=body']], [390, 844]);
+  // 界面：桌面 1440×900（遗传）+ 手机 390×844（外观 / 头发）
+  const [desk] = await shoot([['ui-desk', 'preset=3&tab=heritage&anim=idle&t=1.2']], [1440, 900]);
+  const [phone] = await shoot([['ui-phone', 'preset=1&tab=look&look=hair&anim=idle&t=0.6']], [390, 844]);
   {
     const d = await sharp(desk).resize(1440, 900).toBuffer();
     const p = await sharp(phone).resize(390, 844).toBuffer();
@@ -77,25 +78,23 @@ try {
       .jpeg({ quality: 86, mozjpeg: true }).toFile(path.join(out, 'creator.jpg'));
   }
   const presets = [0, 1, 2, 3, 4, 5, 6, 7];
-  // 全身图按同一个取景高度拍，高矮能直接比
-  const full = await shoot(presets.map((i) => [`full${i}`, `preset=${i}&bare=1&az=20&frameH=1.86`]), [420, 720]);
+  // 全身图按同一个取景高度拍，高矮能直接比；放待机动作的一帧（不是 A 字静止姿势）
+  const full = await shoot(presets.map((i) => [`full${i}`, `preset=${i}&bare=1&az=18&frameH=1.9&anim=idle&t=${0.4 + i * 0.17}`]), [420, 720]);
   await grid(full, 8, 300, 520, path.join(out, 'creator-presets.jpg'));
-  const faces = await shoot(presets.map((i) => [`face${i}`, `preset=${i}&bare=1&cam=face&az=18`]), [520, 560]);
+  const faces = await shoot(presets.map((i) => [`face${i}`, `preset=${i}&bare=1&cam=face&az=16&anim=idle&t=${0.4 + i * 0.17}`]), [520, 560]);
   await grid(faces, 4, 360, 388, path.join(out, 'creator-faces.jpg'), { gap: 4 });
-  const poses = ['stand', 'relaxed', 'hips', 'pockets', 'wave', 'think'];
-  const ps = await shoot(poses.map((p) => [`pose-${p}`, `preset=6&bare=1&pose=${p}&az=24`]), [420, 720]);
-  await grid(ps, 6, 300, 520, path.join(out, 'creator-poses.jpg'), { labels: ['站立', '稍息', '叉腰', '插兜', '打招呼', '托腮'] });
-  // 同一个人，拉不同的滑杆
-  const sl = [
-    ['s-base', 'preset=0&bare=1&az=20&frameH=1.98'],
-    ['s-fem', 'preset=0&bare=1&az=20&frameH=1.98&sex=1'],
-    ['s-fat', 'preset=0&bare=1&az=20&frameH=1.98&weight=1'],
-    ['s-thin', 'preset=0&bare=1&az=20&frameH=1.98&weight=-1'],
-    ['s-mus', 'preset=0&bare=1&az=20&frameH=1.98&muscle=1&shoulders=1'],
-    ['s-tall', 'preset=0&bare=1&az=20&frameH=1.98&height=196&legs=1'],
-  ];
-  const sls = await shoot(sl, [420, 720]);
-  await grid(sls, 6, 300, 520, path.join(out, 'creator-sliders.jpg'), { labels: ['默认', '性别特征 → 女性', '胖瘦 → 胖', '胖瘦 → 瘦', '肌肉、肩宽', '身高 196、腿长'] });
+  // 遗传：同一对父母，长相 0 → 1
+  const her = [0, 0.25, 0.5, 0.75, 1];
+  const hs = await shoot(her.map((t) => [`her-${t}`, `preset=0&bare=1&cam=face&az=12&mom=1&dad=2&shape=${t}&skin=${t}`]), [420, 460]);
+  await grid(hs, 5, 300, 330, path.join(out, 'creator-heritage.jpg'), { labels: ['像母亲（苏菲）', '', '一半一半', '', '像父亲（科菲）'] });
+  // 表情
+  const ex = ['neutral', 'smile', 'laugh', 'surprise', 'angry', 'sad'];
+  const es = await shoot(ex.map((e) => [`expr-${e}`, `preset=3&bare=1&cam=face&az=10&expr=${e}`]), [420, 460]);
+  await grid(es, 6, 300, 330, path.join(out, 'creator-expressions.jpg'), { labels: ['平静', '微笑', '大笑', '惊讶', '生气', '难过'] });
+  // 动作
+  const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话']];
+  const ms = await shoot(mo.map(([a, t]) => [`mo-${a}`, `preset=5&bare=1&az=30&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);
+  await grid(ms, 6, 300, 520, path.join(out, 'creator-motion.jpg'), { labels: mo.map((m) => m[2]) });
 } finally {
   await browser.close();
   server.close();

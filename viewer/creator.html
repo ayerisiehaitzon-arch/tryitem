@@ -8,8 +8,8 @@
 <style>
   /* 版式：整屏是三维舞台，人站在左边留出的空间里；右侧一列捏人面板（手机上变成底部抽屉）。和家具陈列室同一套颜色和字体 */
   :root {
-    --stage: #e3e2dd;
-    --panel: rgba(246, 245, 241, 0.9);
+    --stage: #dedcd6;
+    --panel: rgba(246, 245, 241, 0.92);
     --panel-solid: #f6f5f1;
     --ink: #1b1e21;
     --muted: #62676c;
@@ -22,7 +22,7 @@
     --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
     --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
     --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-    --panel-w: 372px;
+    --panel-w: 380px;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
@@ -100,8 +100,8 @@
   .group h3 { margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font: 600 12px/1 var(--mono); letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
   .group h3 em { font-style: normal; font-weight: 400; letter-spacing: 0; text-transform: none; font-family: var(--sans); font-size: 12px; }
 
-  .slider { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) 3.4em; align-items: center; gap: 10px; }
-  .slider label { font-size: 13px; white-space: nowrap; cursor: default; }
+  .slider { display: grid; grid-template-columns: 5.4em minmax(0, 1fr) 3.4em; align-items: center; gap: 10px; }
+  .slider label { font-size: 13px; white-space: nowrap; cursor: default; overflow: hidden; text-overflow: ellipsis; }
   .slider output { font: 12px/1 var(--mono); text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
   .slider .ends { grid-column: 2; display: flex; justify-content: space-between; margin-top: -8px; font-size: 11px; color: var(--muted); }
   input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; cursor: pointer; --a: 50%; --b: 50%; }
@@ -116,9 +116,14 @@
   .swatches { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
   .sw { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; padding: 0; background: var(--c); }
   .sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--accent); }
+  .sw.none { background: linear-gradient(135deg, transparent 45%, var(--muted) 45%, var(--muted) 55%, transparent 55%), var(--panel-solid); }
   .sw.custom { position: relative; overflow: hidden; background: conic-gradient(#e55, #ec5, #5c6, #5be, #75e, #e5b, #e55); }
   .sw.custom input { position: absolute; inset: -8px; width: 44px; height: 44px; opacity: 0; cursor: pointer; }
 
+  .parents { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .parent { display: grid; justify-items: center; gap: 4px; padding: 6px 2px 7px; border: 1px solid var(--line); border-radius: 10px; background: transparent; cursor: pointer; min-width: 0; font-size: 12px; }
+  .parent canvas { width: 100%; max-width: 74px; aspect-ratio: 1; border-radius: 8px; background: var(--track); display: block; }
+  .parent[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
   .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .card { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: transparent; cursor: pointer; min-width: 0; }
   .card b { font: 600 15px/1.3 var(--serif); }
@@ -132,6 +137,7 @@
   .saved .item .card { flex: 1; }
   .saved .del { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
   .hint { margin: 0; font-size: 12px; color: var(--muted); }
+  .hint a { color: inherit; }
 
   .actions {
     position: fixed; z-index: 2; left: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); display: flex; flex-wrap: wrap; gap: 8px;
@@ -150,7 +156,7 @@
   .modal textarea { width: 100%; box-sizing: border-box; min-height: 110px; resize: vertical; border: 1px solid var(--line); border-radius: 9px; padding: 10px; background: var(--stage); font: 12px/1.5 var(--mono); word-break: break-all; }
   .toast { position: fixed; z-index: 11; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); transform: translateX(-50%); background: var(--ink); color: var(--panel-solid); padding: 9px 16px; border-radius: 999px; font-size: 13px; pointer-events: none; opacity: 0; transition: opacity .2s; white-space: nowrap; }
   .toast.show { opacity: 1; }
-  .loading { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 12px var(--mono); color: var(--muted); letter-spacing: .12em; pointer-events: none; }
+  .loading { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 12px var(--mono); color: var(--muted); letter-spacing: .12em; pointer-events: none; text-align: center; }
 
   @media (max-width: 760px) {
     :root { --panel-w: 100%; --sheet: 46%; }
@@ -161,6 +167,7 @@
     .actions { left: 16px; right: 16px; max-width: none; bottom: calc(var(--sheet) + 10px); gap: 6px; }
     .actions button { padding: 7px 11px; font-size: 13px; }
     .stats { display: none; }
+    .parents { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
   @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
   body.shot .actions, body.shot .stats, body.shot .loading { display: none; }
@@ -168,7 +175,7 @@
 </style>
 
 <canvas id="stage" aria-label="三维角色预览，可拖动旋转、滚轮或双指缩放"></canvas>
-<div class="loading" id="loading">LOADING</div>
+<div class="loading" id="loading">LOADING<br><span id="loading-sub"></span></div>
 <header class="head">
   <h1>角色创建器</h1>
   <div class="en">Character creator · tryitem</div>
@@ -176,7 +183,7 @@
 </header>
 <aside class="panel" aria-label="捏人面板">
   <nav class="tabs" id="tabs" role="tablist" aria-label="分类"></nav>
-  <div class="sub" id="sub" role="tablist" aria-label="五官"></div>
+  <div class="sub" id="sub" role="tablist" aria-label="细分"></div>
   <div class="pane" id="pane"></div>
 </aside>
 <div class="stats" id="stats"></div>
@@ -201,567 +208,697 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import * as CH from '../src/character/index.js';
+import * as HM from '../src/human/human.js';
 
 const $ = (id) => document.getElementById(id);
-const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const params = new URLSearchParams(location.search);
 const SHOT = params.has('shot');
 if (SHOT) document.body.classList.add('shot');
 if (params.get('bare') === '1') document.body.classList.add('bare');
+const ASSETS = params.get('assets') ?? new URL('./human/', location.href).href;
 
-// —— 调色板 ——
-const SKIN = ['#f6dccb', '#eec4a9', '#e2ae8d', '#cf9672', '#b27a57', '#8f5d40', '#6c432e', '#4a2c1f'];
-const LIPS = ['#c9706a', '#b5615a', '#a8545c', '#c46b7d', '#9b4b45', '#d98a7c', '#8c3b3f', '#b87a6e'];
-const IRIS = ['#5a3d27', '#2f2017', '#7a5a2e', '#a8742a', '#4f6b3a', '#5f7480', '#4f7fae', '#7a5aa0'];
-const HAIR = ['#1c1714', '#3b2a1e', '#6a4a30', '#7d3f22', '#a0522d', '#b08a5a', '#d6b47a', '#e6dcc4', '#8f8a85', '#c96f86', '#4c6fb8', '#6a8f5f'];
-const FRAMES = ['#232426', '#6b3f22', '#b48a4a', '#c9ccd0', '#8c2f2f', '#2b3a56'];
-const CLOTH = ['#efece4', '#d9d2c3', '#232426', '#5d6166', '#2b3a56', '#3c5a85', '#8fb4d6', '#b8443a', '#d4a23a', '#6b7a45', '#2f5a45', '#c06a48', '#e4a8b6', '#6e4b33'];
+// —— 资源：MakeHuman（CC0）的人体、头发、衣服、皮肤；Quaternius（CC0）的动作 ——
+const H = await HM.loadHuman(ASSETS);
+const ANIM = await (async () => {
+  const meta = await (await fetch(`${ASSETS}anims.json`)).json();
+  const res = await fetch(`${ASSETS}anims.bin`);
+  let buf = new Uint8Array(await res.arrayBuffer());
+  if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  for (const c of meta.clips) { c.qd = new Int16Array(buf.buffer, c.q.off, c.q.n); c.hd = new Float32Array(buf.buffer, c.hips.off, c.hips.n); }
+  return meta;
+})();
+const CLIPS = Object.fromEntries(ANIM.clips.map((c) => [c.id, c]));
 
-// —— 状态 ——
-const DEF = () => ({
-  name: '未命名角色',
-  p: { ...CH.DEFAULTS },
-  look: { skin: '#e2ae8d', lips: '#b5615a', blush: 0.3, stubble: 0, liner: 0.55 },
-  iris: '#5a3d27',
-  hair: { style: 'side', color: '#3b2a1e' },
-  outfit: { top: 'tee', topColor: '#efece4', bottom: 'jeans', bottomColor: '#3c5a85', shoes: 'sneakers', shoesColor: '#efece4' },
-  expr: 'neutral',
-  pose: 'stand',
-  anim: 'idle',
-  glasses: { style: 'none', color: '#232426' },
-});
-let S = DEF();
-
-const EXPR = {
-  neutral: { label: '平静', p: {} },
-  smile: { label: '微笑', p: { smile: 0.75 } },
-  grin: { label: '开心', p: { smile: 1, browUp: 0.35 } },
-  surprise: { label: '惊讶', p: { browUp: 1 } },
-  angry: { label: '生气', p: { browDown: 1, frown: 0.55 } },
-  sad: { label: '难过', p: { browUp: 0.7, frown: 0.9 } },
-  wink: { label: '眨眼', p: { blinkL: 1, smile: 0.6 } },
-  sleep: { label: '闭眼', p: { blink: 1 } },
+// —— 遗传：GTA 式的“父母”。每位家长 = 人种比例 + 一组脸部滑杆 + 皮肤（人种、第几套）。孩子的脸在两位之间插值，肤色单独插值 ——
+const M = (o) => o; // 只是为了排版
+const PARENTS = {
+  mom: [
+    { name: '林晓', race: { asian: 1 }, skin: 'asian', face: M({ 'eyes/eye-epicanthus|in-out': 0.35, 'head/head-oval': 0.5, 'chin/chin-width|decr-incr': -0.25, 'nose/nose-scale-horiz|decr-incr': -0.1, 'mouth/mouth-scale-horiz|decr-incr': -0.15 }) },
+    { name: '苏菲', race: { caucasian: 1 }, skin: 'caucasian', face: M({ 'cheek/cheek-bones|decr-incr': 0.35, 'nose/nose-point-width|decr-incr': -0.3, 'head/head-oval': 0.4, 'mouth/mouth-upperlip-volume|decr-incr': 0.25, 'eyes/eye-scale|decr-incr': 0.1 }) },
+    { name: '阿玛拉', race: { african: 1 }, skin: 'african', face: M({ 'nose/nose-scale-horiz|decr-incr': 0.25, 'mouth/mouth-lowerlip-volume|decr-incr': 0.35, 'mouth/mouth-upperlip-volume|decr-incr': 0.3, 'head/head-round': 0.3, 'cheek/cheek-bones|decr-incr': 0.2 }) },
+    { name: '玛丽亚', race: { caucasian: 0.65, african: 0.2, asian: 0.15 }, skin: 'caucasian2', face: M({ 'eyes/eye-scale|decr-incr': 0.25, 'mouth/mouth-scale-horiz|decr-incr': 0.15, 'chin/chin-prominent|decr-incr': -0.2, 'head/head-invertedtriangular': 0.35, 'eyebrows/eyebrows-angle|down-up': 0.2 }) },
+    { name: '优子', race: { asian: 1 }, skin: 'asian', face: M({ 'head/head-round': 0.5, 'eyes/eye-scale|decr-incr': 0.15, 'nose/nose-scale-depth|decr-incr': -0.25, 'chin/chin-height|decr-incr': -0.25, 'cheek/cheek-volume|decr-incr': 0.25 }) },
+    { name: '艾琳', race: { caucasian: 1 }, skin: 'caucasian2', face: M({ 'head/head-rectangular': 0.35, 'nose/nose-hump|decr-incr': 0.35, 'nose/nose-scale-vert|decr-incr': 0.2, 'chin/chin-prominent|decr-incr': 0.2, 'eyes/eye-scale|decr-incr': -0.1 }) },
+    { name: '莱拉', race: { caucasian: 0.55, asian: 0.25, african: 0.2 }, skin: 'caucasian', face: M({ 'eyebrows/eyebrows-trans|down-up': -0.2, 'nose/nose-curve|concave-convex': 0.35, 'eyes/eye-scale|decr-incr': 0.25, 'head/head-oval': 0.3, 'mouth/mouth-lowerlip-volume|decr-incr': 0.2 }) },
+    { name: '珍', race: { african: 0.6, caucasian: 0.4 }, skin: 'african', face: M({ 'cheek/cheek-bones|decr-incr': 0.4, 'head/head-oval': 0.45, 'nose/nose-point-width|decr-incr': -0.1, 'eyes/eye-corner1|down-up': 0.25 }) },
+  ],
+  dad: [
+    { name: '陈峰', race: { asian: 1 }, skin: 'asian', face: M({ 'head/head-square': 0.35, 'chin/chin-width|decr-incr': 0.25, 'eyes/eye-epicanthus|in-out': 0.3, 'nose/nose-scale-depth|decr-incr': -0.1 }) },
+    { name: '杰克', race: { caucasian: 1 }, skin: 'caucasian', face: M({ 'chin/chin-prominent|decr-incr': 0.3, 'chin/chin-width|decr-incr': 0.3, 'nose/nose-hump|decr-incr': 0.2, 'head/head-rectangular': 0.35, 'eyebrows/eyebrows-trans|backward-forward': 0.3 }) },
+    { name: '科菲', race: { african: 1 }, skin: 'african', face: M({ 'nose/nose-scale-horiz|decr-incr': 0.35, 'mouth/mouth-lowerlip-volume|decr-incr': 0.3, 'head/head-square': 0.25, 'chin/chin-bones|decr-incr': 0.2 }) },
+    { name: '卡洛斯', race: { caucasian: 0.6, african: 0.25, asian: 0.15 }, skin: 'caucasian2', face: M({ 'eyebrows/eyebrows-trans|down-up': -0.2, 'nose/nose-curve|concave-convex': 0.3, 'chin/chin-cleft|decr-incr': 0.4, 'head/head-square': 0.2 }) },
+    { name: '健太', race: { asian: 1 }, skin: 'asian', face: M({ 'head/head-oval': 0.45, 'eyes/eye-scale|decr-incr': -0.1, 'nose/nose-scale-depth|decr-incr': -0.2, 'mouth/mouth-scale-horiz|decr-incr': -0.1 }) },
+    { name: '伊万', race: { caucasian: 1 }, skin: 'caucasian2', face: M({ 'head/head-diamond': 0.35, 'cheek/cheek-bones|decr-incr': 0.45, 'eyes/eye-trans|in-out': -0.15, 'nose/nose-scale-vert|decr-incr': 0.3 }) },
+    { name: '奥马尔', race: { caucasian: 0.5, asian: 0.25, african: 0.25 }, skin: 'caucasian', face: M({ 'nose/nose-hump|decr-incr': 0.45, 'eyebrows/eyebrows-trans|backward-forward': 0.35, 'head/head-rectangular': 0.25, 'eyes/eye-scale|decr-incr': 0.1 }) },
+    { name: '马库斯', race: { african: 0.7, caucasian: 0.3 }, skin: 'african', face: M({ 'head/head-square': 0.45, 'chin/chin-bones|decr-incr': 0.35, 'mouth/mouth-scale-horiz|decr-incr': 0.2, 'neck/neck-scale-horiz|decr-incr': 0.2 }) },
+  ],
+};
+// 皮肤贴图：人种 + 性别 + 年龄段（young / middleage / old），caucasian2 是白人的第二套
+const skinId = (kind, sex, age = 'young') => {
+  const race = kind.replace('2', ''), v = kind.endsWith('2') && age === 'young' ? '2' : '';
+  return `${age}_${race}_${sex === 'f' ? 'female' : 'male'}${v}`;
 };
 
-const PRESETS = [
-  { name: '阿哲', note: '侧分短发，白 T 牛仔裤', s: { p: { sex: 0.05, height: 178, weight: -0.1, muscle: 0.45, jaw: 0.3, browThick: 0.3, noseBridge: 0.3 }, look: { skin: '#e2ae8d', stubble: 0.25 }, hair: { style: 'side', color: '#1c1714' }, outfit: { top: 'tee', topColor: '#efece4', bottom: 'jeans', bottomColor: '#3c5a85', shoes: 'sneakers', shoesColor: '#efece4' } } },
-  { name: '小满', note: '波波头，卫衣短裤', s: { p: { sex: 0.95, height: 162, weight: -0.15, eyeSize: 0.45, faceLength: -0.4, lips: 0.3, noseSize: -0.3, chin: -0.3 }, look: { skin: '#f6dccb', blush: 0.55, lips: '#c46b7d' }, iris: '#2f2017', glasses: { style: 'round', color: '#6b3f22' }, hair: { style: 'bob', color: '#3b2a1e' }, outfit: { top: 'hoodie', topColor: '#e4a8b6', bottom: 'shorts', bottomColor: '#2b3a56', shoes: 'sneakers', shoesColor: '#efece4' } } },
-  { name: '老周', note: '寸头，微胖，卡其裤', s: { p: { sex: 0, height: 172, weight: 0.65, muscle: 0.3, faceWidth: 0.4, cheeks: 0.5, jaw: 0.2, browThick: 0.5, earSize: 0.3, noseWidth: 0.4 }, look: { skin: '#cf9672', stubble: 0.6, blush: 0.2 }, hair: { style: 'buzz', color: '#5d5752' }, outfit: { top: 'tee', topColor: '#5d6166', bottom: 'chinos', bottomColor: '#b49a72', shoes: 'boots', shoesColor: '#6e4b33' }, pose: 'think' } },
-  { name: '安娜', note: '长直发，长袖 T 恤', s: { p: { sex: 1, height: 170, weight: -0.3, eyeSize: 0.2, eyeTilt: 0.4, cheekbones: 0.4, lips: 0.4, noseBridge: 0.2 }, look: { skin: '#eec4a9', lips: '#a8545c', liner: 0.9 }, iris: '#4f7fae', hair: { style: 'long', color: '#b08a5a' }, outfit: { top: 'longtee', topColor: '#2b3a56', bottom: 'jeans', bottomColor: '#232426', shoes: 'boots', shoesColor: '#232426' }, pose: 'relaxed' } },
-  { name: '大力', note: '健身达人，背心短裤', s: { p: { sex: 0.1, height: 186, weight: 0.15, muscle: 1, shoulders: 0.7, chest: 0.6, waist: -0.2, neck: -0.4, jaw: 0.7, chinWidth: 0.4 }, look: { skin: '#8f5d40', stubble: 0.3 }, iris: '#2f2017', hair: { style: 'crop', color: '#1c1714' }, outfit: { top: 'tank', topColor: '#d4a23a', bottom: 'shorts', bottomColor: '#232426', shoes: 'sneakers', shoesColor: '#232426' }, pose: 'hips', expr: 'smile' } },
-  { name: '阿月', note: '丸子头，T 恤半身裙', s: { p: { sex: 0.9, height: 166, eyeSize: 0.3, eyeOpen: 0.4, faceWidth: -0.2, mouthWidth: -0.2, browArch: 0.5 }, look: { skin: '#b27a57', lips: '#9b4b45', blush: 0.4 }, iris: '#2f2017', hair: { style: 'bun', color: '#1c1714' }, outfit: { top: 'tee', topColor: '#efece4', bottom: 'skirt', bottomColor: '#6b7a45', shoes: 'sneakers', shoesColor: '#efece4' } } },
-  { name: '马克', note: '背头，卫衣牛仔裤', s: { p: { sex: 0.15, height: 182, weight: 0.1, muscle: 0.5, faceLength: 0.4, chin: 0.4, noseLength: 0.4, noseBridge: 0.6, eyeSpacing: -0.2 }, look: { skin: '#f6dccb', stubble: 0.45 }, iris: '#4f6b3a', glasses: { style: 'square', color: '#232426' }, hair: { style: 'back', color: '#7d3f22' }, outfit: { top: 'hoodie', topColor: '#2f5a45', bottom: 'jeans', bottomColor: '#3c5a85', shoes: 'boots', shoesColor: '#6e4b33' }, pose: 'pockets' } },
-  { name: '晴子', note: '马尾，T 恤休闲裤', s: { p: { sex: 0.85, height: 164, weight: 0.05, eyeSize: 0.5, eyeOpen: 0.6, noseSize: -0.4, cheeks: 0.4, faceLength: -0.2 }, look: { skin: '#eec4a9', lips: '#d98a7c', blush: 0.6 }, iris: '#7a5a2e', hair: { style: 'pony', color: '#a0522d' }, outfit: { top: 'tee', topColor: '#8fb4d6', bottom: 'chinos', bottomColor: '#efece4', shoes: 'sneakers', shoesColor: '#efece4' }, pose: 'wave', expr: 'grin' } },
+// —— 五官：仿 GTA 的那几十根滑杆，每根对应 MakeHuman 的一个（或几个）形变 ——
+const FEATURES = [
+  { id: 'shape', label: '脸型', focus: 'face', items: [
+    ['face_w', '脸宽', ['head/head-scale-horiz|decr-incr']], ['face_l', '脸长', ['head/head-scale-vert|decr-incr']], ['face_fat', '脸部胖瘦', ['head/head-fat|decr-incr']],
+    ['face_round', '圆脸', ['head/head-round'], 0, 1], ['face_square', '方脸', ['head/head-square'], 0, 1], ['face_oval', '鹅蛋脸', ['head/head-oval'], 0, 1], ['face_heart', '心形脸', ['head/head-invertedtriangular'], 0, 1],
+    ['forehead', '额头高低', ['forehead/forehead-scale-vert|decr-incr']], ['temple', '太阳穴', ['forehead/forehead-temple|decr-incr']],
+  ] },
+  { id: 'eyes', label: '眼睛', focus: 'eyes', items: [
+    ['eye_s', '眼睛大小', ['eyes/eye-scale|decr-incr']], ['eye_o', '睁眼程度', ['eyes/eye-height2|decr-incr']], ['eye_d', '眼距', ['eyes/eye-trans|in-out']],
+    ['eye_y', '眼睛高低', ['eyes/eye-trans|down-up']], ['eye_tilt', '眼角上挑', ['eyes/eye-corner1|down-up']], ['eye_fold', '内眦赘皮', ['eyes/eye-epicanthus|in-out']],
+    ['eye_lid', '双眼皮', ['eyes/eye-eyefold|down-up']], ['eye_bag', '眼袋', ['eyes/eye-bag|decr-incr']],
+    ['brow_h', '眉毛高低', ['eyebrows/eyebrows-trans|down-up']], ['brow_d', '眉骨', ['eyebrows/eyebrows-trans|backward-forward']], ['brow_a', '眉尾上扬', ['eyebrows/eyebrows-angle|down-up']],
+  ] },
+  { id: 'nose', label: '鼻子', focus: 'face', items: [
+    ['nose_w', '鼻翼宽窄', ['nose/nose-scale-horiz|decr-incr']], ['nose_d', '鼻梁高低', ['nose/nose-scale-depth|decr-incr']], ['nose_l', '鼻子长短', ['nose/nose-scale-vert|decr-incr']],
+    ['nose_tip', '鼻尖上翘', ['nose/nose-point|down-up']], ['nose_tipw', '鼻头大小', ['nose/nose-point-width|decr-incr']], ['nose_hump', '驼峰', ['nose/nose-hump|decr-incr']],
+    ['nose_curve', '鼻梁弧度', ['nose/nose-curve|concave-convex']], ['nostril', '鼻孔大小', ['nose/nose-nostrils-width|decr-incr']], ['nose_y', '鼻子高低', ['nose/nose-trans|down-up']],
+  ] },
+  { id: 'mouth', label: '嘴巴', focus: 'mouth', items: [
+    ['mouth_w', '嘴巴宽窄', ['mouth/mouth-scale-horiz|decr-incr']], ['lip_up', '上唇厚薄', ['mouth/mouth-upperlip-volume|decr-incr']], ['lip_low', '下唇厚薄', ['mouth/mouth-lowerlip-volume|decr-incr']],
+    ['mouth_c', '嘴角', ['mouth/mouth-angles|down-up']], ['mouth_y', '嘴巴高低', ['mouth/mouth-trans|down-up']], ['mouth_z', '嘴巴前后', ['mouth/mouth-trans|backward-forward']],
+    ['cupid', '唇峰', ['mouth/mouth-cupidsbow|decr-incr']], ['philtrum', '人中', ['mouth/mouth-philtrum-volume|decr-incr']], ['dimple', '酒窝', ['mouth/mouth-dimples|in-out']],
+  ] },
+  { id: 'jaw', label: '下巴', focus: 'face', items: [
+    ['cheek_h', '颧骨高低', ['cheek/cheek-trans|down-up']], ['cheek_b', '颧骨突出', ['cheek/cheek-bones|decr-incr']], ['cheek_v', '脸颊丰满', ['cheek/cheek-volume|decr-incr']],
+    ['jaw_b', '下颌骨', ['chin/chin-bones|decr-incr']], ['jaw_drop', '下颌角', ['chin/chin-jaw-drop|decr-incr']], ['chin_w', '下巴宽窄', ['chin/chin-width|decr-incr']],
+    ['chin_h', '下巴长短', ['chin/chin-height|decr-incr']], ['chin_p', '下巴前后', ['chin/chin-prominent|decr-incr']], ['chin_c', '下巴沟', ['chin/chin-cleft|decr-incr']],
+    ['neck_w', '脖子粗细', ['neck/neck-scale-horiz|decr-incr', 'neck/neck-scale-depth|decr-incr']],
+  ] },
+  { id: 'ears', label: '耳朵', focus: 'side', items: [
+    ['ear_s', '耳朵大小', ['ears/ear-scale|decr-incr']], ['ear_wing', '招风耳', ['ears/ear-wing|decr-incr']], ['ear_lobe', '耳垂', ['ears/ear-lobe|decr-incr']],
+    ['ear_y', '耳朵高低', ['ears/ear-trans|down-up']], ['ear_point', '尖耳朵', ['ears/ear-shape|pointed-triangle']],
+  ] },
 ];
+const FEATURE_DEF = Object.fromEntries(FEATURES.flatMap((g) => g.items.map(([id, label, mods, min = -1, max = 1]) => [id, { id, label, mods, min, max }])));
+// 身材：宏（性别倾向、年龄、身高、体重、肌肉、比例、胸围）+ 几个局部
+const BODY = [
+  ['gender', '性别倾向', 0, 1], ['age', '年龄', 20, 80, '岁'], ['height', '身高', 0, 1], ['weight', '胖瘦', 0, 1], ['muscle', '肌肉', 0, 1], ['proportions', '身材比例', 0, 1], ['cup', '胸围', 0, 1],
+];
+const BODY_MODS = [
+  ['shoulder', '肩宽', ['measure/shoulder-dist']], ['waist', '腰围', ['measure/waist-circ']], ['hips', '臀围', ['measure/hips-circ']],
+  ['belly', '肚子', ['stomach/stomach-pregnant|decr-incr']], ['butt', '臀部', ['buttocks/buttocks-volume|decr-incr']], ['legs', '腿长', ['measure/upperleg-height', 'measure/lowerleg-height']],
+  ['arms', '手臂粗细', ['armslegs/upperarm-fat|decr-incr', 'armslegs/lowerarm-fat|decr-incr']], ['thigh', '大腿粗细', ['measure/thigh-circ']], ['vshape', '倒三角', ['torso/torso-vshape|decr-incr']],
+];
+const BODY_MOD_DEF = Object.fromEntries(BODY_MODS.map(([id, label, mods]) => [id, { id, label, mods, min: -1, max: 1 }]));
 
+// —— 表情：MakeHuman 的表情单元（FACS 那样的一块块肌肉动作）按比例组合 ——
+const EXPR = {
+  neutral: { label: '平静', u: {} },
+  smile: { label: '微笑', u: { 'mouth-corner-puller': 0.45, 'mouth-compression': 0.15, 'eye-left-slit': 0.15, 'eye-right-slit': 0.15 } },
+  laugh: { label: '大笑', u: { 'mouth-corner-puller': 0.9, 'mouth-open': 0.35, 'mouth-upward-retraction': 0.3, 'eye-left-slit': 0.35, 'eye-right-slit': 0.35, 'eyebrows-left-up': 0.15, 'eyebrows-right-up': 0.15 } },
+  surprise: { label: '惊讶', u: { 'eyebrows-left-up': 0.8, 'eyebrows-right-up': 0.8, 'eye-left-opened-up': 0.35, 'eye-right-opened-up': 0.35, 'mouth-open': 0.3 } },
+  angry: { label: '生气', u: { 'eyebrows-left-down': 0.8, 'eyebrows-right-down': 0.8, 'mouth-compression': 0.45, 'nose-left-elevation': 0.35, 'nose-right-elevation': 0.35, 'eye-left-slit': 0.25, 'eye-right-slit': 0.25 } },
+  sad: { label: '难过', u: { 'eyebrows-left-inner-up': 0.8, 'eyebrows-right-inner-up': 0.8, 'mouth-depression': 0.55, 'eye-left-slit': 0.2, 'eye-right-slit': 0.2 } },
+  disgust: { label: '嫌弃', u: { 'nose-left-elevation': 0.6, 'nose-right-elevation': 0.6, 'mouth-upward-retraction': 0.35, 'eyebrows-left-down': 0.35, 'eyebrows-right-down': 0.35, 'mouth-depression': 0.25 } },
+  pout: { label: '嘟嘴', u: { 'mouth-pursing': 0.7, 'mouth-protusion': 0.45, 'eyebrows-left-inner-up': 0.2, 'eyebrows-right-inner-up': 0.2 } },
+  wink: { label: '眨眼', u: { 'eye-left-closure': 1, 'mouth-corner-puller': 0.35 } },
+  sleep: { label: '闭眼', u: { 'eye-left-closure': 1, 'eye-right-closure': 1 } },
+};
+const UNITS = H.meta.expr.map((e) => e.id);
+
+// —— 调色板 ——
+const HAIRC = ['#100d0b', '#2b1d14', '#4a3020', '#6b4428', '#8a5a33', '#a0522d', '#c08a52', '#d8b47a', '#e8d7b0', '#8f8a85', '#d7d3cf', '#b33a3a', '#c96f86', '#4c6fb8'];
+const MAKEUP = ['#b84a5a', '#c9706a', '#9b3b45', '#d98a7c', '#8c2f3f', '#e07a8a', '#7a3b6a', '#c46b4a'];
+const SHADOW = ['#5a4a40', '#3a2d28', '#7a5a6a', '#4f5f7a', '#6a5a3a', '#7a4a3a'];
+const BLUSH = ['#e08a8a', '#d9776a', '#e89a9a', '#c66a6a', '#d88aa0'];
+const EYEC = Object.keys(H.meta.eyeTex);
+const EYE_LABEL = { brown: '棕', brownlight: '浅棕', blue: '蓝', lightblue: '浅蓝', deepblue: '深蓝', bluegreen: '蓝绿', green: '绿', grey: '灰', ice: '冰蓝' };
+
+const proxyList = (cat) => H.meta.proxies.filter((p) => p.cat === cat);
+// —— 状态 ——
+const DEF = () => ({
+  name: '未命名角色', sex: 'm',
+  her: { mom: 0, dad: 0, shape: 0.5, skin: 0.5 },
+  body: { gender: null, age: 25, height: 0.5, weight: 0.5, muscle: 0.5, proportions: 0.5, cup: 0.5 },
+  bmods: {}, feat: {},
+  look: { hair: 'short02', hairColor: '', brows: 'eyebrow001', browColor: '', lashes: 'eyelashes01', eye: 'brown', beard: 0, beardColor: '', aging: 0, freckles: 0, blush: 0, blushColor: BLUSH[0], lips: 0, lipColor: MAKEUP[0], shadow: 0, shadowColor: SHADOW[0], liner: 0 },
+  outfit: 'male_casualsuit06', shoes: 'shoes05', hat: '',
+  anim: 'idle', expr: 'neutral',
+});
+let S = DEF();
+const PRESETS = [
+  { name: '阿哲', note: '碎短发，白 T 牛仔裤', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.6, skin: 0.5 }, body: { age: 26, height: 0.6, muscle: 0.6 }, feat: { jaw_b: 0.2, brow_d: 0.2 }, look: { hair: 'short02', hairColor: '#100d0b' }, outfit: 'male_casualsuit06', shoes: 'shoes05' } },
+  { name: '小满', note: '齐耳短发，T 恤热裤', s: { sex: 'f', her: { mom: 4, dad: 4, shape: 0.3, skin: 0.4 }, body: { age: 22, height: 0.35, weight: 0.4 }, feat: { eye_s: 0.3, face_round: 0.3 }, look: { hair: 'bob02', hairColor: '#4a3020', blush: 0.45, lips: 0.4, lipColor: '#c9706a' }, outfit: 'female_casualsuit02', shoes: 'shoes05' } },
+  { name: '老周', note: '平头，微胖，衬衫', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.7, skin: 0.6 }, body: { age: 58, height: 0.45, weight: 0.75, muscle: 0.4 }, feat: { face_fat: 0.4, cheek_v: 0.3 }, look: { hair: 'short04', hairColor: '#8f8a85', beard: 0.35, aging: 0.6 }, outfit: 'male_casualsuit01', shoes: 'shoes01', anim: 'idle_talking' } },
+  { name: '安娜', note: '长直发，衬衫半裙', s: { sex: 'f', her: { mom: 1, dad: 5, shape: 0.35, skin: 0.3 }, body: { age: 29, height: 0.6, weight: 0.4 }, feat: { cheek_b: 0.3, eye_tilt: 0.2 }, look: { hair: 'long01', hairColor: '#c08a52', eye: 'lightblue', lips: 0.6, lipColor: '#9b3b45', shadow: 0.4, liner: 0.6 }, outfit: 'female_elegantsuit01', shoes: 'shoes03', anim: 'walk_formal' } },
+  { name: '大力', note: '健身教练，T 恤牛仔裤', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: 'male_casualsuit04', shoes: 'shoes02' } },
+  { name: '阿月', note: '马尾，运动装', s: { sex: 'f', her: { mom: 3, dad: 3, shape: 0.45, skin: 0.5 }, body: { age: 24, height: 0.5, weight: 0.35, muscle: 0.65 }, look: { hair: 'ponytail01', hairColor: '#2b1d14', blush: 0.3 }, outfit: 'female_sportsuit01', shoes: 'shoes06', anim: 'jog_fwd' } },
+  { name: '马克', note: '黑西装，短发', s: { sex: 'm', her: { mom: 5, dad: 1, shape: 0.6, skin: 0.4 }, body: { age: 38, height: 0.7, weight: 0.5 }, feat: { chin_p: 0.25, nose_hump: 0.2 }, look: { hair: 'short01', hairColor: '#6b4428', beard: 0.25, eye: 'green' }, outfit: 'male_elegantsuit01', shoes: 'shoes03' } },
+  { name: '晴子', note: '麻花辫，T 恤牛仔裤', s: { sex: 'f', her: { mom: 4, dad: 0, shape: 0.4, skin: 0.5 }, body: { age: 21, height: 0.4, weight: 0.45 }, feat: { eye_s: 0.2, nose_tip: 0.2 }, look: { hair: 'braid01', hairColor: '#8a5a33', blush: 0.5, lips: 0.35, lipColor: '#d98a7c' }, outfit: 'female_casualsuit01', shoes: 'shoes05', anim: 'dance' } },
+];
 function applyPreset(pr) {
-  const d = DEF();
-  S = { ...d, name: pr.name, p: { ...d.p, ...(pr.s.p ?? {}) }, look: { ...d.look, ...(pr.s.look ?? {}) }, iris: pr.s.iris ?? d.iris, hair: { ...d.hair, ...(pr.s.hair ?? {}) }, outfit: { ...d.outfit, ...(pr.s.outfit ?? {}) }, expr: pr.s.expr ?? 'neutral', pose: pr.s.pose ?? 'stand', anim: pr.s.anim ?? (pr.s.pose ? '' : 'idle'), glasses: { ...d.glasses, ...(pr.s.glasses ?? {}) } };
+  const d = DEF(), s = pr.s;
+  S = { ...d, ...JSON.parse(JSON.stringify(s)), name: pr.name, her: { ...d.her, ...(s.her ?? {}) }, body: { ...d.body, ...(s.body ?? {}) }, bmods: { ...(s.bmods ?? {}) }, feat: { ...(s.feat ?? {}) }, look: { ...d.look, ...(s.look ?? {}) } };
+  S.anim = s.anim ?? 'idle';
 }
 
 // —— 渲染器、场景 ——
 const canvas = $('stage');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: !SHOT, preserveDrawingBuffer: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(SHOT ? Number(params.get('pr') ?? 1) : Math.min(window.devicePixelRatio || 1, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.85;
-const camera = new THREE.PerspectiveCamera(28, 1, 0.03, 40);
+scene.environmentIntensity = 0.75;
+const camera = new THREE.PerspectiveCamera(26, 1, 0.03, 40);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.09;
-controls.minDistance = 0.35;
-controls.maxDistance = 14;
+controls.minDistance = 0.25;
+controls.maxDistance = 12;
 controls.maxPolarAngle = Math.PI * 0.53;
 controls.enablePan = false;
-const key = new THREE.DirectionalLight(0xfff0e2, 1.55);
-key.position.set(-1.6, 3.4, 2.6);
+// 三点布光：暖色主光（带阴影）、冷色补光、背后的轮廓光
+const key = new THREE.DirectionalLight(0xfff1e4, 2.2);
+key.position.set(-1.4, 3.2, 2.6);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
-key.shadow.camera.left = -1.2; key.shadow.camera.right = 1.2; key.shadow.camera.top = 2.2; key.shadow.camera.bottom = -0.4;
-key.shadow.bias = -0.0003; key.shadow.normalBias = 0.015; key.shadow.radius = 5;
-scene.add(key, key.target);
-const rim = new THREE.DirectionalLight(0xdfe8ff, 0.55);
-rim.position.set(2.2, 2.4, -2.6);
+Object.assign(key.shadow.camera, { left: -1.1, right: 1.1, top: 2.3, bottom: -0.3, near: 0.5, far: 8 });
+key.shadow.bias = -0.0003; key.shadow.normalBias = 0.012; key.shadow.radius = 3;
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xdce6ff, 0.55);
+fill.position.set(2.4, 1.6, 2.2);
+scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff, 1.1);
+rim.position.set(0.6, 2.6, -3);
 scene.add(rim);
-const ground = new THREE.Mesh(new THREE.CircleGeometry(6, 64), new THREE.ShadowMaterial({ opacity: 0.2 }));
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ground = new THREE.Mesh(new THREE.CircleGeometry(4, 72), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 }));
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
-const disc = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.425, 96), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.35, toneMapped: false }));
-disc.rotation.x = -Math.PI / 2; disc.position.y = 0.0008;
-scene.add(disc);
 function applyTheme() {
   scene.background = new THREE.Color(css('--stage'));
-  disc.material.color.set(css('--line'));
+  ground.material.color.set(css('--stage')).multiplyScalar(0.94);
 }
 applyTheme();
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 
-// —— 程序生成的小贴图：布纹、发丝 ——
-function dataTex(size, fn) {
+// —— 贴图 ——
+const loader = new THREE.TextureLoader();
+const texCache = new Map();
+function tex(path, srgb = true) {
+  const k = path + srgb;
+  if (texCache.has(k)) return texCache.get(k);
+  const p = new Promise((res, rej) => loader.load(ASSETS + path, (t) => {
+    t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    res(t);
+  }, undefined, rej));
+  texCache.set(k, p);
+  return p;
+}
+// 皮肤的细节：毛孔的法线（程序生成，平铺）
+function poreNormal(size = 256) {
+  const h = new Float32Array(size * size);
+  const rnd = (i) => { let x = Math.imul(i ^ 0x9e3779b9, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); return ((x ^ (x >>> 16)) >>> 0) / 4294967296; };
+  for (let n = 0; n < 2600; n++) {
+    const cx = rnd(n * 3) * size, cy = rnd(n * 3 + 1) * size, r = 0.8 + rnd(n * 3 + 2) * 1.6;
+    for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+      const x = (Math.floor(cx) + dx + size) % size, y = (Math.floor(cy) + dy + size) % size;
+      const d2 = ((x + 0.5 - cx + size * 1.5) % size - size / 2) ** 2 + ((y + 0.5 - cy + size * 1.5) % size - size / 2) ** 2;
+      h[y * size + x] -= Math.exp(-d2 / (r * r));
+    }
+  }
+  for (let i = 0; i < h.length; i++) h[i] += (rnd(i + 99991) - 0.5) * 0.35;
   const d = new Uint8Array(size * size * 4);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const v = fn(x / size, y / size);
+    const hx = h[y * size + ((x + 1) % size)] - h[y * size + ((x - 1 + size) % size)];
+    const hy = h[((y + 1) % size) * size + x] - h[((y - 1 + size) % size) * size + x];
+    const nx = -hx * 0.6, ny = -hy * 0.6, l = Math.hypot(nx, ny, 1);
     const o = (y * size + x) * 4;
-    d[o] = d[o + 1] = d[o + 2] = Math.max(0, Math.min(255, v * 255)); d[o + 3] = 255;
+    d[o] = (nx / l * 0.5 + 0.5) * 255; d[o + 1] = (ny / l * 0.5 + 0.5) * 255; d[o + 2] = (1 / l * 0.5 + 0.5) * 255; d[o + 3] = 255;
   }
   const t = new THREE.DataTexture(d, size, size);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
   t.needsUpdate = true;
   return t;
 }
-const hash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
-const vnoise = (x, y, p) => {
-  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
-  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
-  const h = (a, b) => hash(((a % p) + p) % p, ((b % p) + p) % p);
-  return h(xi, yi) * (1 - u) * (1 - v) + h(xi + 1, yi) * u * (1 - v) + h(xi, yi + 1) * (1 - u) * v + h(xi + 1, yi + 1) * u * v;
+
+// —— 皮肤材质：两张皮肤照片按“肤色遗传”混合 + 老化（换成同人种的中年 / 老年皮肤）+ 化妆；漫反射用“包裹光照”模拟皮下散射（明暗交界处偏红、偏软）——
+const SKIN_WRAP = THREE.ShaderChunk.lights_physical_pars_fragment.replace(
+  'reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseContribution ) * ( 1.0 - F );',
+  `float ndlW = dot( geometryNormal, directLight.direction );
+	vec3 wrapW = vec3( 0.22, 0.08, 0.04 );
+	vec3 irrW = clamp( ( vec3( ndlW ) + wrapW ) / ( 1.0 + wrapW ), 0.0, 1.0 ) * directLight.color;
+	reflectedLight.directDiffuse += irrW * BRDF_Lambert( material.diffuseContribution ) * ( 1.0 - F );`);
+const skinU = {
+  uSkinB: { value: null }, uSkinMix: { value: 0.5 }, uSkinOld: { value: null }, uAging: { value: 0 },
+  uMask: { value: null }, uEyeMask: { value: null }, uBlush: { value: new THREE.Vector4(0.8, 0.4, 0.4, 0) }, uLips: { value: new THREE.Vector4(0.7, 0.2, 0.25, 0) },
+  uShadow: { value: new THREE.Vector4(0.3, 0.25, 0.2, 0) }, uBeard: { value: new THREE.Vector4(0.1, 0.08, 0.06, 0) }, uFreckle: { value: 0 }, uLiner: { value: 0 },
+  uPore: { value: poreNormal() },
 };
-const TEX = {
-  jersey: dataTex(128, (x, y) => 0.92 + 0.06 * vnoise(x * 32, y * 32, 32) + 0.02 * vnoise(x * 4, y * 4, 4)),
-  denim: dataTex(256, (x, y) => 0.84 + 0.06 * (Math.sin((x * 32 + y * 32) * Math.PI * 2) * 0.5 + 0.5) + 0.06 * vnoise(x * 32, y * 8, 32) - 0.05 * vnoise(x * 64, y * 64, 64)),
-  twill: dataTex(128, (x, y) => 0.88 + 0.05 * (Math.sin((x * 16 + y * 16) * Math.PI * 2) * 0.5 + 0.5) + 0.06 * vnoise(x * 16, y * 16, 16)),
-  fleece: dataTex(128, (x, y) => 0.86 + 0.14 * vnoise(x * 48, y * 48, 48) * vnoise(x * 12, y * 12, 12)),
-  canvas: dataTex(128, (x, y) => 0.86 + 0.06 * (Math.sin(x * Math.PI * 32) * Math.sin(y * Math.PI * 32) * 0.5 + 0.5) + 0.06 * vnoise(x * 8, y * 8, 8)),
-  hair: dataTex(256, (x, y) => 0.7 + 0.3 * vnoise(x * 96, y * 3, 96) * (0.7 + 0.3 * vnoise(x * 24, y * 1.5, 24))),
+const skinMat = new THREE.MeshPhysicalMaterial({ roughness: 0.52, sheen: 0.35, sheenRoughness: 0.5, sheenColor: new THREE.Color('#ff9a84'), specularIntensity: 0.55 });
+skinMat.onBeforeCompile = (sh) => {
+  Object.assign(sh.uniforms, skinU);
+  sh.fragmentShader = sh.fragmentShader
+    .replace('#include <common>', `#include <common>
+uniform sampler2D uSkinB; uniform float uSkinMix; uniform sampler2D uSkinOld; uniform float uAging;
+uniform sampler2D uMask; uniform sampler2D uEyeMask; uniform vec4 uBlush; uniform vec4 uLips; uniform vec4 uShadow; uniform vec4 uBeard; uniform float uFreckle; uniform float uLiner;
+uniform sampler2D uPore;
+float hash12(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }`)
+    .replace('#include <map_fragment>', `
+vec4 sA = texture2D( map, vMapUv );
+vec4 sB = texture2D( uSkinB, vMapUv );
+vec4 sO = texture2D( uSkinOld, vMapUv );
+vec4 skinC = mix( mix( sA, sB, uSkinMix ), sO, uAging );
+// 化妆和胡子：遮罩贴图（UV 空间，构建时从三维位置画出来）R = 胡子区域，G = 腮红，B = 嘴唇；眼睑另一张
+vec4 mk = vec4( texture2D( uMask, vMapUv ).rgb, texture2D( uEyeMask, vMapUv ).r );
+float stub = smoothstep( 0.35, 0.75, hash12( floor( vMapUv * 2600.0 ) ) );
+skinC.rgb = mix( skinC.rgb, uBeard.rgb, uBeard.a * mk.r * ( 0.55 + 0.45 * stub ) );
+float frk = smoothstep( 0.78, 0.92, hash12( floor( vMapUv * 900.0 ) ) ) * mk.g;
+skinC.rgb *= 1.0 - uFreckle * frk * 0.35;
+skinC.rgb = mix( skinC.rgb, skinC.rgb * uBlush.rgb * 1.15, uBlush.a * smoothstep( 0.05, 0.6, mk.g ) );
+skinC.rgb = mix( skinC.rgb, uLips.rgb * ( 0.55 + 0.45 * dot( skinC.rgb, vec3( 0.6 ) ) ), uLips.a * mk.b );
+skinC.rgb = mix( skinC.rgb, uShadow.rgb, uShadow.a * mk.a * 0.85 );
+skinC.rgb = mix( skinC.rgb, vec3( 0.03, 0.025, 0.025 ), uLiner * smoothstep( 0.55, 0.9, mk.a ) );
+diffuseColor *= skinC;`)
+    .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+roughnessFactor = mix( roughnessFactor, 0.32, uLips.a * mk.b * 0.8 );`)
+    .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+{
+  // 毛孔：平铺的细节法线，按屏幕空间导数构造切线框架叠上去
+  vec3 pn = texture2D( uPore, vMapUv * 34.0 ).xyz * 2.0 - 1.0;
+  vec3 q0 = dFdx( - vViewPosition ), q1 = dFdy( - vViewPosition );
+  vec2 st0 = dFdx( vMapUv ), st1 = dFdy( vMapUv );
+  vec3 N = normal, q1p = cross( q1, N ), q0p = cross( N, q0 );
+  vec3 T = q1p * st0.x + q0p * st1.x, B = q1p * st0.y + q0p * st1.y;
+  float det = max( dot( T, T ), dot( B, B ) ), sc = det == 0.0 ? 0.0 : inversesqrt( det );
+  normal = normalize( T * sc * pn.x * 0.35 + B * sc * pn.y * 0.35 + N * pn.z );
+}`)
+    .replace('#include <lights_physical_pars_fragment>', SKIN_WRAP);
 };
-// —— 衣服的褶皱：在片元着色器里按“褶皱坐标”算高度，用屏幕空间的导数扰动法线（Mikkelsen 的无参数化凹凸） ——
-// 坐标见 clothes.js 的 garmentFolds；振幅（米）按衣服给：uFoldArm = 肘窝、袖口、腋下、罗纹下摆，uFoldLeg = 膝窝、裤脚堆褶、猫须、垂坠
-const FOLD_GLSL = `
-varying vec4 vFoldA;
-varying vec2 vFoldB;
-uniform vec4 uFoldArm;
-uniform vec4 uFoldLeg;
-float fband(float x, float c, float w) { float d = (x - c) / w; return exp(-d * d); }
-float foldH(vec4 a, vec2 b) {
-  float code = a.x, s = a.y, e = a.z, tp = a.w;
-  float c = b.x, sn = b.y, th = atan(sn, c);
-  float mT = clamp(1.0 - code, 0.0, 1.0), mA = clamp(1.0 - abs(code - 1.0), 0.0, 1.0);
-  float mL = clamp(1.0 - abs(code - 2.0), 0.0, 1.0), mS = clamp(code - 2.0, 0.0, 1.0);
-  float h = 0.0;
-  // 胳膊：肘窝里一道道月牙形的褶（只在前面），袖口往上堆的几道
-  float elbow = uFoldArm.x * fband(s, 0.0, 0.065) * smoothstep(0.05, 0.75, c) * sin(6.2832 * (s + 0.014 * sn * sn) / 0.024);
-  float cuff = uFoldArm.y * smoothstep(0.1, 0.012, e) * smoothstep(0.0, 0.006, e) * sin(6.2832 * (e + 0.006 * sin(2.0 * th + 1.0)) / 0.027);
-  h += mA * (elbow + cuff) * smoothstep(0.02, 0.07, tp);
-  // 腿：膝盖后面的横褶，裤脚往上堆的几道（有点斜），裆下往外上方散开的“猫须”（只在前面）
-  float knee = uFoldLeg.x * fband(s, 0.01, 0.06) * smoothstep(-0.05, -0.7, c) * sin(6.2832 * (s + 0.01 * sn) / 0.021);
-  float stack = uFoldLeg.y * smoothstep(0.13, 0.015, e) * smoothstep(0.0, 0.008, e) * sin(6.2832 * (e + 0.009 * sin(2.0 * th + 0.5) + 0.005 * c) / 0.031);
-  float wh = uFoldLeg.z * smoothstep(0.16, 0.02, tp) * smoothstep(0.02, 0.05, tp) * smoothstep(0.2, 0.75, c) * smoothstep(0.55, -0.1, sn) * max(0.0, sin(6.2832 * (tp * 0.9 + 0.05 * sn) / 0.028));
-  h += mL * (knee + stack + wh);
-  // 躯干：腋下往前下、后下斜着的褶；罗纹下摆上面鼓出来的横褶；从胸口垂下来的竖向波浪
-  float pit = uFoldArm.z * fband(s, -0.09, 0.055) * smoothstep(0.45, 0.85, sn) * sin(6.2832 * (s - 0.07 * c) / 0.028);
-  float hem = uFoldArm.w * smoothstep(0.1, 0.03, e) * smoothstep(0.0, 0.015, e) * sin(6.2832 * (e + 0.008 * sin(3.0 * th)) / 0.03);
-  float drape = uFoldLeg.w * smoothstep(0.32, 0.05, e) * sin(7.0 * th + 1.7 * sin(3.0 * th + 0.5) + 0.8);
-  h += mT * (pit + hem + drape);
-  // 裙子：竖向的波浪，越往下越深
-  h += mS * uFoldLeg.w * smoothstep(0.02, 0.35, s) * sin(9.0 * th + 1.5 * sin(4.0 * th + 0.7));
-  return h;
-}
-vec3 foldNormal(vec3 pos, vec3 n, float fd) {
-  float h0 = foldH(vFoldA, vFoldB);
-  float hx = foldH(vFoldA + dFdx(vFoldA), vFoldB + dFdx(vFoldB));
-  float hy = foldH(vFoldA + dFdy(vFoldA), vFoldB + dFdy(vFoldB));
-  vec3 sx = dFdx(pos), sy = dFdy(pos);
-  vec3 r1 = cross(sy, n), r2 = cross(n, sx);
-  float det = dot(sx, r1) * fd;
-  vec3 grad = sign(det) * ((hx - h0) * r1 + (hy - h0) * r2);
-  return normalize(abs(det) * n - grad);
-}
-`;
-function foldMaterial(mat, f) {
-  const u = { uFoldArm: { value: new THREE.Vector4(f.elbow ?? 0, f.cuff ?? 0, f.armpit ?? 0, f.hem ?? 0) }, uFoldLeg: { value: new THREE.Vector4(f.knee ?? 0, f.stack ?? 0, f.crotch ?? 0, f.drape ?? 0) } };
+skinMat.customProgramCacheKey = () => 'skin-v1';
+
+// 头发、眉毛：按“亮度 / 平均亮度 × 颜色”染色（染色强度 0 = 原色）
+function dyeMaterial(mat, mean) {
+  const u = { uDye: { value: new THREE.Color(1, 1, 1) }, uDyeAmt: { value: 0 }, uMeanLum: { value: Math.max(0.01, mean?.lum ?? 0.2) } };
+  mat.userData.dye = u;
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, u);
-    sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute vec4 foldA;\nattribute vec2 foldB;\nvarying vec4 vFoldA;\nvarying vec2 vFoldB;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFoldA = foldA;\nvFoldB = foldB;');
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\n' + FOLD_GLSL)
-      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = foldNormal(-vViewPosition, normal, faceDirection);');
+      .replace('#include <common>', '#include <common>\nuniform vec3 uDye; uniform float uDyeAmt; uniform float uMeanLum;')
+      .replace('#include <map_fragment>', `
+vec4 hairT = texture2D( map, vMapUv );
+float hl = dot( hairT.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+hairT.rgb = mix( hairT.rgb, uDye * clamp( hl / uMeanLum, 0.0, 2.6 ), uDyeAmt );
+diffuseColor *= hairT;`);
   };
-  mat.customProgramCacheKey = () => 'cloth-folds';
+  mat.customProgramCacheKey = () => 'dye';
   return mat;
 }
-const FABRIC = { tee: ['jersey', 6], longtee: ['jersey', 6], tank: ['jersey', 6], hoodie: ['fleece', 5], jeans: ['denim', 3], chinos: ['twill', 5], shorts: ['twill', 5], sneakers: ['canvas', 8], boots: ['canvas', 6] };
 
-// —— 角色 ——
-const body = CH.createBody();
-const root = new THREE.Group();
-scene.add(root);
-// 骨架：17 根骨头，层级和 rig.js 一样。身体、衣服是显卡蒙皮的 SkinnedMesh（权重从控制点细分下来，只和拓扑有关、算一次），
-// 头发、眼睛、眉毛、眼镜挂在“头”这根骨头下面。滑杆变了只在静止姿势下重算网格，动作每帧只动 17 根骨头
-const JI = Object.fromEntries(CH.JOINTS.map((n, i) => [n, i]));
-const bones = CH.JOINTS.map((name) => { const b = new THREE.Bone(); b.name = name; return b; });
-CH.PARENTS.forEach((p, j) => (p < 0 ? root : bones[p]).add(bones[j]));
-// 头发垂下来的那部分挂在一根额外的骨头上（头的子骨头）：跟着头走，但被重力往下拉，头一动会晃一晃再停
-const hairBone = new THREE.Bone();
-hairBone.name = 'hair';
-bones[JI.head].add(hairBone);
-const HAIR_BONE = bones.length;
-const skeleton = new THREE.Skeleton([...bones, hairBone]);
+// —— 骨架：54 根骨头（和虚幻小白人同名），静止姿势里每根骨头的世界旋转都是单位旋转，只有位置 ——
+const rig = new THREE.Group();
+rig.name = 'character';
+scene.add(rig);
+const bones = H.rig.bones.map((b) => { const o = new THREE.Bone(); o.name = b.name; return o; });
+H.rig.bones.forEach((b, i) => (b.parent < 0 ? rig : bones[b.parent]).add(bones[i]));
+const BI = Object.fromEntries(H.rig.bones.map((b, i) => [b.name, i]));
+const skeleton = new THREE.Skeleton(bones);
 const skinned = new Set();
-const bodySkin = CH.bodySkin(body);
-const mats = {
-  skin: new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.56, sheen: 0.35, sheenRoughness: 0.55, sheenColor: new THREE.Color('#ff9f8c') }),
-  eye: new THREE.MeshPhysicalMaterial({ roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.03 }),
-  brow: new THREE.MeshStandardMaterial({ roughness: 0.85, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
-  hair: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, side: THREE.DoubleSide, map: TEX.hair }),
-};
-function meshOf(mat, name, parent = root, skin = null) {
-  const g = new THREE.BufferGeometry();
-  const m = skin ? new THREE.SkinnedMesh(g, mat) : new THREE.Mesh(g, mat);
-  m.name = name; m.castShadow = true; m.receiveShadow = true;
-  parent.add(m);
-  if (skin) {
-    g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(skin.skinIndex, 4));
-    g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(skin.skinWeight, 4));
-    m.frustumCulled = false; // 动起来以后会跑出静止姿势的包围球
-    root.updateMatrixWorld(true);
-    m.bind(skeleton, m.matrixWorld.clone());
-    skinned.add(m);
-  }
+function skinnedMesh(geo, mat, name) {
+  const m = new THREE.SkinnedMesh(geo, mat);
+  m.name = name; m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false;
+  rig.add(m);
+  rig.updateMatrixWorld(true);
+  m.bind(skeleton, m.matrixWorld.clone());
+  skinned.add(m);
   return m;
 }
-// 头上的东西（眼球、眉毛、头发）放在一个跟着“头”这根骨头走的组里
-const headRig = new THREE.Group();
-headRig.name = 'headAttachments';
-headRig.matrixAutoUpdate = false;
-bones[JI.head].add(headRig);
-const M = { body: meshOf(mats.skin, 'body', root, bodySkin), brows: meshOf(mats.brow, 'brows', headRig), hair: meshOf(mats.hair, 'hair', root, { skinIndex: new Uint16Array(0), skinWeight: new Float32Array(0) }) };
-M.brows.castShadow = false;
-const eyeGeo = (() => {
-  const e = CH.eyeballGeometry();
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(e.position, 3));
-  g.setAttribute('normal', new THREE.BufferAttribute(e.normal, 3));
-  g.setAttribute('uv', new THREE.BufferAttribute(e.uv, 2));
-  g.setIndex(new THREE.BufferAttribute(e.index, 1));
-  return g;
-})();
-M.glasses = meshOf(new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.2 }), 'glasses', headRig);
-M.lens = meshOf(new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide }), 'lens', headRig);
-M.lens.castShadow = false;
-M.eyes = [1, -1].map((side) => { const m = new THREE.Mesh(eyeGeo, mats.eye); m.name = side > 0 ? 'eye_L' : 'eye_R'; headRig.add(m); return m; });
-const garments = new Map(); // id → { gm, mesh, slot }
 
-function setGeo(mesh, d, { color = false, uv = false } = {}) {
-  const g = mesh.geometry;
-  const put = (name, arr, size) => {
-    const a = g.getAttribute(name);
-    if (a && a.array.length === arr.length) { a.array.set(arr); a.needsUpdate = true; }
-    else g.setAttribute(name, new THREE.BufferAttribute(arr, size));
-  };
-  put('position', d.position, 3);
-  put('normal', d.normal, 3);
-  if (uv && d.uv) put('uv', d.uv, 2);
-  if (color && d.color) put('color', d.color, 3);
-  if (d.index && (!g.index || g.index.array !== d.index)) g.setIndex(new THREE.BufferAttribute(d.index, 1));
-  g.computeBoundingSphere();
-}
-
-function setAttr(geo, name, arr, size) {
-  const a = geo.getAttribute(name);
-  if (a && a.array.length === arr.length) { a.array.set(arr); a.needsUpdate = true; }
-  else geo.setAttribute(name, new THREE.BufferAttribute(arr, size));
-}
-function eyeTex(hex) {
-  const t = CH.eyeTexture(hex, 256);
-  const c = document.createElement('canvas');
-  c.width = t.width; c.height = t.height;
-  c.getContext('2d').putImageData(new ImageData(t.data, t.width, t.height), 0, 0);
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-let irisNow = null;
-
-// 当前表情 + 眨眼动画叠加到参数上
-let blinkNow = 0;
-function shapeParams() {
-  const e = EXPR[S.expr]?.p ?? {};
-  const p = { ...S.p, ...e };
-  if (blinkNow > 0) p.blink = Math.max(p.blink ?? 0, blinkNow);
-  return p;
-}
-
-let last = null;
-let hidden = new Set();
-let lift = 0;
-const timing = { body: 0 };
-
-function rebuildOutfit() {
-  const want = [S.outfit.top, S.outfit.bottom, S.outfit.shoes].filter((id) => id && CH.GARMENTS[id]);
-  for (const [id, g] of garments) if (!want.includes(id)) {
-    for (const m of [g.mesh, g.extra]) { if (!m) continue; root.remove(m); skinned.delete(m); m.geometry.dispose(); m.material.dispose(); }
-    g.mesh.material.map?.dispose();
-    garments.delete(id);
+// —— 身体网格 ——
+const NR = H.body.map.length;
+const bodyGeo = new THREE.BufferGeometry();
+bodyGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(NR * 3), 3));
+bodyGeo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(NR * 3), 3));
+bodyGeo.setAttribute('uv', new THREE.BufferAttribute(H.body.uv, 2));
+{
+  const si = new Uint16Array(NR * 4), sw = new Float32Array(NR * 4);
+  for (let r = 0; r < NR; r++) {
+    const v = H.body.map[r];
+    let sum = 0;
+    for (let k = 0; k < 4; k++) sum += H.rig.skinWeight[v * 4 + k];
+    for (let k = 0; k < 4; k++) { si[r * 4 + k] = H.rig.skinIndex[v * 4 + k]; sw[r * 4 + k] = H.rig.skinWeight[v * 4 + k] / (sum || 1); }
   }
-  for (const id of want) {
-    if (garments.has(id)) continue;
-    const gm = CH.buildGarment(body, id);
-    const spec = CH.GARMENTS[id];
-    const [tex, rep] = FABRIC[id] ?? ['jersey', 12];
-    const map = TEX[tex].clone(); map.repeat.set(rep, rep); map.needsUpdate = true;
-    const mat = new THREE.MeshPhysicalMaterial({ roughness: spec.rough, sheen: spec.sheen, sheenRoughness: 0.7, sheenColor: new THREE.Color(0xffffff), side: THREE.DoubleSide, map });
-    const plain = mat.clone(); // 配件（卫衣的帽子、抽绳、口袋）用同一块布，但不叠褶皱
-    if (spec.folds) foldMaterial(mat, spec.folds);
-    const skin = CH.garmentSkin(gm, body);
-    const mesh = meshOf(mat, id, root, skin);
-    const extra = spec.extras ? meshOf(plain, `${id}_parts`, root, { skinIndex: new Uint16Array(0), skinWeight: new Float32Array(0) }) : null;
-    garments.set(id, { gm, mesh, extra, slot: spec.slot, skin, folds: !!spec.folds });
-  }
-  hidden = new Set();
-  lift = 0;
-  for (const [id, g] of garments) {
-    for (const f of g.gm.hide) hidden.add(f);
-    if (CH.GARMENTS[id].sole) lift = Math.max(lift, CH.GARMENTS[id].sole);
-  }
-  M.body.geometry.setIndex(new THREE.BufferAttribute(CH.bodyIndex(body, hidden), 1));
-  root.position.y = lift;
-  paintOutfit();
+  bodyGeo.setAttribute('skinIndex', new THREE.BufferAttribute(si, 4));
+  bodyGeo.setAttribute('skinWeight', new THREE.BufferAttribute(sw, 4));
 }
-function paintOutfit() {
-  for (const [, g] of garments) {
-    const c = g.slot === 'top' ? S.outfit.topColor : g.slot === 'bottom' ? S.outfit.bottomColor : S.outfit.shoesColor;
-    g.mesh.material.color.set(c);
-    g.extra?.material.color.set(c);
-  }
-}
+// 表情单元：显卡上的变形目标（身体 + 眉毛、睫毛、牙齿、舌头跟着动）
+const UNIT_DENSE = UNITS.map((id) => HM.denseTarget(H, H.exprIndex[id]));
+bodyGeo.morphAttributes.position = UNIT_DENSE.map((D) => new THREE.BufferAttribute(HM.expand(D, H.body.map), 3));
+bodyGeo.morphTargetsRelative = true;
+bodyGeo.setIndex(new THREE.BufferAttribute(H.body.index, 1));
+const body = skinnedMesh(bodyGeo, skinMat, 'body');
+body.updateMorphTargets();
 
-// 头发：几何只和发型、脸型、身体比例有关；输入没变就沿用上一次的结果
-let hairKey = '';
-function updateHair(r) {
-  const style = S.hair.style;
-  mats.hair.color.set(S.hair.color);
-  mats.brow.color.set(new THREE.Color(S.hair.color).multiplyScalar(0.72));
-  if (style === 'none') { M.hair.visible = false; return; }
-  M.hair.visible = true;
-  const k = JSON.stringify([style, r.head.F, Math.round(r.head.g * 1e4), Math.round(r.L.shoulderW * 1e3), Math.round(r.L.notch * 1e3), Math.round(r.L.neckR * 1e3)]);
-  if (k === hairKey) return;
-  hairKey = k;
-  const h = CH.buildHair(body, style);
-  if (!h) { M.hair.visible = false; return; }
-  const d = CH.evalHair(h, r.target, null, r.head, r.L);
-  setGeo(M.hair, d, { color: true, uv: true });
-  // 权重：耳朵以上全跟着头，往下（下巴的高度）渐渐全挂到垂发骨上
-  const { O, g } = r.head, n = d.position.length / 3;
-  const si = new Uint16Array(n * 4), sw = new Float32Array(n * 4);
-  for (let i = 0; i < n; i++) {
-    const w = smooth01((O[1] + 0.005 * g - d.position[i * 3 + 1]) / (0.1 * g));
-    si[i * 4] = JI.head; si[i * 4 + 1] = HAIR_BONE; sw[i * 4] = 1 - w; sw[i * 4 + 1] = w;
-  }
-  M.hair.geometry.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
-  M.hair.geometry.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
-}
-
-let hairTimer = 0;
-function updateCharacter({ face = true, hairNow = false } = {}) {
-  const t0 = performance.now();
-  const p = shapeParams();
-  const r = CH.evalBody(body, p, { look: S.look });
-  setGeo(M.body, { position: r.positions, normal: r.normals, color: r.colors }, { color: true });
-  last = r;
-  bindRest(r);
-  if (irisNow !== S.iris) { irisNow = S.iris; mats.eye.map?.dispose(); mats.eye.map = eyeTex(S.iris); mats.eye.needsUpdate = true; }
-  placeEyes();
-  setGeo(M.brows, CH.toWorld(CH.browMesh(r.head.F, r.head.sdf, p), r.head.O, r.head.g));
-  updateGlasses(r);
-  const cn = CH.cageNormals(body.topo.faces, r.target);
-  // 穿长裤时靴筒收进裤腿里
-  const ctx = { long: !!CH.GARMENTS[S.outfit.bottom]?.long };
-  for (const [, g] of garments) {
-    const d = CH.evalGarment(g.gm, r.target, cn, { ctx });
-    setGeo(g.mesh, d, { uv: true });
-    if (g.folds) {
-      const f = CH.garmentFolds(g.gm, d.position, g.skin, r.rig.rest);
-      setAttr(g.mesh.geometry, 'foldA', f.a, 4);
-      setAttr(g.mesh.geometry, 'foldB', f.b, 2);
-    }
-    if (g.extra) {
-      const x = CH.hoodieExtras(body.topo, r.target, cn, body.weights);
-      setGeo(g.extra, x, { uv: true });
-      setAttr(g.extra.geometry, 'skinIndex', x.skinIndex, 4);
-      setAttr(g.extra.geometry, 'skinWeight', x.skinWeight, 4);
-    }
-  }
-  // 头发重算要 20~60ms：拖脸型滑杆时先只更新身体，停手 140ms 后再换头发
+// —— 代理（眼球、眉毛、睫毛、牙齿、舌头、头发、衣服、鞋、帽子）——
+const SLOTS = {};
+async function setSlot(slot, id) {
+  const cur = SLOTS[slot];
+  if (cur && cur.id === id) return;
+  if (cur) { for (const m of cur.meshes) { rig.remove(m); skinned.delete(m); m.geometry.dispose(); } delete SLOTS[slot]; }
+  if (!id) { hiddenDirty = true; return; }
+  const p = await HM.loadProxy(H, id);
+  if (SLOTS[slot]) return; // 等的时候又换了
+  const d = p.data;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(p.nr * 3), 3));
+  geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(p.nr * 3), 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(d.uv, 2));
+  const sk = p.skin ??= HM.proxySkin(H, p);
+  const si = new Uint16Array(p.nr * 4), sw = new Float32Array(p.nr * 4);
+  for (let r = 0; r < p.nr; r++) { const v = d.map[r]; for (let k = 0; k < 4; k++) { si[r * 4 + k] = sk.skinIndex[v * 4 + k]; sw[r * 4 + k] = sk.skinWeight[v * 4 + k]; } }
+  geo.setAttribute('skinIndex', new THREE.BufferAttribute(si, 4));
+  geo.setAttribute('skinWeight', new THREE.BufferAttribute(sw, 4));
+  geo.setIndex(new THREE.BufferAttribute(d.index, 1));
+  // 脸上的代理跟着表情动：代理顶点的增量 = 三个参考顶点增量的加权和
+  const face = ['eyebrows', 'eyelashes', 'teeth', 'tongue'].includes(p.cat);
   if (face) {
-    clearTimeout(hairTimer);
-    if (hairNow || SHOT) updateHair(r);
-    else hairTimer = setTimeout(() => { updateHair(last); updateStats(); }, 140);
-  } else { mats.hair.color.set(S.hair.color); mats.brow.color.set(new THREE.Color(S.hair.color).multiplyScalar(0.72)); M.hair.visible = S.hair.style !== 'none'; }
-  timing.body = performance.now() - t0;
-  updateStats();
+    geo.morphAttributes.position = UNIT_DENSE.map((D) => {
+      const o = new Float32Array(p.nv * 3);
+      for (let i = 0; i < p.nv; i++) for (let k = 0; k < 3; k++) { const r = d.ref[i * 3 + k] * 3, w = d.w[i * 3 + k]; o[i * 3] += D[r] * w; o[i * 3 + 1] += D[r + 1] * w; o[i * 3 + 2] += D[r + 2] * w; }
+      return new THREE.BufferAttribute(HM.expand(o, d.map), 3);
+    });
+    geo.morphTargetsRelative = true;
+  }
+  const meshes = [];
+  const add = (mat, name, groupIdx = null) => {
+    const g2 = groupIdx === null ? geo : geo;
+    const m = skinnedMesh(g2, mat, name);
+    if (face) m.updateMorphTargets();
+    meshes.push(m);
+    return m;
+  };
+  const maps = await Promise.all(['map', 'normal', 'ao'].map((k) => (p.maps[k] ? tex(p.maps[k], k === 'map') : null)));
+  if (p.cat === 'eyes') {
+    // 眼球：眼白和虹膜不透明；外面一层角膜透明、很亮
+    geo.clearGroups();
+    geo.addGroup(p.groups[0][0], p.groups[0][1], 0);
+    geo.addGroup(p.groups[1][0], p.groups[1][1], 1);
+    const eyeMat = new THREE.MeshPhysicalMaterial({ roughness: 0.35, map: await tex(H.meta.eyeTex[S.look.eye]) });
+    const cornea = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.03, transparent: true, opacity: 0.12, depthWrite: false, specularIntensity: 1, clearcoat: 1, clearcoatRoughness: 0.02 });
+    const m = add([eyeMat, cornea], 'eyes');
+    m.castShadow = false;
+  } else if (p.cat === 'hair') {
+    // 头发：两遍——先不透明（alpha 截断）写深度，再画半透明的发梢，边缘就是软的
+    const base = { map: maps[0], normalMap: maps[1] ?? null, side: THREE.DoubleSide, roughness: 0.55, sheen: 0.4, sheenRoughness: 0.35, specularIntensity: 0.6 };
+    const solid = dyeMaterial(new THREE.MeshPhysicalMaterial({ ...base, alphaTest: 0.5, alphaToCoverage: true }), p.mean);
+    const soft = dyeMaterial(new THREE.MeshPhysicalMaterial({ ...base, transparent: true, depthWrite: false, alphaTest: 0.02 }), p.mean);
+    add(solid, 'hair'); const b = add(soft, 'hair_soft');
+    b.castShadow = false; b.renderOrder = 2;
+  } else if (p.cat === 'eyebrows' || p.cat === 'eyelashes') {
+    const m = add(dyeMaterial(new THREE.MeshStandardMaterial({ map: maps[0], transparent: true, depthWrite: false, alphaTest: 0.02, roughness: 0.8, side: p.cull ? THREE.FrontSide : THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), p.mean), p.cat);
+    m.castShadow = false; m.renderOrder = 3;
+  } else {
+    const fabric = p.cat === 'outfit' || p.cat === 'hat';
+    const mat = new THREE.MeshPhysicalMaterial({ map: maps[0], normalMap: maps[1] ?? null, aoMap: maps[2] ?? null, aoMapIntensity: 0.9, roughness: p.cat === 'teeth' ? 0.3 : p.cat === 'shoes' ? 0.55 : 0.82, sheen: fabric ? 0.35 : 0, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff) });
+    const m = add(mat, p.cat);
+    if (p.cat === 'teeth' || p.cat === 'tongue') m.castShadow = false;
+  }
+  SLOTS[slot] = { id, p, meshes, geo, P: new Float32Array(p.nv * 3) };
+  hiddenDirty = true;
+  if (cur || true) dirty.shape = true;
 }
 
-// 眼镜：样式和脸型变了才重建
-let glassesKey = '';
-function updateGlasses(r) {
-  const st = S.glasses.style;
-  M.glasses.material.color.set(S.glasses.color);
-  M.glasses.material.metalness = ['#b48a4a', '#c9ccd0'].includes(S.glasses.color) ? 0.85 : 0.15;
-  const show = st !== 'none';
-  M.glasses.visible = M.lens.visible = show;
-  if (!show) return;
-  const k = JSON.stringify([st, r.head.F.eye, Math.round(r.head.g * 1e4), r.head.F.fw]);
-  if (k === glassesKey) return;
-  glassesKey = k;
-  const gm = CH.glassesMesh(r.head.F, r.head.sdf, st);
-  setGeo(M.glasses, CH.toWorld(gm.frame, r.head.O, r.head.g));
-  setGeo(M.lens, CH.toWorld(gm.lens, r.head.O, r.head.g));
-  M.lens.material.color.set(gm.dark ? '#1d2126' : '#ffffff');
-  M.lens.material.opacity = gm.dark ? 0.86 : 0.14;
+// —— 形状：参数 → 目标权重 → 顶点 → 身体、代理、骨架 ——
+let P = new Float32Array(H.nv * 3), groundY = 0, heightCm = 0, heightOut = null;
+const dirty = { shape: true, skin: true };
+let hiddenDirty = true;
+function childRace() {
+  const a = PARENTS.mom[S.her.mom].race, b = PARENTS.dad[S.her.dad].race, t = S.her.shape;
+  const r = {};
+  for (const k of ['caucasian', 'asian', 'african']) r[k] = (a[k] ?? 0) * (1 - t) + (b[k] ?? 0) * t;
+  return r;
+}
+function modifierValues() {
+  const mods = {};
+  const add = (id, v) => { if (v) mods[id] = (mods[id] ?? 0) + v; };
+  // 遗传的脸 + 五官滑杆 + 身材里的局部滑杆
+  const t = S.her.shape, a = PARENTS.mom[S.her.mom].face, b = PARENTS.dad[S.her.dad].face;
+  for (const id of new Set([...Object.keys(a), ...Object.keys(b)])) add(id, (a[id] ?? 0) * (1 - t) + (b[id] ?? 0) * t);
+  for (const [k, v] of Object.entries(S.feat)) for (const id of FEATURE_DEF[k]?.mods ?? []) add(id, v);
+  for (const [k, v] of Object.entries(S.bmods)) for (const id of BODY_MOD_DEF[k]?.mods ?? []) add(id, v);
+  for (const id of Object.keys(mods)) mods[id] = Math.max(-1, Math.min(1, mods[id]));
+  return mods;
+}
+const ageParam = (years) => (years <= 25 ? 0.5 : 0.5 + Math.min(1, (years - 25) / 65) * 0.5);
+// 身高滑杆 0…1 → MakeHuman 的身高宏 0.3…0.68（原范围从侏儒到巨人，太夸张）；亚洲人的目标偏矮，补一点
+const heightParam = (u, race) => Math.min(1, Math.max(0, (u < 0.5 ? 0.5 - (0.5 - u) * 0.4 : 0.5 + (u - 0.5) * 0.36) + 0.07 * (race.asian ?? 0)));
+function updateShape() {
+  const t0 = performance.now();
+  const g = S.body.gender ?? (S.sex === 'f' ? 0 : 1);
+  const race = childRace();
+  const macro = { gender: g, age: ageParam(S.body.age), muscle: S.body.muscle, weight: S.body.weight, height: heightParam(S.body.height, race), proportions: S.body.proportions, cup: S.sex === 'f' ? S.body.cup : 0.5, ...race };
+  const w = HM.targetWeights(H, macro, modifierValues());
+  HM.shape(H, w, P);
+  // 身体
+  const pos = bodyGeo.attributes.position;
+  HM.expand(P, H.body.map, pos.array);
+  HM.renderNormals(P, H.body.map, H.body.index, H.nv, bodyGeo.attributes.normal.array);
+  pos.needsUpdate = true; bodyGeo.attributes.normal.needsUpdate = true;
+  // 脚底在地面上（穿鞋的话按鞋底）
+  let lo = Infinity, hi = -Infinity;
+  for (let r = 0; r < NR; r++) { const y = pos.array[r * 3 + 1]; if (y < lo) lo = y; if (y > hi) hi = y; }
+  heightCm = Math.round((hi - lo) * 100);
+  if (heightOut?.isConnected) heightOut.textContent = `${heightCm}cm`;
+  for (const s of Object.values(SLOTS)) {
+    const p = s.p;
+    HM.fitProxy(p, P, s.P);
+    const a = s.geo.attributes.position;
+    HM.expand(s.P, p.data.map, a.array);
+    HM.renderNormals(s.P, p.data.map, p.data.index, p.nv, s.geo.attributes.normal.array);
+    a.needsUpdate = true; s.geo.attributes.normal.needsUpdate = true;
+    s.geo.computeBoundingSphere();
+    if (p.cat === 'shoes') for (let i = 0; i < p.nv; i++) lo = Math.min(lo, s.P[i * 3 + 1]);
+  }
+  groundY = lo;
+  bodyGeo.computeBoundingSphere();
+  bindRest();
+  timing.shape = performance.now() - t0;
+}
+// 衣服、鞋盖住的身体部分不画（不然会穿模）
+function updateHidden() {
+  hiddenDirty = false;
+  const del = new Uint8Array(H.nv);
+  let any = false;
+  for (const s of Object.values(SLOTS)) if (s.p.data.del) { any = true; for (const v of s.p.data.del) del[v] = 1; }
+  if (!any) { bodyGeo.setIndex(new THREE.BufferAttribute(H.body.index, 1)); return; }
+  const src = H.body.index, map = H.body.map, out = [];
+  for (let t = 0; t < src.length; t += 3) if (!del[map[src[t]]] && !del[map[src[t + 1]]] && !del[map[src[t + 2]]]) out.push(src[t], src[t + 1], src[t + 2]);
+  bodyGeo.setIndex(new THREE.BufferAttribute(Uint16Array.from(out), 1));
 }
 
-// —— 骨骼：静止姿势绑定 + 每帧摆姿势 ——
-let restJ = null;
-function bindRest(r) {
-  restJ = r.rig.rest;
-  bones.forEach((b, j) => {
-    const p = CH.PARENTS[j], o = p < 0 ? [0, 0, 0] : restJ[p];
-    b.position.set(restJ[j][0] - o[0], restJ[j][1] - o[1], restJ[j][2] - o[2]);
-    b.quaternion.identity();
+// —— 骨架的静止姿势：关节位置跟着体型走，每次体型变了重新绑定 ——
+let J = null, restDir = [], restQ = [];
+const qTmp = new THREE.Quaternion();
+function bindRest() {
+  J = HM.joints(H, P);
+  const head = (i) => new THREE.Vector3(J[H.rig.bones[i].head * 3], J[H.rig.bones[i].head * 3 + 1], J[H.rig.bones[i].head * 3 + 2]);
+  const tail = (i) => new THREE.Vector3(J[H.rig.bones[i].tail * 3], J[H.rig.bones[i].tail * 3 + 1], J[H.rig.bones[i].tail * 3 + 2]);
+  H.rig.bones.forEach((b, i) => {
+    const h = head(i);
+    if (b.parent < 0) bones[i].position.copy(h); else bones[i].position.copy(h.sub(head(b.parent)));
+    bones[i].quaternion.identity();
+    bones[i].scale.set(1, 1, 1);
   });
-  const h = restJ[JI.head];
-  headRig.matrix.makeTranslation(-h[0], -h[1], -h[2]);
-  // 垂发骨的支点：后脑勺中间（头部局部坐标的 (0, 0, −0.06)）
-  const { O, g } = r.head;
-  hairBone.position.set(O[0] - h[0], O[1] - h[1], O[2] - 0.06 * g - h[2]);
-  hairBone.quaternion.identity();
-  headRig.matrixWorldNeedsUpdate = true;
-  root.updateMatrixWorld(true);
+  rig.position.set(0, -groundY, 0);
+  rig.updateMatrixWorld(true);
   skeleton.calculateInverses();
-  for (const m of skinned) m.bind(skeleton, m.matrixWorld.clone());
-  applyMotion(performance.now());
-}
-// 动作：一个循环的动画片段，或者一个静止姿势（叠一层呼吸）。换的时候 0.4 秒平滑过渡
-const motion = { t0: performance.now(), from: null, fromT: 0 };
-const SHOT_T = Number(params.get('t') ?? 0);
-const m4 = new THREE.Matrix4();
-const smooth01 = (x) => { const t = Math.max(0, Math.min(1, x)); return t * t * (3 - 2 * t); };
-function currentPose(now) {
-  const ctx = { rest: restJ, B: last.marks };
-  const t = SHOT ? SHOT_T : (now - motion.t0) / 1000;
-  if (S.anim && CH.CLIPS[S.anim]) return CH.clipPose(S.anim, t, ctx);
-  const pose = CH.POSES[S.pose] ?? CH.POSES.stand;
-  return SHOT ? pose : CH.breathe(pose, t);
-}
-// 世界旋转 → 每根骨头相对父骨头的四元数（three.js 的骨骼要的是局部变换）
-function localQuats(T) {
-  return bones.map((b, j) => {
-    const p = CH.PARENTS[j], R = T.R[j];
-    if (p < 0) m4.set(R[0], R[1], R[2], 0, R[3], R[4], R[5], 0, R[6], R[7], R[8], 0, 0, 0, 0, 1);
-    else {
-      const A = T.R[p];
-      const c = (i, k) => A[i] * R[k] + A[i + 3] * R[k + 3] + A[i + 6] * R[k + 6]; // (Aᵀ·R)[i][k]
-      m4.set(c(0, 0), c(0, 1), c(0, 2), 0, c(1, 0), c(1, 1), c(1, 2), 0, c(2, 0), c(2, 1), c(2, 2), 0, 0, 0, 0, 1);
-    }
-    return new THREE.Quaternion().setFromRotationMatrix(m4);
+  for (const m of skinned) { m.bindMatrix.copy(m.matrixWorld); m.bindMatrixInverse.copy(m.matrixWorld).invert(); }
+  // 动作换骨架：我们每根骨头的静止方向 → 源骨架静止方向的旋转
+  restQ = H.rig.bones.map((b, i) => {
+    const k = ANIM.bones.indexOf(b.name);
+    if (k < 0) return null;
+    const d = tail(i).sub(head(i)).normalize();
+    const s = new THREE.Vector3(...ANIM.restDir[k]);
+    return new THREE.Quaternion().setFromUnitVectors(d, s);
   });
-}
-function applyMotion(now) {
-  if (!last || !restJ) return;
-  const T = CH.poseTransforms(restJ, currentPose(now), last.marks, 1, { feet: last.feet });
-  const q = localQuats(T), rp = new THREE.Vector3(...T.P[0]);
-  let k = 1;
-  if (motion.from) { k = smooth01((now - motion.fromT) / 400); if (k >= 1) motion.from = null; }
-  bones.forEach((b, j) => (motion.from ? b.quaternion.slerpQuaternions(motion.from.q[j], q[j], k) : b.quaternion.copy(q[j])));
-  bones[0].position.copy(motion.from ? motion.from.p.clone().lerp(rp, k) : rp);
-  swingHair(now);
-}
-// 垂发骨：目标是让垂下来的那部分朝着“有效重力”（重力减去头的加速度的一部分）；用一个有阻尼的弹簧追过去
-const hairDyn = { q: new THREE.Quaternion(), v: new THREE.Vector3(), t: 0, pos: null, vel: new THREE.Vector3(), acc: new THREE.Vector3() };
-const tq = new THREE.Quaternion(), tv = new THREE.Vector3(), DOWN = new THREE.Vector3(0, -1, 0);
-function swingHair(now) {
-  root.updateMatrixWorld(true);
-  const head = bones[JI.head];
-  const hq = head.getWorldQuaternion(new THREE.Quaternion());
-  const hp = head.getWorldPosition(new THREE.Vector3());
-  const dt = SHOT || !hairDyn.t ? 0 : Math.min(0.05, (now - hairDyn.t) / 1000);
-  hairDyn.t = now;
-  if (dt > 0 && hairDyn.pos) {
-    const vel = hp.clone().sub(hairDyn.pos).divideScalar(dt);
-    hairDyn.acc.lerp(vel.clone().sub(hairDyn.vel).divideScalar(dt), 0.25);
-    hairDyn.vel.copy(vel);
+  pelvisRest = bones[BI.pelvis].position.clone();
+  // 眼球骨头的转轴挪到眼球中心（默认骨架的关节在眼球后面一点，转眼珠时眼球会滑进眼眶）
+  const eyes = SLOTS.eyes;
+  if (eyes) {
+    for (const [name, sgn] of [['eye_l', 1], ['eye_r', -1]]) {
+      const c = new THREE.Vector3(); let n = 0;
+      for (let i = 0; i < eyes.p.nv; i++) if (Math.sign(eyes.P[i * 3]) === sgn) { c.x += eyes.P[i * 3]; c.y += eyes.P[i * 3 + 1]; c.z += eyes.P[i * 3 + 2]; n++; }
+      c.divideScalar(n || 1);
+      const i = BI[name];
+      bones[i].position.copy(c.sub(head(H.rig.bones[i].parent)));
+    }
+    rig.updateMatrixWorld(true);
+    skeleton.calculateInverses();
   }
-  hairDyn.pos = hp;
-  const g = new THREE.Vector3(0, -9.8, 0).addScaledVector(hairDyn.acc, -0.35).normalize();
-  const headDown = DOWN.clone().applyQuaternion(hq);
-  // 世界里把头的“下”转到有效重力方向的旋转，换到头的局部坐标里；只转一部分（头皮附近的头发是硬的），最多 32°
-  const qw = new THREE.Quaternion().setFromUnitVectors(headDown, g);
-  const target = hq.clone().invert().multiply(qw).multiply(hq);
-  target.slerp(new THREE.Quaternion(), 0.2);
-  const ang = 2 * Math.acos(Math.min(1, Math.abs(target.w)));
-  if (ang > 0.56) target.slerp(new THREE.Quaternion(), 1 - 0.56 / ang);
-  if (!dt) { hairDyn.q.copy(target); hairDyn.v.set(0, 0, 0); }
-  else {
-    // 误差（轴角）→ 角加速度；k、c 让它半秒左右停下来
-    tq.copy(target).multiply(hairDyn.q.clone().invert());
-    if (tq.w < 0) tq.set(-tq.x, -tq.y, -tq.z, -tq.w);
-    const a = 2 * Math.acos(Math.min(1, tq.w)), sn = Math.sqrt(Math.max(1e-12, 1 - tq.w * tq.w));
-    tv.set(tq.x / sn, tq.y / sn, tq.z / sn).multiplyScalar(a);
-    hairDyn.v.addScaledVector(tv, 70 * dt).multiplyScalar(Math.max(0, 1 - 9 * dt));
-    const w = hairDyn.v.length() * dt;
-    if (w > 1e-6) hairDyn.q.premultiply(new THREE.Quaternion().setFromAxisAngle(hairDyn.v.clone().normalize(), w));
-  }
-  hairBone.quaternion.copy(hairDyn.q);
 }
-function startMotion() {
-  const now = performance.now();
-  motion.from = { q: bones.map((b) => b.quaternion.clone()), p: bones[0].position.clone() };
-  motion.fromT = now;
-  motion.t0 = now;
+let pelvisRest = new THREE.Vector3();
+
+// —— 动作播放：按名字取源骨头的“世界空间相对旋转”D，我们的骨头世界旋转 = D · Q（Q 把静止方向对上），再换成局部旋转 ——
+const animState = { id: null, t0: 0, prev: null, blend0: 0 };
+const worldQ = bones.map(() => new THREE.Quaternion());
+const localNow = bones.map(() => new THREE.Quaternion());
+const qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), qInv = new THREE.Quaternion();
+function sampleClip(clip, time, outLocal, outHips) {
+  const nb = ANIM.bones.length, fps = ANIM.fps;
+  let f = time * fps;
+  const nf = clip.frames;
+  if (clip.loop) f = ((f % nf) + nf) % nf; else f = Math.min(f, nf - 1);
+  const f0 = Math.floor(f), f1 = clip.loop ? (f0 + 1) % nf : Math.min(nf - 1, f0 + 1), k = f - f0;
+  const q = clip.qd;
+  H.rig.bones.forEach((b, i) => {
+    const kk = ANIM.bones.indexOf(b.name);
+    const pw = b.parent < 0 ? null : worldQ[b.parent];
+    if (kk < 0 || !restQ[i]) { worldQ[i].copy(pw ?? qa.identity()); outLocal[i].identity(); return; }
+    const o0 = (f0 * nb + kk) * 4, o1 = (f1 * nb + kk) * 4;
+    qa.set(q[o0] / 32767, q[o0 + 1] / 32767, q[o0 + 2] / 32767, q[o0 + 3] / 32767).normalize();
+    qb.set(q[o1] / 32767, q[o1 + 1] / 32767, q[o1 + 2] / 32767, q[o1 + 3] / 32767).normalize();
+    qa.slerp(qb, k);
+    worldQ[i].copy(qa).multiply(restQ[i]);
+    if (pw) outLocal[i].copy(qInv.copy(pw).invert()).multiply(worldQ[i]); else outLocal[i].copy(worldQ[i]);
+  });
+  const h0 = f0 * 3, h1 = f1 * 3;
+  outHips.set(clip.hd[h0] + (clip.hd[h1] - clip.hd[h0]) * k, clip.hd[h0 + 1] + (clip.hd[h1 + 1] - clip.hd[h0 + 1]) * k, clip.hd[h0 + 2] + (clip.hd[h1 + 2] - clip.hd[h0 + 2]) * k);
+}
+const hipsNow = new THREE.Vector3(), hipsPrev = new THREE.Vector3();
+const prevLocal = bones.map(() => new THREE.Quaternion());
+function startAnim(id) {
+  // 交叉淡入：记下现在的姿势，0.35 秒里过渡到新动作
+  bones.forEach((b, i) => prevLocal[i].copy(b.quaternion));
+  hipsPrev.copy(bones[BI.pelvis].position).sub(pelvisRest);
+  animState.id = id; animState.t0 = performance.now(); animState.blend0 = performance.now();
+}
+function applyAnim(now) {
+  const clip = CLIPS[animState.id];
+  if (!clip) { bones.forEach((b) => b.quaternion.identity()); bones[BI.pelvis].position.copy(pelvisRest); return; }
+  const t = SHOT ? Number(params.get('t') ?? 0) : (now - animState.t0) / 1000;
+  sampleClip(clip, t, localNow, hipsNow);
+  const hipH = pelvisRest.y + groundY; // 胯高（从地面算）
+  const b = SHOT ? 1 : Math.min(1, (now - animState.blend0) / 350), e = b * b * (3 - 2 * b);
+  bones.forEach((bone, i) => bone.quaternion.copy(prevLocal[i]).slerp(localNow[i], e));
+  const hp = hipsNow.multiplyScalar(hipH);
+  // 原地循环：走路、跑步的前后位移不要（相机跟不上），只留上下起伏和左右晃
+  if (clip.loop) hp.z = 0;
+  bones[BI.pelvis].position.copy(pelvisRest).add(hipsPrev.clone().lerp(hp, e));
 }
 
-// 视线：眼球朝相机看（限制在自然的角度内）
-const gaze = { x: 0, y: 0 };
-function placeEyes() {
-  if (!last) return;
-  const { F, O, g } = last.head;
-  root.updateMatrixWorld(true);
-  const camLocal = headRig.worldToLocal(camera.position.clone());
-  const sleep = S.expr === 'sleep';
-  let want = [0, 0];
-  M.eyes.forEach((m, i) => {
-    const side = i === 0 ? 1 : -1;
-    const e = CH.eyePlacement(F, last.L, O, g, side);
-    m.position.set(...e.center);
-    m.scale.setScalar(e.radius);
-    if (i === 0) {
-      const d = camLocal.clone().sub(m.position);
-      want = sleep ? [0, 0] : [Math.max(-0.38, Math.min(0.38, Math.atan2(d.x, d.z))), Math.max(-0.25, Math.min(0.2, Math.atan2(d.y, Math.hypot(d.x, d.z))))];
-    }
-  });
-  gaze.x += (want[0] - gaze.x) * 0.25; gaze.y += (want[1] - gaze.y) * 0.25;
-  M.eyes.forEach((m, i) => m.rotation.set(-gaze.y, (i === 0 ? 1 : -1) * 0.035 + gaze.x, 0, 'YXZ'));
+// —— 眼睛看镜头 ——
+const gaze = new THREE.Vector2();
+function eyeLook() {
+  const headB = bones[BI.head];
+  const target = camera.position.clone();
+  for (const name of ['eye_l', 'eye_r']) {
+    const e = bones[BI[name]];
+    const wp = new THREE.Vector3().setFromMatrixPosition(e.matrixWorld);
+    const hq = headB.getWorldQuaternion(new THREE.Quaternion());
+    const dir = target.clone().sub(wp).applyQuaternion(hq.invert()).normalize();
+    const yaw = Math.max(-0.4, Math.min(0.4, Math.atan2(dir.x, dir.z))), pitch = Math.max(-0.25, Math.min(0.14, Math.asin(Math.max(-1, Math.min(1, dir.y)))));
+    gaze.set(yaw, pitch);
+    e.quaternion.setFromEuler(new THREE.Euler(-pitch, yaw, 0, 'YXZ'));
+  }
 }
 
+// —— 表情：当前表情的单元权重平滑过渡，叠加眨眼 ——
+const unitNow = new Float32Array(UNITS.length);
+const UI_ = Object.fromEntries(UNITS.map((u, i) => [u, i]));
+let blink = 0;
+function applyExpr(dt) {
+  const want = new Float32Array(UNITS.length);
+  for (const [u, v] of Object.entries(EXPR[S.expr]?.u ?? {})) want[UI_[u]] = v;
+  // 说话的动作：嘴巴一张一合
+  if (animState.id === 'idle_talking' && !SHOT) { const tt = performance.now() / 1000; want[UI_['mouth-open']] += 0.18 * Math.max(0, Math.sin(tt * 9) * Math.sin(tt * 2.3 + 1)); }
+  if (blink > 0) { want[UI_['eye-left-closure']] = Math.max(want[UI_['eye-left-closure']], blink); want[UI_['eye-right-closure']] = Math.max(want[UI_['eye-right-closure']], blink); }
+  const k = SHOT ? 1 : Math.min(1, dt * 12);
+  for (let i = 0; i < UNITS.length; i++) unitNow[i] += (want[i] - unitNow[i]) * (i === UI_['eye-left-closure'] || i === UI_['eye-right-closure'] ? Math.min(1, dt * 40) : k);
+  for (const m of skinned) if (m.morphTargetInfluences) for (let i = 0; i < UNITS.length; i++) m.morphTargetInfluences[i] = unitNow[i];
+}
+
+// —— 皮肤、发色、化妆 ——
+const maskTex = tex('tex/facemask.webp', false).catch(() => null);
+const eyeMaskTex = tex('tex/eyemask.webp', false).catch(() => null);
+async function updateSkin() {
+  dirty.skin = false;
+  const mom = PARENTS.mom[S.her.mom], dad = PARENTS.dad[S.her.dad];
+  const age = S.body.age;
+  const [a, b] = await Promise.all([tex(H.meta.skins[skinId(mom.skin, S.sex)]), tex(H.meta.skins[skinId(dad.skin, S.sex)])]);
+  // 老化：年龄 40 岁以后（或“老化”滑杆）换成同人种的中年、老年皮肤
+  const domRace = S.her.skin < 0.5 ? mom.skin : dad.skin;
+  const agedKey = age >= 60 || S.look.aging > 0.5 ? 'old' : 'middleage';
+  const o = await tex(H.meta.skins[skinId(domRace, S.sex, agedKey)]);
+  skinMat.map = a; skinU.uSkinB.value = b; skinU.uSkinOld.value = o;
+  skinU.uSkinMix.value = S.her.skin;
+  skinU.uAging.value = Math.min(0.85, Math.max(S.look.aging, Math.max(0, (age - 38) / 45)));
+  skinU.uMask.value = (await maskTex) ?? a;
+  skinU.uEyeMask.value = (await eyeMaskTex) ?? a;
+  const col = (hex, a2) => { const c = new THREE.Color(hex); return new THREE.Vector4(c.r, c.g, c.b, a2); };
+  const hasMask = !!(await maskTex);
+  skinU.uBlush.value = col(S.look.blushColor, hasMask ? S.look.blush * 0.6 : 0);
+  skinU.uLips.value = col(S.look.lipColor, hasMask ? S.look.lips * 0.75 : 0);
+  skinU.uShadow.value = col(S.look.shadowColor, hasMask ? S.look.shadow * 0.6 : 0);
+  const hc = S.look.beardColor || S.look.hairColor || '#2b1d14';
+  skinU.uBeard.value = col(hc, hasMask ? S.look.beard * 0.85 : 0);
+  skinU.uFreckle.value = hasMask ? S.look.freckles : 0;
+  skinU.uLiner.value = hasMask ? S.look.liner * 0.8 : 0;
+  skinMat.needsUpdate = true;
+  // 发色、眉色
+  for (const [slot, colorKey] of [['hair', 'hairColor'], ['brows', 'browColor'], ['lashes', 'browColor']]) {
+    const s = SLOTS[slot];
+    if (!s) continue;
+    let c = slot === 'hair' ? S.look.hairColor : (S.look.browColor || (S.look.hairColor ? new THREE.Color(S.look.hairColor).multiplyScalar(0.8).getStyle() : ''));
+    // 睫毛：总是深色（跟眉色走，再压暗一些），贴图本身偏白，不染会发灰
+    if (slot === 'lashes') c = new THREE.Color(c || '#2b1d14').multiplyScalar(0.45).getStyle();
+    for (const m of s.meshes) {
+      const u = m.material.userData.dye;
+      if (!u) continue;
+      u.uDyeAmt.value = c ? 1 : 0;
+      if (c) u.uDye.value.set(c);
+    }
+  }
+  // 眼睛颜色
+  const eyes = SLOTS.eyes?.meshes[0];
+  if (eyes) { eyes.material[0].map = await tex(H.meta.eyeTex[S.look.eye] ?? H.meta.eyeTex.brown); eyes.material[0].needsUpdate = true; }
+}
+
+// —— 换装：按当前状态加载各个槽位 ——
+async function syncSlots() {
+  await Promise.all([
+    setSlot('eyes', 'eyes/high-poly'),
+    setSlot('brows', S.look.brows ? `eyebrows/${S.look.brows}` : ''),
+    setSlot('lashes', `eyelashes/${S.look.lashes}`),
+    setSlot('teeth', 'teeth/teeth_base'),
+    setSlot('tongue', 'tongue/tongue01'),
+    setSlot('hair', S.look.hair ? `hair/${S.look.hair}` : ''),
+    setSlot('outfit', S.outfit ? `outfit/${S.outfit}` : ''),
+    setSlot('shoes', S.shoes ? `shoes/${S.shoes}` : ''),
+    setSlot('hat', S.hat ? `hat/${S.hat}` : ''),
+  ]);
+  dirty.shape = true; dirty.skin = true;
+}
+
+const timing = { shape: 0 };
 function updateStats() {
   let tris = 0;
-  root.traverse((o) => { if (o.isMesh && o.visible && o.geometry.index) tris += o.geometry.index.count / 3; });
-  $('stats').textContent = `${Math.round(tris).toLocaleString()} 三角面 · 控制点 ${body.topo.n.toLocaleString()} · 重算 ${timing.body.toFixed(0)}ms`;
+  rig.traverse((o) => { if (o.isMesh && o.visible && o.geometry.index) tris += o.geometry.index.count / 3; });
+  $('stats').textContent = `身高 ${heightCm} cm · ${Math.round(tris).toLocaleString()} 三角面 · 重算 ${timing.shape.toFixed(0)}ms · MakeHuman（CC0）`;
 }
 
-// —— 相机：按分类对准全身 / 上半身 / 脸 ——
-// 每种镜头要框住的范围（高、宽，米）；距离按屏幕上没被面板挡住的那块区域算，手机竖屏也能看到全身
+// —— 相机 ——
 const FOCUS = {
-  full: { t: (H) => [0, H * 0.5, 0], span: (H) => [H * 1.16, 0.75], el: 5 },
-  bust: { t: (H) => [0, H - 0.28, 0], span: () => [0.66, 0.62], el: 8 },
-  face: { t: (H) => [0, H - 0.1, 0.02], span: () => [0.34, 0.3], el: 4 },
-  side: { t: (H) => [0, H - 0.1, 0], span: () => [0.34, 0.34], el: 4, az: 70 },
-  waist: { t: (H) => [0, H * 0.6, 0], span: () => [0.8, 0.8], el: 6 },
-  mouth: { t: (H) => [0, H - 0.175, 0.06], span: () => [0.11, 0.11], el: 2 },
+  full: { t: (Hh) => [0, Hh * 0.5, 0], span: (Hh) => [Hh * 1.14, 0.8], el: 4 },
+  bust: { t: (Hh) => [0, Hh - 0.3, 0], span: () => [0.72, 0.66], el: 6 },
+  face: { t: (Hh) => [0, Hh - 0.16, 0.04], span: () => [0.46, 0.4], el: 3 },
+  portrait: { t: (Hh) => [0, Hh - 0.22, 0.03], span: () => [0.62, 0.56], el: 4 },
+  eyes: { t: (Hh) => [0, Hh - 0.12, 0.08], span: () => [0.2, 0.22], el: 2 },
+  mouth: { t: (Hh) => [0, Hh - 0.17, 0.08], span: () => [0.2, 0.2], el: 2 },
+  side: { t: (Hh) => [0, Hh - 0.13, 0.02], span: () => [0.36, 0.36], el: 3, az: 70 },
 };
-// 屏幕上留给人物的那块区域（像素）：桌面是面板左边；手机是标题下面、底部抽屉（和抽屉上方那排按钮）上面
 function band() {
   const w = innerWidth, h = innerHeight;
   if (document.body.classList.contains('bare')) return { x0: 0, x1: w, y0: 0, y1: h };
@@ -769,7 +906,6 @@ function band() {
   const hb = document.querySelector('.head').getBoundingClientRect().bottom + 8;
   const ar = document.querySelector('.actions').getBoundingClientRect();
   if (w <= 760) return { x0: 0, x1: w, y0: hb, y1: (ar.height > 0 ? ar.top : pr.top) - 8 };
-  // 桌面上标题和按钮在左边角上；只有留给人物的那一栏比较窄时才会和人重叠，这时也避开它们
   const x1 = pr.left - 16, narrow = x1 < 720;
   return { x0: 0, x1, y0: narrow ? hb : 0, y1: narrow && ar.height > 0 ? ar.top - 8 : h };
 }
@@ -777,29 +913,35 @@ function visible() {
   const b = band();
   return { fw: Math.max(0.3, (b.x1 - b.x0) / innerWidth), fh: Math.max(0.25, (b.y1 - b.y0) / innerHeight) };
 }
-let camAnim = null;
+let camAnim = null, focusKind = 'full';
+// 头顶高度：头骨尾关节（头顶）再往上一点
+const headTop = () => (J ? J[H.rig.bones[BI.head].tail * 3 + 1] - groundY + 0.02 : 1.7);
 function focus(kind, instant = false) {
+  focusKind = kind;
   const f = FOCUS[kind] ?? FOCUS.full;
-  // 截图时可以固定取景高度（frameH，米），几张图里的人才能比身高
-  const H = SHOT && params.has('frameH') ? Number(params.get('frameH')) : S.p.height / 100 + lift;
-  const t = new THREE.Vector3(...f.t(H));
+  const Hh = SHOT && params.has('frameH') ? Number(params.get('frameH')) : headTop();
+  const t = new THREE.Vector3(...f.t(Hh));
+  // 对着脸的镜头跟着头现在的位置（动作里头会晃、会低下去）
+  if (kind !== 'full' && J) {
+    const hp = bones[BI.head].getWorldPosition(new THREE.Vector3());
+    const rest = new THREE.Vector3(J[H.rig.bones[BI.head].head * 3], J[H.rig.bones[BI.head].head * 3 + 1] - groundY, J[H.rig.bones[BI.head].head * 3 + 2]);
+    t.add(hp.sub(rest));
+  }
   const dir = camera.position.clone().sub(controls.target);
   let az = Math.atan2(dir.x, dir.z) * 180 / Math.PI;
   if (f.az !== undefined) az = f.az;
-  else if (instant || Math.abs(az) > 60 || (kind === 'full' && Math.abs(az) > 40)) az = 18;
-  const [sh, sw] = f.span(H), v = visible(), tanH = Math.tan(camera.fov * Math.PI / 360);
+  else if (instant || Math.abs(az) > 60 || (kind === 'full' && Math.abs(az) > 40)) az = 16;
+  const [sh, sw] = f.span(Hh), v = visible(), tanH = Math.tan(camera.fov * Math.PI / 360);
   const d = Math.max(sh / (2 * tanH * v.fh), sw / (2 * tanH * camera.aspect * v.fw));
   const a = az * Math.PI / 180, e = f.el * Math.PI / 180;
   const p = new THREE.Vector3(t.x + d * Math.sin(a) * Math.cos(e), t.y + d * Math.sin(e), t.z + d * Math.cos(a) * Math.cos(e));
   if (instant) { controls.target.copy(t); camera.position.copy(p); controls.update(); return; }
   camAnim = { t0: performance.now(), from: [controls.target.clone(), camera.position.clone()], to: [t, p] };
 }
-
 function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  // 面板挡住的那部分：把画面中心挪到空出来的区域里
   const b = band();
   if (document.body.classList.contains('bare')) camera.clearViewOffset();
   else camera.setViewOffset(w, h, w / 2 - (b.x0 + b.x1) / 2, h / 2 - (b.y0 + b.y1) / 2, w, h);
@@ -810,19 +952,18 @@ addEventListener('resize', resize);
 // —— 界面 ——
 const TABS = [
   { id: 'preset', label: '预设', focus: 'full' },
-  { id: 'body', label: '体型', focus: 'full' },
-  { id: 'face', label: '脸型', focus: 'face' },
-  { id: 'feature', label: '五官', focus: 'face' },
-  { id: 'hair', label: '发型', focus: 'bust' },
+  { id: 'heritage', label: '遗传', focus: 'portrait' },
+  { id: 'features', label: '五官', focus: 'face' },
+  { id: 'look', label: '外观', focus: 'bust' },
+  { id: 'body', label: '身材', focus: 'full' },
   { id: 'outfit', label: '服装', focus: 'full' },
-  { id: 'expr', label: '动作', focus: 'full' },
+  { id: 'motion', label: '动作', focus: 'full' },
 ];
-const FEATURES = [
-  { id: 'eyes', label: '眼睛' }, { id: 'brows', label: '眉毛' }, { id: 'nose', label: '鼻子' }, { id: 'mouth', label: '嘴巴' }, { id: 'ears', label: '耳朵' },
-];
+const LOOK_SUB = [{ id: 'hair', label: '头发', focus: 'bust' }, { id: 'brows', label: '眉毛睫毛', focus: 'eyes' }, { id: 'eyes', label: '眼睛', focus: 'eyes' }, { id: 'beard', label: '胡子', focus: 'face' }, { id: 'makeup', label: '妆容', focus: 'face' }, { id: 'skin', label: '皮肤', focus: 'face' }];
 let tab = params.get('tab') ?? 'preset';
-let feat = params.get('feat') ?? 'eyes';
-const tabFocus = () => (tab === 'feature' && feat === 'ears' ? 'side' : TABS.find((t) => t.id === tab)?.focus ?? 'full');
+let featSub = params.get('feat') ?? 'shape';
+let lookSub = params.get('look') ?? 'hair';
+const tabFocus = () => tab === 'features' ? FEATURES.find((f) => f.id === featSub)?.focus ?? 'face' : tab === 'look' ? LOOK_SUB.find((l) => l.id === lookSub)?.focus ?? 'bust' : TABS.find((t) => t.id === tab)?.focus ?? 'full';
 
 function el(tag, attrs = {}, ...kids) {
   const e = document.createElement(tag);
@@ -834,18 +975,12 @@ function el(tag, attrs = {}, ...kids) {
   for (const k of kids.flat()) if (k !== null && k !== undefined) e.append(k.nodeType ? k : document.createTextNode(k));
   return e;
 }
-
 function renderTabs() {
   $('tabs').replaceChildren(...TABS.map((t) => el('button', { class: 'tab', role: 'tab', 'aria-selected': String(t.id === tab), on: { click: () => { tab = t.id; renderTabs(); renderPane(); focus(tabFocus()); } } }, t.label)));
-  $('sub').replaceChildren(...(tab === 'feature' ? FEATURES.map((f) => el('button', { class: 'chip', role: 'tab', 'aria-pressed': String(f.id === feat), on: { click: () => { feat = f.id; renderTabs(); renderPane(); focus(tabFocus()); } } }, f.label)) : []));
+  const subs = tab === 'features' ? FEATURES.map((f) => [f.id, f.label, featSub, (id) => { featSub = id; }]) : tab === 'look' ? LOOK_SUB.map((f) => [f.id, f.label, lookSub, (id) => { lookSub = id; }]) : [];
+  $('sub').replaceChildren(...subs.map(([id, label, cur, set]) => el('button', { class: 'chip', role: 'tab', 'aria-pressed': String(id === cur), on: { click: () => { set(id); renderTabs(); renderPane(); focus(tabFocus()); } } }, label)));
 }
-
-let pending = null;
-function schedule({ face = true, now = false } = {}) {
-  pending = { face: (pending?.face ?? false) || face, now: (pending?.now ?? false) || now };
-}
-
-function slider(def, value, onInput) {
+function slider(def, value, onInput, fmt = null) {
   const id = `s-${def.id}`;
   const min = def.min, max = def.max, step = def.step ?? 0.01;
   const pct = (v) => ((v - min) / (max - min)) * 100;
@@ -854,26 +989,24 @@ function slider(def, value, onInput) {
   const out = el('output', { for: id });
   const show = (v) => {
     input.style.setProperty('--a', `${Math.min(zero, pct(v))}%`); input.style.setProperty('--b', `${Math.max(zero, pct(v))}%`);
-    out.textContent = def.unit ? `${Math.round(v)}${def.unit}` : min < 0 ? (v > 0.004 ? '+' : '') + Math.round(v * 100) : String(Math.round(v * 100));
+    out.textContent = fmt ? fmt(v) : def.unit ? `${Math.round(v)}${def.unit}` : min < 0 ? (v > 0.004 ? '+' : '') + Math.round(v * 100) : String(Math.round(v * 100));
   };
   show(value);
   input.addEventListener('input', () => { const v = Number(input.value); show(v); onInput(v); });
   const label = el('label', { for: id, title: '双击恢复默认' }, def.label);
-  label.addEventListener('dblclick', () => { input.value = def.def; show(def.def); onInput(def.def); });
+  label.addEventListener('dblclick', () => { const v = def.def ?? (min < 0 ? 0 : min); input.value = v; show(v); onInput(v); });
   const box = el('div', { class: 'slider' }, label, input, out);
   if (def.ends) box.append(el('div', { class: 'ends' }, el('span', {}, def.ends[0]), el('span', {}, def.ends[1])));
   return box;
 }
-function paramSliders(grp, faceDep = true) {
-  return CH.PARAMS.filter((d) => d.group === grp).map((d) => slider(d, S.p[d.id], (v) => { S.p[d.id] = v; schedule({ face: faceDep }); }));
-}
-function swatches(list, value, onPick) {
+function swatches(list, value, onPick, { none = null } = {}) {
   const wrap = el('div', { class: 'swatches' });
   const draw = (cur) => {
-    wrap.replaceChildren(
-      ...list.map((c) => el('button', { class: 'sw', style: `--c:${c}`, 'aria-label': `颜色 ${c}`, 'aria-pressed': String(c.toLowerCase() === cur.toLowerCase()), on: { click: () => { onPick(c); draw(c); } } })),
-      el('label', { class: 'sw custom', title: '自定义颜色' }, el('input', { type: 'color', value: cur, 'aria-label': '自定义颜色', on: { input: (e) => onPick(e.target.value) } })),
-    );
+    wrap.replaceChildren(...[
+      none ? el('button', { class: 'sw none', 'aria-label': none, title: none, 'aria-pressed': String(!cur), on: { click: () => { onPick(''); draw(''); } } }) : null,
+      ...list.map((c) => el('button', { class: 'sw', style: `--c:${c}`, 'aria-label': `颜色 ${c}`, 'aria-pressed': String(c.toLowerCase() === (cur || '').toLowerCase()), on: { click: () => { onPick(c); draw(c); } } })),
+      el('label', { class: 'sw custom', title: '自定义颜色' }, el('input', { type: 'color', value: cur || '#6b4428', 'aria-label': '自定义颜色', on: { input: (e) => onPick(e.target.value) } })),
+    ].filter(Boolean));
   };
   draw(value);
   return wrap;
@@ -887,58 +1020,142 @@ function chips(options, value, onPick) {
 function group(title, note, ...kids) {
   return el('section', { class: 'group' }, el('h3', {}, title, note ? el('em', {}, note) : null), ...kids);
 }
-const look = (k) => (v) => { S.look[k] = v; schedule({ face: false }); };
-
+const reshape = () => { dirty.shape = true; };
+const reskin = () => { dirty.skin = true; };
+// 家长头像：用当前渲染器离屏画一张小脸（换家长时更新）
+function parentPicker(kind) {
+  const wrap = el('div', { class: 'parents' });
+  const draw = () => wrap.replaceChildren(...PARENTS[kind].map((p, i) => {
+    const c = el('canvas', { width: 96, height: 96 });
+    portraits.queue(kind, i, c);
+    return el('button', { class: 'parent', 'aria-pressed': String(S.her[kind] === i), on: { click: () => { S.her[kind] = i; reshape(); reskin(); draw(); } } }, c, p.name);
+  }));
+  draw();
+  return wrap;
+}
 function renderPane() {
   const g = [];
   if (tab === 'preset') {
     g.push(group('预设角色', '点一下换上',
       el('div', { class: 'cards' }, PRESETS.map((pr) => el('button', { class: 'card', 'aria-pressed': String(S.name === pr.name), on: { click: () => { applyPreset(pr); afterLoad(); } } }, el('b', {}, pr.name), el('span', {}, pr.note))))));
     g.push(group('我的角色', '只保存在这台设备上', savedList()));
-  } else if (tab === 'body') {
-    g.push(group('身材', null, ...paramSliders('body', false)));
-    g.push(group('肤色', null, swatches(SKIN, S.look.skin, look('skin'))));
-  } else if (tab === 'face') {
-    g.push(group('脸型', null, ...paramSliders('face')));
-    g.push(group('妆容', null,
-      slider({ id: 'blush', label: '腮红', min: 0, max: 1, def: 0.3 }, S.look.blush, look('blush')),
-      slider({ id: 'stubble', label: '胡茬', min: 0, max: 1, def: 0 }, S.look.stubble, look('stubble'))));
-  } else if (tab === 'feature') {
-    if (feat === 'eyes') {
-      g.push(group('眼睛', null, ...paramSliders('eyes')));
-      g.push(group('瞳色', null, swatches(IRIS, S.iris, (c) => { S.iris = c; schedule({ face: false }); })));
-      g.push(group('眼线', null, slider({ id: 'liner', label: '浓淡', min: 0, max: 1, def: 0.55 }, S.look.liner, look('liner'))));
-    } else if (feat === 'brows') g.push(group('眉毛', '颜色跟着发色', ...paramSliders('brows', false)));
-    else if (feat === 'nose') g.push(group('鼻子', null, ...paramSliders('nose')));
-    else if (feat === 'mouth') {
-      g.push(group('嘴巴', null, ...paramSliders('mouth')));
-      g.push(group('唇色', null, swatches(LIPS, S.look.lips, look('lips'))));
-    } else g.push(group('耳朵', null, ...paramSliders('ears')));
-  } else if (tab === 'hair') {
-    g.push(group('发型', null, chips(Object.entries(CH.HAIRSTYLES).map(([id, h]) => [id, h.label]), S.hair.style, (id) => { S.hair.style = id; schedule({ face: true, now: true }); })));
-    g.push(group('发色', '眉毛跟着变', swatches(HAIR, S.hair.color, (c) => { S.hair.color = c; schedule({ face: false }); })));
-  } else if (tab === 'outfit') {
-    for (const [slot, label] of [['top', '上衣'], ['bottom', '下装'], ['shoes', '鞋']]) {
-      const opts = Object.entries(CH.GARMENTS).filter(([, v]) => v.slot === slot).map(([id, v]) => [id, v.label]);
-      if (slot === 'shoes') opts.push(['', '光脚']);
-      g.push(group(label, null,
-        chips(opts, S.outfit[slot], (id) => { S.outfit[slot] = id; rebuildOutfit(); schedule({ face: false }); }),
-        swatches(CLOTH, S.outfit[slot + 'Color'], (c) => { S.outfit[slot + 'Color'] = c; paintOutfit(); })));
+    g.push(el('p', { class: 'hint' }, '人体、皮肤、头发、衣服来自 MakeHuman（CC0），动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
+  } else if (tab === 'heritage') {
+    g.push(group('性别', null, chips([['f', '女'], ['m', '男']], S.sex, (v) => { S.sex = v; S.body.gender = null; if (!S.outfit || PROXY_SEX(S.outfit) !== v) S.outfit = v === 'f' ? 'female_casualsuit01' : 'male_casualsuit06'; syncSlots(); reshape(); reskin(); renderPane(); })));
+    g.push(group('母亲', PARENTS.mom[S.her.mom].name, parentPicker('mom')));
+    g.push(group('父亲', PARENTS.dad[S.her.dad].name, parentPicker('dad')));
+    g.push(group('相像', null,
+      slider({ id: 'her-shape', label: '长相', min: 0, max: 1, def: 0.5, ends: ['像母亲', '像父亲'] }, S.her.shape, (v) => { S.her.shape = v; reshape(); }, (v) => `${Math.round(v * 100)}%`),
+      slider({ id: 'her-skin', label: '肤色', min: 0, max: 1, def: 0.5, ends: ['像母亲', '像父亲'] }, S.her.skin, (v) => { S.her.skin = v; reskin(); }, (v) => `${Math.round(v * 100)}%`)));
+  } else if (tab === 'features') {
+    const f = FEATURES.find((x) => x.id === featSub) ?? FEATURES[0];
+    g.push(group(f.label, '双击名字恢复', ...f.items.map(([id, label, , min = -1, max = 1]) => slider({ id, label, min, max, def: 0 }, S.feat[id] ?? 0, (v) => { S.feat[id] = v; reshape(); }))));
+  } else if (tab === 'look') {
+    if (lookSub === 'hair') {
+      g.push(group('发型', null, chips([['', '光头'], ...proxyList('hair').map((p) => [p.name, p.label])], S.look.hair, (id) => { S.look.hair = id; syncSlots(); })));
+      g.push(group('发色', '第一个是原色', swatches(HAIRC, S.look.hairColor, (c) => { S.look.hairColor = c; reskin(); }, { none: '原色' })));
+    } else if (lookSub === 'brows') {
+      g.push(group('眉形', null, chips([['', '无'], ...proxyList('eyebrows').map((p) => [p.name, p.label])], S.look.brows, (id) => { S.look.brows = id; syncSlots(); })));
+      g.push(group('眉色', '不选就跟着发色', swatches(HAIRC, S.look.browColor, (c) => { S.look.browColor = c; reskin(); }, { none: '跟着发色' })));
+      g.push(group('睫毛', null, chips(proxyList('eyelashes').map((p) => [p.name, p.label]), S.look.lashes, (id) => { S.look.lashes = id; syncSlots(); })));
+    } else if (lookSub === 'eyes') {
+      g.push(group('瞳色', null, chips(EYEC.map((c) => [c, EYE_LABEL[c] ?? c]), S.look.eye, (c) => { S.look.eye = c; reskin(); })));
+      g.push(group('眼妆', null,
+        slider({ id: 'liner', label: '眼线', min: 0, max: 1, def: 0 }, S.look.liner, (v) => { S.look.liner = v; reskin(); }),
+        slider({ id: 'shadow', label: '眼影', min: 0, max: 1, def: 0 }, S.look.shadow, (v) => { S.look.shadow = v; reskin(); }),
+        swatches(SHADOW, S.look.shadowColor, (c) => { S.look.shadowColor = c; reskin(); })));
+    } else if (lookSub === 'beard') {
+      g.push(group('胡子', null, slider({ id: 'beard', label: '浓密', min: 0, max: 1, def: 0 }, S.look.beard, (v) => { S.look.beard = v; reskin(); }),
+        swatches(HAIRC, S.look.beardColor, (c) => { S.look.beardColor = c; reskin(); }, { none: '跟着发色' })));
+    } else if (lookSub === 'makeup') {
+      g.push(group('口红', null, slider({ id: 'lips', label: '浓淡', min: 0, max: 1, def: 0 }, S.look.lips, (v) => { S.look.lips = v; reskin(); }), swatches(MAKEUP, S.look.lipColor, (c) => { S.look.lipColor = c; reskin(); })));
+      g.push(group('腮红', null, slider({ id: 'blush', label: '浓淡', min: 0, max: 1, def: 0 }, S.look.blush, (v) => { S.look.blush = v; reskin(); }), swatches(BLUSH, S.look.blushColor, (c) => { S.look.blushColor = c; reskin(); })));
+    } else if (lookSub === 'skin') {
+      g.push(group('皮肤', null,
+        slider({ id: 'aging', label: '老化', min: 0, max: 1, def: 0 }, S.look.aging, (v) => { S.look.aging = v; reskin(); }),
+        slider({ id: 'freckles', label: '雀斑', min: 0, max: 1, def: 0 }, S.look.freckles, (v) => { S.look.freckles = v; reskin(); })));
+      g.push(el('p', { class: 'hint' }, '肤色由“遗传”里两位家长的皮肤混合而来；年龄过了 40 岁会慢慢换成中年、老年的皮肤。'));
     }
-    g.push(group('眼镜', null,
-      chips(Object.entries(CH.GLASSES).map(([id, v]) => [id, v.label]), S.glasses.style, (id) => { S.glasses.style = id; schedule({ face: false }); }),
-      swatches(FRAMES, S.glasses.color, (c) => { S.glasses.color = c; schedule({ face: false }); })));
-  } else if (tab === 'expr') {
-    g.push(group('动画', '循环播放', chips([['', '不动'], ...Object.entries(CH.CLIPS).map(([id, c]) => [id, c.label])], S.anim, (id) => { S.anim = id; startMotion(); renderPane(); })));
-    g.push(group('姿势', S.anim ? '选一个就停下动画' : null, chips(Object.entries(CH.POSES).map(([id, e]) => [id, e.label]), S.anim ? null : S.pose, (id) => { S.pose = id; S.anim = ''; startMotion(); renderPane(); })));
-    g.push(group('表情', null, chips(Object.entries(EXPR).map(([id, e]) => [id, e.label]), S.expr, (id) => { S.expr = id; schedule({ face: false }); })));
-    g.push(el('p', { class: 'hint' }, '眼睛会跟着镜头转；平时每隔几秒眨一次眼。'));
+  } else if (tab === 'body') {
+    g.push(group('身材', null, ...BODY.filter(([id]) => id !== 'cup' || S.sex === 'f').map(([id, label, min, max, unit]) => {
+      const v = id === 'gender' ? (S.body.gender ?? (S.sex === 'f' ? 0 : 1)) : S.body[id];
+      const box = slider({ id: `b-${id}`, label, min, max, def: id === 'age' ? 25 : id === 'gender' ? (S.sex === 'f' ? 0 : 1) : 0.5, unit, step: id === 'age' ? 1 : 0.01, ends: id === 'gender' ? ['女性化', '男性化'] : null }, v, (x) => { S.body[id] = x; reshape(); if (id === 'age') reskin(); },
+        id === 'height' ? () => `${heightCm}cm` : null);
+      if (id === 'height') heightOut = box.querySelector('output');
+      return box;
+    })));
+    g.push(group('局部', '双击名字恢复', ...BODY_MODS.map(([id, label]) => slider({ id: `bm-${id}`, label, min: -1, max: 1, def: 0 }, S.bmods[id] ?? 0, (v) => { S.bmods[id] = v; reshape(); }))));
+  } else if (tab === 'outfit') {
+    const outfits = proxyList('outfit');
+    g.push(group('衣服', '整套', chips([['', '内衣'], ...outfits.filter((p) => p.sex === S.sex).map((p) => [p.name, p.label]), ...outfits.filter((p) => p.sex !== S.sex).map((p) => [p.name, p.label])], S.outfit, (id) => { S.outfit = id; syncSlots(); })));
+    g.push(group('鞋', null, chips([['', '光脚'], ...proxyList('shoes').map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots(); })));
+    g.push(group('帽子', null, chips([['', '不戴'], ...proxyList('hat').map((p) => [p.name, p.label])], S.hat, (id) => { S.hat = id; syncSlots(); })));
+  } else if (tab === 'motion') {
+    g.push(group('动作', 'Quaternius（CC0）', chips([['', '站着不动'], ...ANIM.clips.map((c) => [c.id, c.label])], S.anim, (id) => { S.anim = id; startAnim(id); })));
+    g.push(group('表情', null, chips(Object.entries(EXPR).map(([id, e]) => [id, e.label]), S.expr, (id) => { S.expr = id; })));
+    g.push(el('p', { class: 'hint' }, '眼睛会看着镜头；平时每隔几秒眨一次眼。'));
   }
   $('pane').replaceChildren(...g);
 }
+const PROXY_SEX = (name) => H.proxies[`outfit/${name}`]?.sex;
 
-// —— 保存在本机（localStorage）——
-const STORE = 'tryitem.characters.v1';
+// —— 家长头像：离屏渲染一张脸 ——
+const portraits = (() => {
+  const jobs = [];
+  const cache = new Map();
+  let busy = false;
+  async function run() {
+    if (busy) return;
+    busy = true;
+    while (jobs.length) {
+      const { kind, i, c } = jobs.shift();
+      const k = `${kind}-${i}-${S.sex}`;
+      if (!cache.has(k)) cache.set(k, await renderParent(kind, i));
+      c.getContext('2d').drawImage(cache.get(k), 0, 0, c.width, c.height);
+    }
+    busy = false;
+  }
+  return { queue(kind, i, c) { jobs.push({ kind, i, c }); setTimeout(run, 0); }, clear() { cache.clear(); }, idle: () => !busy && !jobs.length };
+})();
+let paused = false;
+async function renderParent(kind, i) {
+  // 把状态临时换成“这位家长本人”（长相 100% 像他 / 她，性别跟家长），画完再换回来；这期间主画面暂停
+  paused = true;
+  const saved = JSON.parse(JSON.stringify(S));
+  S.her = { ...S.her, [kind]: i, shape: kind === 'mom' ? 0 : 1, skin: kind === 'mom' ? 0 : 1 };
+  S.sex = kind === 'mom' ? 'f' : 'm';
+  S.body = { ...S.body, gender: null, age: 45 };
+  S.feat = {}; S.bmods = {};
+  S.expr = 'neutral';
+  const vis = [];
+  for (const [slot, s] of Object.entries(SLOTS)) if (['hair', 'outfit', 'hat', 'shoes'].includes(slot)) for (const m of s.meshes) { vis.push([m, m.visible]); m.visible = false; }
+  updateShape(); await updateSkin();
+  bones.forEach((b) => b.quaternion.identity()); bones[BI.pelvis].position.copy(pelvisRest);
+  rig.updateMatrixWorld(true);
+  const cam = new THREE.PerspectiveCamera(20, 1, 0.05, 10);
+  const top = headTop();
+  cam.position.set(0.14, top - 0.1, 0.95); cam.lookAt(0, top - 0.115, 0);
+  // 画在主画布左下角一小块（同一帧里马上又会画回主画面），再拷出来
+  const bg = scene.background; scene.background = new THREE.Color(css('--track'));
+  ground.visible = false;
+  const pr = renderer.getPixelRatio(), px = 128, size = new THREE.Vector2();
+  renderer.getSize(size);
+  renderer.setScissorTest(true); renderer.setScissor(0, 0, px, px); renderer.setViewport(0, 0, px, px);
+  renderer.render(scene, cam);
+  const c = document.createElement('canvas'); c.width = c.height = 160;
+  c.getContext('2d').drawImage(renderer.domElement, 0, renderer.domElement.height - px * pr, px * pr, px * pr, 0, 0, 160, 160);
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, size.x, size.y);
+  ground.visible = true; scene.background = bg;
+  for (const [m, v] of vis) m.visible = v;
+  S = saved;
+  dirty.shape = true; dirty.skin = true;
+  updateShape(); await updateSkin();
+  paused = false;
+  return c;
+}
+
+// —— 保存在本机 ——
+const STORE = 'tryitem.characters.v2';
 function readSaved() { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } }
 function writeSaved(list) { try { localStorage.setItem(STORE, JSON.stringify(list)); return true; } catch { return false; } }
 function savedList() {
@@ -947,7 +1164,7 @@ function savedList() {
     const list = readSaved();
     box.replaceChildren(
       ...list.map((it, i) => el('div', { class: 'item' },
-        el('button', { class: 'card', on: { click: () => { S = { ...DEF(), ...JSON.parse(JSON.stringify(it.s)) }; afterLoad(); } } }, el('b', {}, it.s.name), el('span', {}, new Date(it.t).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }))),
+        el('button', { class: 'card', on: { click: () => { S = sanitize(it.s); afterLoad(); } } }, el('b', {}, it.s.name), el('span', {}, new Date(it.t).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }))),
         el('button', { class: 'del', 'aria-label': `删除 ${it.s.name}`, on: { click: () => { const l = readSaved(); l.splice(i, 1); writeSaved(l); draw(); } } }, '×'))),
       list.length ? null : el('p', { class: 'hint' }, '还没有保存过角色。捏好以后点下面的按钮存一份，下次打开还在。'),
       el('div', { class: 'row' }, el('button', { class: 'btn primary', on: { click: () => {
@@ -960,40 +1177,47 @@ function savedList() {
   draw();
   return box;
 }
+// 读进来的状态：只认识的字段、数值夹到范围里
+function sanitize(o) {
+  const d = DEF();
+  const num = (v, lo, hi, f) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : f);
+  const str = (v, ok, f) => (typeof v === 'string' && ok(v) ? v : f);
+  const col = (c, f) => (typeof c === 'string' && (/^#[0-9a-f]{6}$/i.test(c) || c === '') ? c : f);
+  const has = (cat) => (v) => v === '' || !!H.proxies[`${cat}/${v}`];
+  const S2 = {
+    name: String(o?.name ?? d.name).slice(0, 16), sex: o?.sex === 'f' ? 'f' : 'm',
+    her: { mom: num(o?.her?.mom, 0, PARENTS.mom.length - 1, 0) | 0, dad: num(o?.her?.dad, 0, PARENTS.dad.length - 1, 0) | 0, shape: num(o?.her?.shape, 0, 1, 0.5), skin: num(o?.her?.skin, 0, 1, 0.5) },
+    body: { ...d.body }, bmods: {}, feat: {},
+    look: { ...d.look },
+    outfit: str(o?.outfit, has('outfit'), d.outfit), shoes: str(o?.shoes, has('shoes'), d.shoes), hat: str(o?.hat, has('hat'), ''),
+    anim: typeof o?.anim === 'string' && (o.anim === '' || CLIPS[o.anim]) ? o.anim : 'idle', expr: EXPR[o?.expr] ? o.expr : 'neutral',
+  };
+  for (const [id, , min, max] of BODY) S2.body[id] = id === 'gender' ? (o?.body?.gender === null || o?.body?.gender === undefined ? null : num(o.body.gender, 0, 1, null)) : num(o?.body?.[id], min, max, d.body[id]);
+  for (const k of Object.keys(BODY_MOD_DEF)) if (typeof o?.bmods?.[k] === 'number') S2.bmods[k] = num(o.bmods[k], -1, 1, 0);
+  for (const [k, f] of Object.entries(FEATURE_DEF)) if (typeof o?.feat?.[k] === 'number') S2.feat[k] = num(o.feat[k], f.min, f.max, 0);
+  const L = o?.look ?? {};
+  S2.look = {
+    hair: str(L.hair, has('hair'), d.look.hair), hairColor: col(L.hairColor, ''), brows: str(L.brows, has('eyebrows'), d.look.brows), browColor: col(L.browColor, ''),
+    lashes: str(L.lashes, (v) => !!H.proxies[`eyelashes/${v}`], d.look.lashes), eye: EYEC.includes(L.eye) ? L.eye : 'brown',
+    beard: num(L.beard, 0, 1, 0), beardColor: col(L.beardColor, ''), aging: num(L.aging, 0, 1, 0), freckles: num(L.freckles, 0, 1, 0),
+    blush: num(L.blush, 0, 1, 0), blushColor: col(L.blushColor, d.look.blushColor) || d.look.blushColor, lips: num(L.lips, 0, 1, 0), lipColor: col(L.lipColor, d.look.lipColor) || d.look.lipColor,
+    shadow: num(L.shadow, 0, 1, 0), shadowColor: col(L.shadowColor, d.look.shadowColor) || d.look.shadowColor, liner: num(L.liner, 0, 1, 0),
+  };
+  return S2;
+}
 
-// —— 捏脸码：把全部设置压成一串字，复制给别人，粘贴回来 ——
-const CODE_IDS = CH.PARAMS.map((d) => d.id);
+// —— 捏脸码 ——
 function encode() {
-  const o = { v: 1, n: S.name, p: CODE_IDS.map((id) => Math.round(S.p[id] * 100)), l: [S.look.skin, S.look.lips, Math.round(S.look.blush * 100), Math.round(S.look.stubble * 100), Math.round(S.look.liner * 100)], i: S.iris, h: [S.hair.style, S.hair.color], o: [S.outfit.top, S.outfit.topColor, S.outfit.bottom, S.outfit.bottomColor, S.outfit.shoes, S.outfit.shoesColor], e: S.expr, a: S.pose, m: S.anim, g: [S.glasses.style, S.glasses.color] };
-  const bytes = new TextEncoder().encode(JSON.stringify(o));
+  const bytes = new TextEncoder().encode(JSON.stringify({ v: 2, ...S }));
   let bin = '';
   bytes.forEach((b) => { bin += String.fromCharCode(b); });
-  return 'TRY1.' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return 'TRY2.' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 function decode(code) {
-  const m = code.trim().match(/TRY1\.([A-Za-z0-9_-]+)/);
-  if (!m) throw new Error('不是有效的捏脸码：应该以 TRY1. 开头');
+  const m = code.trim().match(/TRY2\.([A-Za-z0-9_-]+)/);
+  if (!m) throw new Error(code.includes('TRY1.') ? '这是旧版捏人器的捏脸码，新版读不了' : '不是有效的捏脸码：应该以 TRY2. 开头');
   const b = atob(m[1].replace(/-/g, '+').replace(/_/g, '/'));
-  const o = JSON.parse(new TextDecoder().decode(Uint8Array.from(b, (c) => c.charCodeAt(0))));
-  const d = DEF();
-  const p = { ...d.p };
-  CODE_IDS.forEach((id, i) => {
-    const def = CH.PARAMS.find((x) => x.id === id);
-    if (typeof o.p?.[i] === 'number') p[id] = Math.max(def.min, Math.min(def.max, o.p[i] / 100));
-  });
-  const col = (c, f) => (/^#[0-9a-f]{6}$/i.test(c ?? '') ? c : f);
-  const gar = (id) => (CH.GARMENTS[id] ? id : '');
-  return {
-    ...d, name: String(o.n ?? d.name).slice(0, 16), p,
-    look: { skin: col(o.l?.[0], d.look.skin), lips: col(o.l?.[1], d.look.lips), blush: (o.l?.[2] ?? 30) / 100, stubble: (o.l?.[3] ?? 0) / 100, liner: (o.l?.[4] ?? 55) / 100 },
-    iris: col(o.i, d.iris),
-    hair: { style: CH.HAIRSTYLES[o.h?.[0]] ? o.h[0] : d.hair.style, color: col(o.h?.[1], d.hair.color) },
-    outfit: { top: gar(o.o?.[0]), topColor: col(o.o?.[1], d.outfit.topColor), bottom: gar(o.o?.[2]), bottomColor: col(o.o?.[3], d.outfit.bottomColor), shoes: gar(o.o?.[4]), shoesColor: col(o.o?.[5], d.outfit.shoesColor) },
-    expr: EXPR[o.e] ? o.e : 'neutral',
-    pose: CH.POSES[o.a] ? o.a : 'stand',
-    anim: o.m !== undefined ? (CH.CLIPS[o.m] ? o.m : '') : (CH.POSES[o.a] && o.a !== 'stand' ? '' : 'idle'),
-    glasses: { style: CH.GLASSES[o.g?.[0]] ? o.g[0] : 'none', color: col(o.g?.[1], d.glasses.color) },
-  };
+  return sanitize(JSON.parse(new TextDecoder().decode(Uint8Array.from(b, (c) => c.charCodeAt(0)))));
 }
 function codeDialog() {
   const ta = el('textarea', { id: 'code-text', 'aria-label': '捏脸码', spellcheck: 'false' });
@@ -1009,7 +1233,7 @@ function codeDialog() {
           try { await navigator.clipboard.writeText(ta.value); toast('已复制捏脸码'); } catch { ta.focus(); ta.select(); toast('已选中，按 Ctrl+C 或 ⌘C 复制'); }
         } } }, '复制'),
         el('button', { class: 'btn', on: { click: () => {
-          try { S = decode(ta.value); close(); afterLoad(); toast(`已载入“${S.name}”`); } catch (e) { msg.textContent = e.message?.startsWith('不是') ? e.message : '这串捏脸码读不出来，检查一下有没有复制完整'; }
+          try { S = decode(ta.value); close(); afterLoad(); toast(`已载入“${S.name}”`); } catch (e) { msg.textContent = e.message?.startsWith('不是') || e.message?.startsWith('这是') ? e.message : '这串捏脸码读不出来，检查一下有没有复制完整'; }
         } } }, '载入'),
         el('button', { class: 'btn', on: { click: close } }, '关闭'))));
   document.body.append(modal);
@@ -1021,44 +1245,40 @@ function codeDialog() {
 function randomize() {
   const r = Math.random;
   const pick = (a) => a[Math.floor(r() * a.length)];
+  const gauss = () => (r() + r() + r() - 1.5) / 1.5;
   const d = DEF();
-  const p = { ...d.p };
-  const female = r() < 0.5;
-  for (const def of CH.PARAMS) {
-    if (def.id === 'sex') p.sex = female ? 0.8 + 0.2 * r() : 0.2 * r();
-    else if (def.id === 'height') p.height = Math.round((female ? 163 : 175) + (r() + r() - 1) * 10);
-    else if (def.id === 'muscle') p.muscle = r() * (female ? 0.5 : 0.9);
-    else if (def.id === 'earPoint') p.earPoint = r() < 0.08 ? 0.6 + 0.4 * r() : 0;
-    else p[def.id] = (r() + r() - 1) * 0.75;
-  }
-  const hairs = female ? ['bob', 'long', 'pony', 'bun', 'side', 'crop'] : ['side', 'crop', 'back', 'buzz', 'side', 'none'];
-  const tops = Object.entries(CH.GARMENTS).filter(([, v]) => v.slot === 'top').map(([k]) => k);
-  const bottoms = Object.entries(CH.GARMENTS).filter(([, v]) => v.slot === 'bottom').map(([k]) => k);
+  const sex = r() < 0.5 ? 'f' : 'm';
+  const feat = {};
+  for (const [id, f] of Object.entries(FEATURE_DEF)) if (r() < 0.45) feat[id] = f.min < 0 ? gauss() * 0.45 : r() * 0.4;
+  const hairs = proxyList('hair').filter((p) => (sex === 'f' ? !['short04', 'short02'].includes(p.name) : ['short01', 'short02', 'short04', 'afro01', 'short03'].includes(p.name)));
+  const outfits = proxyList('outfit').filter((p) => p.sex === sex);
   S = {
-    ...d, name: '随机角色', p,
-    look: { skin: pick(SKIN), lips: pick(LIPS), blush: female ? 0.3 + 0.4 * r() : 0.1 + 0.2 * r(), stubble: female ? 0 : r() * 0.7, liner: female ? 0.5 + 0.5 * r() : 0.3 + 0.3 * r() },
-    iris: pick(IRIS),
-    hair: { style: pick(hairs), color: r() < 0.85 ? pick(HAIR.slice(0, 9)) : pick(HAIR) },
-    outfit: { top: pick(tops), topColor: pick(CLOTH), bottom: pick(bottoms), bottomColor: pick(CLOTH), shoes: pick(['sneakers', 'sneakers', 'boots']), shoesColor: pick(CLOTH) },
-    expr: 'neutral',
-    pose: 'stand',
-    anim: 'idle',
-    glasses: r() < 0.25 ? { style: pick(['round', 'square', 'shades']), color: pick(FRAMES) } : { style: 'none', color: '#232426' },
+    ...d, name: '随机角色', sex,
+    her: { mom: Math.floor(r() * PARENTS.mom.length), dad: Math.floor(r() * PARENTS.dad.length), shape: r(), skin: r() },
+    body: { gender: null, age: Math.round(20 + r() * r() * 50), height: 0.5 + gauss() * 0.3, weight: 0.5 + gauss() * 0.3, muscle: 0.5 + gauss() * 0.3, proportions: 0.5 + gauss() * 0.3, cup: 0.5 + gauss() * 0.3 },
+    bmods: {}, feat,
+    look: {
+      ...d.look, hair: pick(hairs).name, hairColor: r() < 0.3 ? '' : pick(HAIRC.slice(0, 11)), brows: pick(proxyList('eyebrows')).name, lashes: pick(proxyList('eyelashes')).name, eye: pick(EYEC),
+      beard: sex === 'm' && r() < 0.5 ? 0.2 + r() * 0.7 : 0, lips: sex === 'f' && r() < 0.6 ? 0.2 + r() * 0.5 : 0, lipColor: pick(MAKEUP), blush: sex === 'f' ? r() * 0.5 : 0, freckles: r() < 0.2 ? r() : 0,
+    },
+    outfit: pick(outfits).name, shoes: pick(proxyList('shoes')).name, hat: r() < 0.15 ? 'fedora01' : '',
+    anim: pick(['idle', 'idle', 'idle_talking', 'dance', 'walk']), expr: pick(['neutral', 'neutral', 'smile']),
   };
+  S.body.height = Math.max(0, Math.min(1, S.body.height)); S.body.weight = Math.max(0, Math.min(1, S.body.weight)); S.body.muscle = Math.max(0, Math.min(1, S.body.muscle)); S.body.proportions = Math.max(0, Math.min(1, S.body.proportions)); S.body.cup = Math.max(0, Math.min(1, S.body.cup));
   afterLoad();
 }
 
-function afterLoad() {
-  startMotion();
+async function afterLoad() {
   $('name').value = S.name;
-  rebuildOutfit();
-  hairKey = ''; glassesKey = '';
-  schedule({ face: true, now: true });
+  await syncSlots();
+  startAnim(S.anim);
+  portraits.clear();
   renderTabs(); renderPane();
+  updateShape();
   focus(tabFocus());
 }
 
-// —— 截图、导出（Artifact 里用 downloads 能力；本地直接下载）——
+// —— 截图、导出 ——
 let downloads = null;
 window.claude?.use?.('downloads').then((d) => { downloads = d; }).catch(() => {});
 async function saveFile(filename, blob) {
@@ -1080,48 +1300,121 @@ async function screenshot() {
   const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
   if (blob) await saveFile(`${fileName()}.png`, blob);
 }
+// 导出用：把着色器里做的事（两张皮肤混合、老化、胡子和化妆、头发染色）烘焙成一张普通贴图，别的软件里看到的和这里一样
+const lin = (c) => (c / 255) ** 2.2, srgb = (x) => Math.round(Math.min(1, Math.max(0, x)) ** (1 / 2.2) * 255);
+const fract = (x) => x - Math.floor(x);
+function hash12(px, py) { let x = fract(px * 0.1031), y = fract(py * 0.1031), z = fract(px * 0.1031); const d = x * (y + 33.33) + y * (z + 33.33) + z * (x + 33.33); x += d; y += d; z += d; return fract((x + y) * z); }
+function pixels(image, size) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(image, 0, 0, size, size);
+  return g.getImageData(0, 0, size, size).data;
+}
+function canvasTexture(data, size, mime) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  c.getContext('2d').putImageData(new ImageData(data, size, size), 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.userData.mimeType = mime;
+  return t;
+}
+function bakeSkin(size = 2048) {
+  const A = pixels(skinMat.map.image, size), B = pixels(skinU.uSkinB.value.image, size), O = pixels(skinU.uSkinOld.value.image, size);
+  const M = pixels(skinU.uMask.value.image, size), E = pixels(skinU.uEyeMask.value.image, size);
+  const mix = skinU.uSkinMix.value, age = skinU.uAging.value, bl = skinU.uBlush.value, li = skinU.uLips.value, sh = skinU.uShadow.value, be = skinU.uBeard.value, fr = skinU.uFreckle.value, ln = skinU.uLiner.value;
+  const out = new Uint8ClampedArray(size * size * 4);
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const o = (y * size + x) * 4, u = (x + 0.5) / size, v = 1 - (y + 0.5) / size;
+    const c = [0, 1, 2].map((k) => { const a = lin(A[o + k]), b = lin(B[o + k]); return (a + (b - a) * mix) * (1 - age) + lin(O[o + k]) * age; });
+    const mr = M[o] / 255, mg = M[o + 1] / 255, mb = M[o + 2] / 255, ma = E[o] / 255;
+    const stub = ss(0.35, 0.75, hash12(Math.floor(u * 2600), Math.floor(v * 2600)));
+    const kb = be.w * mr * (0.55 + 0.45 * stub);
+    const frk = ss(0.78, 0.92, hash12(Math.floor(u * 900), Math.floor(v * 900))) * mg;
+    const lum = (c[0] + c[1] + c[2]) * 0.6;
+    const tint = [be.x, be.y, be.z], blc = [bl.x, bl.y, bl.z], lic = [li.x, li.y, li.z], shc = [sh.x, sh.y, sh.z];
+    for (let k = 0; k < 3; k++) {
+      let q = c[k] + (tint[k] - c[k]) * kb;
+      q *= 1 - fr * frk * 0.35;
+      q += (q * blc[k] * 1.15 - q) * bl.w * ss(0.05, 0.6, mg);
+      q += (lic[k] * (0.55 + 0.45 * lum) - q) * li.w * mb;
+      q += (shc[k] - q) * sh.w * ma * 0.85;
+      q += (0.028 - q) * ln * ss(0.55, 0.9, ma);
+      out[o + k] = srgb(q);
+    }
+    out[o + 3] = 255;
+  }
+  return canvasTexture(out, size, 'image/jpeg');
+}
+function bakeDye(tex, color, mean, size = 1024) {
+  const D = pixels(tex.image, size), c = new THREE.Color(color), out = new Uint8ClampedArray(size * size * 4), ml = Math.max(0.01, mean?.lum ?? 0.2);
+  for (let i = 0; i < size * size; i++) {
+    const o = i * 4, l = 0.2126 * lin(D[o]) + 0.7152 * lin(D[o + 1]) + 0.0722 * lin(D[o + 2]), k = Math.min(2.6, l / ml);
+    out[o] = srgb(c.r * k); out[o + 1] = srgb(c.g * k); out[o + 2] = srgb(c.b * k); out[o + 3] = D[o + 3];
+  }
+  return canvasTexture(out, size, 'image/png');
+}
 async function exportModel() {
   toast('正在导出…');
+  await new Promise((r) => setTimeout(r, 30));
   const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
-  // 导出时骨骼摆回静止姿势（绑定姿势），动作都烘焙成动画片段：每根骨头每一帧（30 帧 / 秒）的旋转，加上骨盆的位置
-  const saved = bones.map((b) => [b.quaternion.clone(), b.position.clone()]);
+  // 换上烘焙好的材质（导出完换回来）；不透明的贴图用 JPEG，文件小很多
+  const swaps = [];
+  const swap = (m, mat) => { swaps.push([m, m.material]); m.material = mat; };
+  swap(body, new THREE.MeshStandardMaterial({ name: 'skin', map: bakeSkin(), roughness: 0.55 }));
+  for (const [slot, s] of Object.entries(SLOTS)) for (const m of s.meshes) {
+    const mat = Array.isArray(m.material) ? m.material[0] : m.material;
+    const u = mat.userData.dye;
+    if (u && u.uDyeAmt.value > 0 && mat.map) {
+      const p = s.p;
+      swap(m, new THREE.MeshStandardMaterial({ name: slot, map: bakeDye(mat.map, '#' + u.uDye.value.getHexString(), p.mean), alphaTest: mat.alphaTest || 0.5, transparent: false, side: mat.side, roughness: 0.6 }));
+    } else for (const mm of [].concat(m.material)) for (const k of ['map', 'normalMap', 'aoMap']) if (mm[k] && !mm.transparent && !mm.alphaTest && slot !== 'eyes') mm[k].userData.mimeType = 'image/jpeg';
+  }
+  // 导出：骨架摆回静止姿势，表情归零；所有动作按这个体型重新换算成动画片段（30 帧 / 秒）
+  const savedQ = bones.map((b) => [b.quaternion.clone(), b.position.clone()]);
   bones.forEach((b) => b.quaternion.identity());
-  bones[0].position.set(...restJ[0]);
-  const name = root.name;
-  root.name = S.name || 'character';
+  bones[BI.pelvis].position.copy(pelvisRest);
+  const savedM = [...skinned].map((m) => [m, m.morphTargetInfluences?.slice()]);
+  for (const m of skinned) if (m.morphTargetInfluences) m.morphTargetInfluences.fill(0);
+  const softHair = [...skinned].filter((m) => m.name === 'hair_soft');
+  softHair.forEach((m) => { m.visible = false; });
+  const name = rig.name;
+  rig.name = S.name || 'character';
   try {
-    const glb = await new GLTFExporter().parseAsync(root, { binary: true, onlyVisible: true, animations: bakeClips() });
+    const glb = await new GLTFExporter().parseAsync(rig, { binary: true, onlyVisible: true, maxTextureSize: 2048, animations: bakeClips() });
     await saveFile(`${fileName()}.zip`, zipStore([
       { name: `${fileName()}.glb`, data: new Uint8Array(glb) },
       { name: '捏脸码.txt', data: new TextEncoder().encode(encode() + '\n') },
+      { name: '素材来源.txt', data: new TextEncoder().encode('人体、皮肤、头发、衣服：MakeHuman（https://www.makehumancommunity.org），CC0 1.0\n动作：Quaternius Universal Animation Library（https://quaternius.com），CC0 1.0\n') },
     ]));
   } finally {
-    root.name = name;
-    saved.forEach(([q, pp], j) => { bones[j].quaternion.copy(q); bones[j].position.copy(pp); });
+    for (const [m, mat] of swaps.reverse()) { if (m.material !== mat) { m.material.map?.dispose(); m.material.dispose(); } m.material = mat; }
+    rig.name = name;
+    softHair.forEach((m) => { m.visible = true; });
+    savedM.forEach(([m, v]) => { if (v) m.morphTargetInfluences.splice(0, v.length, ...v); });
+    savedQ.forEach(([q, p], j) => { bones[j].quaternion.copy(q); bones[j].position.copy(p); });
   }
 }
 function bakeClips() {
-  const fps = 30, ctx = { rest: restJ, B: last.marks };
-  const clip = (name, dur, poseAt) => {
-    const n = Math.max(2, Math.round(dur * fps) + 1);
+  const fps = ANIM.fps, out = [];
+  const L = bones.map(() => new THREE.Quaternion()), hp = new THREE.Vector3();
+  const hipH = pelvisRest.y + groundY;
+  for (const clip of ANIM.clips) {
+    const n = clip.frames + (clip.loop ? 1 : 0);
     const times = new Float32Array(n), qv = bones.map(() => new Float32Array(n * 4)), pv = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
-      const t = (i / (n - 1)) * dur;
-      times[i] = t;
-      const T = CH.poseTransforms(restJ, poseAt(t), last.marks, 1, { feet: last.feet });
-      localQuats(T).forEach((q, j) => q.toArray(qv[j], i * 4));
-      pv.set(T.P[0], i * 3);
+      times[i] = i / fps;
+      sampleClip(clip, i / fps, L, hp);
+      L.forEach((q, j) => q.toArray(qv[j], i * 4));
+      const p = hp.multiplyScalar(hipH);
+      if (clip.loop) p.z = 0;
+      pv.set([pelvisRest.x + p.x, pelvisRest.y + p.y, pelvisRest.z + p.z], i * 3);
     }
     const tracks = bones.map((b, j) => new THREE.QuaternionKeyframeTrack(`${b.name}.quaternion`, times, qv[j]));
-    tracks.push(new THREE.VectorKeyframeTrack(`${bones[0].name}.position`, times, pv));
-    return new THREE.AnimationClip(name, dur, tracks);
-  };
-  return [
-    ...Object.entries(CH.CLIPS).map(([id, c]) => clip(id, c.dur, (t) => CH.clipPose(id, t, ctx))),
-    ...Object.keys(CH.POSES).map((id) => clip(`pose_${id}`, 1, () => CH.POSES[id])),
-  ];
+    tracks.push(new THREE.VectorKeyframeTrack(`${bones[BI.pelvis].name}.position`, times, pv));
+    out.push(new THREE.AnimationClip(clip.id, times[n - 1], tracks));
+  }
+  return out;
 }
-// 最简单的 zip（只存不压）：每个文件一个本地头，最后是中央目录
+// 最简单的 zip（只存不压）
 function zipStore(files) {
   const table = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
   const crc32 = (d) => { let c = 0xffffffff; for (let i = 0; i < d.length; i++) c = table[(c ^ d[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
@@ -1151,41 +1444,48 @@ function toast(msg) {
   t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
-
 $('a-random').addEventListener('click', randomize);
-$('a-reset').addEventListener('click', () => { const n = S.name; S = DEF(); S.name = n; afterLoad(); toast('已恢复默认'); });
+$('a-reset').addEventListener('click', () => { const n = S.name, sex = S.sex; S = DEF(); S.name = n; S.sex = sex; if (sex === 'f') { S.outfit = 'female_casualsuit01'; S.look.hair = 'bob02'; } afterLoad(); toast('已恢复默认'); });
 $('a-code').addEventListener('click', codeDialog);
 $('a-shot').addEventListener('click', () => screenshot().catch(() => toast('截图失败')));
-$('a-export').addEventListener('click', () => exportModel().catch(() => toast('导出失败')));
+$('a-export').addEventListener('click', () => exportModel().catch((e) => { console.error(e); toast('导出失败'); }));
 $('name').addEventListener('input', (e) => { S.name = e.target.value; });
 
 // —— 启动 ——
 applyPreset(PRESETS[Number(params.get('preset') ?? 0)] ?? PRESETS[0]);
+if (params.has('code')) { try { S = decode(params.get('code')); } catch { /* 忽略 */ } }
 if (EXPR[params.get('expr')]) S.expr = params.get('expr');
-for (const d of CH.PARAMS) if (params.has(d.id)) S.p[d.id] = Math.max(d.min, Math.min(d.max, Number(params.get(d.id))));
-if (CH.POSES[params.get('pose')]) { S.pose = params.get('pose'); S.anim = ''; }
-// 截图默认不放动画（静止姿势，没有呼吸）；anim=… 加 t=…（秒）截动画里的某一帧
-if (SHOT) S.anim = CH.CLIPS[params.get('anim')] ? params.get('anim') : '';
-else if (params.has('anim')) S.anim = CH.CLIPS[params.get('anim')] ? params.get('anim') : '';
-for (const slot of ['top', 'bottom', 'shoes']) if (params.has(slot)) S.outfit[slot] = CH.GARMENTS[params.get(slot)] ? params.get(slot) : '';
-if (CH.HAIRSTYLES[params.get('hair')]) S.hair.style = params.get('hair');
-if (CH.GLASSES[params.get('glasses')]) S.glasses.style = params.get('glasses');
+if (params.has('anim')) S.anim = CLIPS[params.get('anim')] ? params.get('anim') : '';
+else if (SHOT) S.anim = '';
+for (const k of ['hair', 'eye']) if (params.has(k)) S.look[k] = params.get(k);
+for (const k of ['outfit', 'shoes', 'hat']) if (params.has(k)) S[k] = params.get(k);
+if (params.has('sex')) S.sex = params.get('sex') === 'f' ? 'f' : 'm';
+for (const k of ['mom', 'dad', 'shape', 'skin']) if (params.has(k)) S.her[k] = Number(params.get(k));
+for (const k of Object.keys(FEATURE_DEF)) if (params.has(k)) S.feat[k] = Number(params.get(k));
+for (const [k] of BODY) if (params.has(k)) S.body[k] = Number(params.get(k));
+$('loading-sub').textContent = '正在载入头发和衣服…';
 $('name').value = S.name;
-rebuildOutfit();
+await syncSlots();
+updateShape();
+await updateSkin();
+updateHidden();
+startAnim(S.anim);
 renderTabs();
 renderPane();
 resize();
-updateCharacter({ face: true, hairNow: true });
 focus(params.get('cam') ?? tabFocus(), true);
 if (params.has('az')) {
-  const t = controls.target, d = camera.position.distanceTo(t), a = Number(params.get('az')) * Math.PI / 180, e = Number(params.get('el') ?? 6) * Math.PI / 180;
+  const t = controls.target, d = camera.position.distanceTo(t), a = Number(params.get('az')) * Math.PI / 180, e = Number(params.get('el') ?? 4) * Math.PI / 180;
   camera.position.set(t.x + d * Math.sin(a) * Math.cos(e), t.y + d * Math.sin(e), t.z + d * Math.cos(a) * Math.cos(e));
   controls.update();
 }
 $('loading').hidden = true;
 
-let nextBlink = performance.now() + 2500, blinkStart = 0;
-function frame(now) {
+let last = performance.now(), nextBlink = last + 2500, blinkStart = 0, statsT = 0;
+function step(now) {
+  if (paused) return;
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
   if (camAnim) {
     const k = Math.min(1, (now - camAnim.t0) / 650), e = k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2;
     controls.target.lerpVectors(camAnim.from[0], camAnim.to[0], e);
@@ -1193,24 +1493,46 @@ function frame(now) {
     if (k >= 1) camAnim = null;
   }
   controls.update();
-  // 眨眼：每 3~6 秒一次，170ms
-  if (S.expr !== 'sleep' && S.expr !== 'wink') {
+  if (dirty.shape) { dirty.shape = false; updateShape(); }
+  if (hiddenDirty) updateHidden();
+  if (dirty.skin) updateSkin();
+  // 眨眼：每 3~6 秒一次，160ms
+  if (!SHOT && S.expr !== 'sleep') {
     if (!blinkStart && now > nextBlink) blinkStart = now;
     if (blinkStart) {
-      const k = (now - blinkStart) / 170;
-      blinkNow = k < 1 ? Math.sin(Math.PI * k) : 0;
+      const k = (now - blinkStart) / 160;
+      blink = k < 1 ? Math.sin(Math.PI * k) : 0;
       if (k >= 1) { blinkStart = 0; nextBlink = now + 2800 + Math.random() * 3200; }
-      if (!pending) pending = { face: false };
     }
   }
-  if (pending) { const p = pending; pending = null; updateCharacter({ face: p.face, hairNow: p.now }); }
-  applyMotion(now);
-  placeEyes();
+  applyAnim(now);
+  applyExpr(dt);
+  rig.updateMatrixWorld(true);
+  eyeLook();
   renderer.render(scene, camera);
+  if (now - statsT > 500) { statsT = now; updateStats(); }
 }
+// 调试：hidemesh=body,outfit 把这些网格藏起来
+if (params.has('hidemesh')) { const hide = params.get('hidemesh').split(','); rig.traverse((o) => { if (o.isMesh && hide.includes(o.name)) o.visible = false; }); }
 if (SHOT) {
-  for (let i = 0; i < 16; i++) placeEyes();
-  renderer.render(scene, camera);
-  setTimeout(() => { renderer.render(scene, camera); window.__ready = true; }, 60);
-} else renderer.setAnimationLoop(frame);
+  // 截图：等家长头像都画完（它们会临时改动画面），再画最后一帧
+  const final = () => {
+    if (!portraits.idle() || paused) { setTimeout(final, 50); return; }
+    if (dirty.shape) { dirty.shape = false; updateShape(); }
+    if (hiddenDirty) updateHidden();
+    updateSkin().then(() => {
+      applyAnim(performance.now()); applyExpr(1); rig.updateMatrixWorld(true); eyeLook(); rig.updateMatrixWorld(true);
+      focus(params.get('cam') ?? tabFocus(), true);
+      if (params.has('az')) {
+        const t = controls.target, d = camera.position.distanceTo(t), a = Number(params.get('az')) * Math.PI / 180, e = Number(params.get('el') ?? 4) * Math.PI / 180;
+        camera.position.set(t.x + d * Math.sin(a) * Math.cos(e), t.y + d * Math.sin(e), t.z + d * Math.cos(a) * Math.cos(e));
+        controls.update();
+      }
+      rig.updateMatrixWorld(true); eyeLook(); rig.updateMatrixWorld(true);
+      renderer.render(scene, camera);
+      setTimeout(() => { renderer.render(scene, camera); window.__ready = true; }, 80);
+    });
+  };
+  setTimeout(final, 100);
+} else renderer.setAnimationLoop(step);
 </script>
