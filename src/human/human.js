@@ -120,7 +120,7 @@ export async function loadProxy(H, id) {
   if (p.data) return p;
   const buf = await fetchBin(H.base + p.file + H.suffix);
   const V = (r) => view(buf, r);
-  p.data = { map: V(p.map), uv: V(p.uv), index: V(p.index), ref: V(p.ref), w: V(p.w), off: V(p.off), del: V(p.del) };
+  p.data = { map: V(p.map), uv: V(p.uv), index: V(p.index), ref: V(p.ref), w: V(p.w), off: V(p.off), del: V(p.del), ao: V(p.ao) };
   return p;
 }
 // 代理顶点 = 三个基础顶点的加权和 + 偏移（按身体尺寸缩放：参考两个基础顶点之间的距离）

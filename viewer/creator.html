@@ -445,6 +445,51 @@ function poreNormal(size = 256) {
   return t;
 }
 
+// —— 布料的细节：一张平铺的“平纹”法线——经线、纬线一上一下地交织（圆的线截面），再加一点纤维的起伏。
+//    衣服贴图的分辨率只够看出褶皱和图案，看不出布纹；把这张图按大约 3mm 一根线铺在所有衣服上，近看才像布 ——
+function weaveNormal(size = 256, threads = 16) {
+  const h = new Float32Array(size * size);
+  const rnd = (i) => { let x = Math.imul(i ^ 0x2545f491, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); return ((x ^ (x >>> 16)) >>> 0) / 4294967296; };
+  const prof = (f) => Math.cos(Math.PI * (f - 0.5)) ** 0.7;
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const u = ((x + 0.5) / size) * threads, v = ((y + 0.5) / size) * threads;
+    const s2 = Math.sin(Math.PI * u) * Math.sin(Math.PI * v); // 一上一下：相邻的线交替
+    const warp = prof(u - Math.floor(u)) * (0.55 + 0.45 * s2), weft = prof(v - Math.floor(v)) * (0.55 - 0.45 * s2);
+    h[y * size + x] = Math.max(warp, weft) + (rnd(y * size + x) - 0.5) * 0.12;
+  }
+  const d = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const hx = h[y * size + ((x + 1) % size)] - h[y * size + ((x - 1 + size) % size)];
+    const hy = h[((y + 1) % size) * size + x] - h[((y - 1 + size) % size) * size + x];
+    const nx = -hx * 1.6, ny = -hy * 1.6, l = Math.hypot(nx, ny, 1), o = (y * size + x) * 4;
+    d[o] = (nx / l * 0.5 + 0.5) * 255; d[o + 1] = (ny / l * 0.5 + 0.5) * 255; d[o + 2] = (1 / l * 0.5 + 0.5) * 255; d[o + 3] = 255;
+  }
+  const t = new THREE.DataTexture(d, size, size);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = 4;
+  t.needsUpdate = true;
+  return t;
+}
+const WEAVE = weaveNormal();
+const FLAT_NORMAL = (() => { const t = new THREE.DataTexture(new Uint8Array([128, 128, 255, 255]), 1, 1); t.needsUpdate = true; return t; })();
+// 衣服的材质：自己的法线贴图（没有就用平的）上再叠布纹（UDN 混合：两张法线的 xy 相加）
+function fabricMaterial(params, { scale = 40, amount = 0.3 } = {}) {
+  const u = { uWeave: { value: WEAVE }, uWeaveScale: { value: scale }, uWeaveAmt: { value: amount } };
+  const mat = new THREE.MeshPhysicalMaterial({ ...params, normalMap: params.normalMap ?? FLAT_NORMAL });
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform sampler2D uWeave; uniform float uWeaveScale; uniform float uWeaveAmt;')
+      .replace('#include <normal_fragment_maps>', `
+vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;
+mapN.xy *= normalScale;
+vec3 weaveN = texture2D( uWeave, vNormalMapUv * uWeaveScale ).xyz * 2.0 - 1.0;
+mapN = normalize( vec3( mapN.xy + weaveN.xy * uWeaveAmt, mapN.z ) );
+normal = normalize( tbn * mapN );`);
+  };
+  mat.customProgramCacheKey = () => 'fabric';
+  return mat;
+}
+
 // —— 皮肤材质：两张皮肤照片按“肤色遗传”混合 + 老化（换成同人种的中年 / 老年皮肤）+ 化妆；漫反射用“包裹光照”模拟皮下散射（明暗交界处偏红、偏软）——
 const SKIN_WRAP = THREE.ShaderChunk.lights_physical_pars_fragment.replace(
   'reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseContribution ) * ( 1.0 - F );',
@@ -515,6 +560,72 @@ hairT.rgb = mix( hairT.rgb, uDye * clamp( hl / uMeanLum, 0.0, 2.6 ), uDyeAmt );
 diffuseColor *= hairT;`);
   };
   mat.customProgramCacheKey = () => 'dye';
+  return mat;
+}
+
+// —— 头发的材质 ——
+//   染色：按“吸收”的模型——贴图里每根发丝的相对亮度 d（亮度 / 平均亮度，压缩成 d^0.45），染出来的颜色 = 发色^(1/d)：
+//         暗的发丝更深、更饱和，亮的发丝更浅、更淡，和真头发一样有层次（直接相乘的话浅色会染成一片橙色）
+//   高光：Kajiya–Kay，两道，沿发丝方向（构建时从贴图算出的流向图）：主高光白而窄，次高光带发色、宽一些
+//   漫反射：发片的法线不可靠，一半按法线、一半按发丝（sin(T, L)）；烘焙的自遮挡让里层的头发暗下去
+function hairMaterial(params, mean, flow) {
+  const u = { uDye: { value: new THREE.Color(1, 1, 1) }, uDyeAmt: { value: 0 }, uMeanLum: { value: Math.max(0.01, mean?.lum ?? 0.2) }, uFlow: { value: flow } };
+  const mat = new THREE.MeshPhysicalMaterial({ ...params, roughness: 0.7, specularIntensity: 0.3, sheen: 0 });
+  mat.userData.dye = u;
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float hairAO;\nvarying float vHairAO;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvHairAO = hairAO;');
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>
+uniform vec3 uDye; uniform float uDyeAmt; uniform float uMeanLum; uniform sampler2D uFlow;
+varying float vHairAO;
+vec3 hairT; vec3 hairBase; float hairCoh; float hairDetail;`)
+      .replace('#include <map_fragment>', `
+vec4 hairTex = texture2D( map, vMapUv );
+hairDetail = clamp( dot( hairTex.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) / uMeanLum, 0.15, 3.0 );
+hairTex.rgb = mix( hairTex.rgb, pow( max( uDye, vec3( 1e-4 ) ), vec3( 1.0 / pow( hairDetail, 0.45 ) ) ), uDyeAmt );
+diffuseColor *= hairTex;
+hairBase = diffuseColor.rgb;`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+{
+  // 流向图：二倍角存的发丝方向（UV 空间）和一致性；用屏幕导数把 UV 方向换成视空间里的切线
+  vec2 dv = texture2D( uFlow, vMapUv ).rg * 2.0 - 1.0;
+  hairCoh = clamp( length( dv ) * 1.25, 0.0, 1.0 );
+  float ang = 0.5 * atan( dv.y, dv.x );
+  vec3 q0 = dFdx( - vViewPosition ), q1 = dFdy( - vViewPosition );
+  vec2 st0 = dFdx( vMapUv ), st1 = dFdy( vMapUv );
+  vec3 q1perp = cross( q1, normal ), q0perp = cross( normal, q0 );
+  vec3 Tu = q1perp * st0.x + q0perp * st1.x, Tv = q1perp * st0.y + q0perp * st1.y;
+  vec3 t = Tu * cos( ang ) + Tv * sin( ang );
+  t -= normal * dot( t, normal );
+  hairT = dot( t, t ) > 1e-12 ? normalize( t ) : vec3( 0.0, 1.0, 0.0 );
+}`)
+      .replace('#include <lights_physical_pars_fragment>', `#include <lights_physical_pars_fragment>
+void RE_Direct_Hair( const in IncidentLight directLight, const in vec3 geometryPosition, const in vec3 geometryNormal, const in vec3 geometryViewDir, const in vec3 geometryClearcoatNormal, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {
+  vec3 L = directLight.direction, V = geometryViewDir, N = geometryNormal;
+  float nl = dot( N, L ), tl = dot( hairT, L );
+  float kd = mix( saturate( nl * 0.6 + 0.4 ), sqrt( max( 0.0, 1.0 - tl * tl ) ) * 0.85, 0.5 * hairCoh );
+  reflectedLight.directDiffuse += directLight.color * kd * BRDF_Lambert( material.diffuseColor ) * mix( 1.0, vHairAO, 0.6 );
+  vec3 H = normalize( L + V );
+  float th = dot( hairT, H ), sinTH = sqrt( max( 0.0, 1.0 - th * th ) );
+  float vis = smoothstep( -0.15, 0.35, nl ) * vHairAO * vHairAO;
+  // 高光落在一根根亮的发丝上（贴图里比平均亮的那些），成一道道细丝，而不是一整片；
+  // 发丝方向不确定（卷发、碎发）的地方各向异性高光弱下去，换成一点普通的高光
+  float coh2 = hairCoh * hairCoh;
+  float strand = smoothstep( 0.75, 1.6, hairDetail );
+  vec3 spec = ( vec3( 0.95, 0.93, 0.9 ) * pow( sinTH, 220.0 ) * 0.22 * strand + hairBase * pow( sinTH, 30.0 ) * 0.7 * ( 0.6 + 0.4 * strand ) ) * coh2
+    + vec3( 0.03 ) * pow( saturate( dot( N, H ) ), 20.0 ) * ( 1.0 - coh2 );
+  reflectedLight.directSpecular += directLight.color * spec * vis;
+}`)
+      .replace('#include <lights_fragment_begin>', '#undef RE_Direct\n#define RE_Direct RE_Direct_Hair\n#include <lights_fragment_begin>')
+      .replace('#include <aomap_fragment>', `#include <aomap_fragment>
+reflectedLight.indirectDiffuse *= mix( 1.0, vHairAO, 0.8 );
+// 环境反射只留一点（发片的法线乱，整片反射环境光会像湿了的塑料），光泽交给上面沿发丝的高光
+reflectedLight.indirectSpecular *= 0.25 * vHairAO * vHairAO;`);
+  };
+  mat.customProgramCacheKey = () => 'hair2';
   return mat;
 }
 
@@ -612,9 +723,14 @@ async function setSlot(slot, id) {
     m.castShadow = false;
   } else if (p.cat === 'hair') {
     // 头发：两遍——先不透明（alpha 截断）写深度，再画半透明的发梢，边缘就是软的
-    const base = { map: maps[0], normalMap: maps[1] ?? null, side: THREE.DoubleSide, roughness: 0.55, sheen: 0.4, sheenRoughness: 0.35, specularIntensity: 0.6 };
-    const solid = dyeMaterial(new THREE.MeshPhysicalMaterial({ ...base, alphaTest: 0.5, alphaToCoverage: true }), p.mean);
-    const soft = dyeMaterial(new THREE.MeshPhysicalMaterial({ ...base, transparent: true, depthWrite: false, alphaTest: 0.02 }), p.mean);
+    const base = { map: maps[0], normalMap: maps[1] ?? null, side: THREE.DoubleSide };
+    const flow = p.maps.flow ? await tex(p.maps.flow, false) : null;
+    // 烘焙的自遮挡（每个代理顶点一个，展开到渲染顶点）
+    const ao = new Float32Array(p.nr);
+    for (let r = 0; r < p.nr; r++) ao[r] = d.ao ? d.ao[d.map[r]] / 255 : 1;
+    geo.setAttribute('hairAO', new THREE.BufferAttribute(ao, 1));
+    const solid = hairMaterial({ ...base, alphaTest: 0.5, alphaToCoverage: true }, p.mean, flow);
+    const soft = hairMaterial({ ...base, transparent: true, depthWrite: false, alphaTest: 0.02 }, p.mean, flow);
     add(solid, 'hair'); const b = add(soft, 'hair_soft');
     b.castShadow = false; b.renderOrder = 2;
   } else if (p.cat === 'eyebrows' || p.cat === 'eyelashes') {
@@ -622,7 +738,8 @@ async function setSlot(slot, id) {
     m.castShadow = false; m.renderOrder = 3;
   } else {
     const fabric = p.cat === 'outfit' || p.cat === 'hat';
-    const mat = new THREE.MeshPhysicalMaterial({ map: maps[0], normalMap: maps[1] ?? null, aoMap: maps[2] ?? null, aoMapIntensity: 0.9, roughness: p.cat === 'teeth' ? 0.3 : p.cat === 'shoes' ? 0.55 : 0.82, sheen: fabric ? 0.35 : 0, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff) });
+    const params = { map: maps[0], normalMap: maps[1] ?? null, aoMap: maps[2] ?? null, aoMapIntensity: 0.9, roughness: p.cat === 'teeth' ? 0.3 : p.cat === 'shoes' ? 0.55 : 0.82, sheen: fabric ? 0.35 : 0, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff) };
+    const mat = fabric ? fabricMaterial(params, p.cat === 'hat' ? { scale: 24, amount: 0.2 } : {}) : new THREE.MeshPhysicalMaterial(params);
     const m = add(mat, p.cat);
     if (p.cat === 'teeth' || p.cat === 'tongue') m.castShadow = false;
   }
@@ -673,9 +790,10 @@ function updateShape() {
   heightCm = Math.round((hi - lo) * 100);
   if (heightOut?.isConnected) heightOut.textContent = `${heightCm}cm`;
   let top = hi;
+  for (const s of Object.values(SLOTS)) HM.fitProxy(s.p, P, s.P);
+  if (SLOTS.hat && SLOTS.hair) hatHair(SLOTS.hat, SLOTS.hair);
   for (const s of Object.values(SLOTS)) {
     const p = s.p;
-    HM.fitProxy(p, P, s.P);
     const a = s.geo.attributes.position;
     HM.expand(s.P, p.data.map, a.array);
     HM.renderNormals(s.P, p.data.map, p.data.index, p.nv, s.geo.attributes.normal.array);
@@ -688,6 +806,57 @@ function updateShape() {
   bodyGeo.computeBoundingSphere();
   bindRest();
   timing.shape = performance.now() - t0;
+}
+// 戴帽子时把帽子里的头发压进去（不然头发从帽顶穿出来）：以头的中心为原点，把帽子的三角形撒成点，
+// 按方向记下帽子离中心最近的距离（方向用从脚底那一极做的球极投影铺成一张 120×120 的图，帽顶附近也不会有空格）；
+// 头发顶点比它远的，沿着这个方向拉回到帽子里面 8mm
+function hatHair(hat, hair) {
+  const J = HM.joints(H, P), hb = H.rig.bones[BI.head];
+  const c = [0, 1, 2].map((a) => (J[hb.head * 3 + a] + J[hb.tail * 3 + a]) / 2);
+  const N = 120, R = 2.5;
+  const rmin = new Float32Array(N * N).fill(Infinity);
+  const bin = (x, y, z) => {
+    const dx = x - c[0], dy = y - c[1], dz = z - c[2], r = Math.hypot(dx, dy, dz), s2 = 1 + dy / r;
+    if (s2 < 0.4) return [-1, r];
+    const i = Math.floor(((dx / r / s2 + R) / (2 * R)) * N), j = Math.floor(((dz / r / s2 + R) / (2 * R)) * N);
+    return i < 0 || j < 0 || i >= N || j >= N ? [-1, r] : [j * N + i, r];
+  };
+  const d = hat.p.data, X = hat.P;
+  for (let t = 0; t < d.index.length; t += 3) {
+    const v = [d.map[d.index[t]], d.map[d.index[t + 1]], d.map[d.index[t + 2]]];
+    for (let k = 0; k < 15; k++) {
+      let r1 = (k * 0.618034) % 1, r2 = (k * 0.381966 + 0.5) % 1;
+      if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
+      const q = [0, 1, 2].map((a) => X[v[0] * 3 + a] + (X[v[1] * 3 + a] - X[v[0] * 3 + a]) * r1 + (X[v[2] * 3 + a] - X[v[0] * 3 + a]) * r2);
+      const [b, r] = bin(q[0], q[1], q[2]);
+      if (b >= 0 && r < rmin[b]) rmin[b] = r;
+    }
+  }
+  // 往外扩 8 圈：帽子盖住的格子 dist = 0，往外每圈 +1。帽檐下面一圈的头发也压一部分（越远越少），
+  // 不然一片发片一头被压进帽子、一头留在外面，会从帽墙上斜着穿出来
+  const K = 8, dist = new Uint8Array(N * N).fill(255);
+  for (let o = 0; o < N * N; o++) if (rmin[o] < Infinity) dist[o] = 0;
+  for (let pass = 1; pass <= K; pass++) {
+    const nxt = rmin.slice();
+    for (let j = 1; j < N - 1; j++) for (let i = 1; i < N - 1; i++) {
+      const o = j * N + i;
+      if (rmin[o] < Infinity) continue;
+      let sum = 0, n = 0;
+      for (const q of [o - 1, o + 1, o - N, o + N]) if (rmin[q] < Infinity) { sum += rmin[q]; n++; }
+      if (n > 0) { nxt[o] = sum / n; dist[o] = pass; }
+    }
+    rmin.set(nxt);
+  }
+  const Y = hair.P;
+  for (let i = 0; i < hair.p.nv; i++) {
+    const [b, r] = bin(Y[i * 3], Y[i * 3 + 1], Y[i * 3 + 2]);
+    if (b < 0 || dist[b] > K) continue;
+    const lim = rmin[b] - 0.008;
+    if (!(r > lim)) continue;
+    const w = dist[b] <= 1 ? 1 : 1 - (dist[b] - 1) / K;
+    const k = (r - (r - lim) * w) / r;
+    for (let a = 0; a < 3; a++) Y[i * 3 + a] = c[a] + (Y[i * 3 + a] - c[a]) * k;
+  }
 }
 // 衣服、鞋盖住的身体部分不画（不然会穿模）
 function updateHidden() {
@@ -1395,11 +1564,15 @@ function bakeSkin(size = 2048) {
   }
   return canvasTexture(out, size, 'image/jpeg');
 }
-function bakeDye(tex, color, mean, size = 1024) {
+// 染色烘焙进贴图（导出用）：头发按“吸收”模型（和着色器里一样），眉毛、睫毛按亮度相乘
+function bakeDye(tex, color, mean, size = 1024, absorb = false) {
   const D = pixels(tex.image, size), c = new THREE.Color(color), out = new Uint8ClampedArray(size * size * 4), ml = Math.max(0.01, mean?.lum ?? 0.2);
+  const cc = [c.r, c.g, c.b].map((x) => Math.max(1e-4, x));
   for (let i = 0; i < size * size; i++) {
-    const o = i * 4, l = 0.2126 * lin(D[o]) + 0.7152 * lin(D[o + 1]) + 0.0722 * lin(D[o + 2]), k = Math.min(2.6, l / ml);
-    out[o] = srgb(c.r * k); out[o + 1] = srgb(c.g * k); out[o + 2] = srgb(c.b * k); out[o + 3] = D[o + 3];
+    const o = i * 4, l = 0.2126 * lin(D[o]) + 0.7152 * lin(D[o + 1]) + 0.0722 * lin(D[o + 2]);
+    if (absorb) { const k = Math.min(3, Math.max(0.15, l / ml)) ** 0.45; for (let q = 0; q < 3; q++) out[o + q] = srgb(cc[q] ** (1 / k)); }
+    else { const k = Math.min(2.6, l / ml); for (let q = 0; q < 3; q++) out[o + q] = srgb(cc[q] * k); }
+    out[o + 3] = D[o + 3];
   }
   return canvasTexture(out, size, 'image/png');
 }
@@ -1416,7 +1589,7 @@ async function exportModel() {
     const u = mat.userData.dye;
     if (u && u.uDyeAmt.value > 0 && mat.map) {
       const p = s.p;
-      swap(m, new THREE.MeshStandardMaterial({ name: slot, map: bakeDye(mat.map, '#' + u.uDye.value.getHexString(), p.mean), alphaTest: mat.alphaTest || 0.5, transparent: false, side: mat.side, roughness: 0.6 }));
+      swap(m, new THREE.MeshStandardMaterial({ name: slot, map: bakeDye(mat.map, '#' + u.uDye.value.getHexString(), p.mean, 1024, slot === 'hair'), alphaTest: mat.alphaTest || 0.5, transparent: false, side: mat.side, roughness: 0.6 }));
     } else for (const mm of [].concat(m.material)) for (const k of ['map', 'normalMap', 'aoMap']) if (mm[k] && !mm.transparent && !mm.alphaTest && slot !== 'eyes') mm[k].userData.mimeType = 'image/jpeg';
   }
   // 导出：骨架摆回静止姿势，表情归零；所有动作按这个体型重新换算成动画片段（30 帧 / 秒）
@@ -1508,6 +1681,7 @@ if (EXPR[params.get('expr')]) S.expr = params.get('expr');
 if (params.has('anim')) S.anim = CLIPS[params.get('anim')] ? params.get('anim') : '';
 else if (SHOT) S.anim = '';
 for (const k of ['hair', 'eye']) if (params.has(k)) S.look[k] = params.get(k);
+if (params.has('hc')) S.look.hairColor = /^[0-9a-f]{6}$/i.test(params.get('hc')) ? '#' + params.get('hc') : '';
 for (const k of ['outfit', 'shoes', 'hat']) if (params.has(k)) S[k] = params.get(k);
 if (params.has('sex')) S.sex = params.get('sex') === 'f' ? 'f' : 'm';
 for (const k of ['mom', 'dad', 'shape', 'skin']) if (params.has(k)) S.her[k] = Number(params.get(k));

@@ -4,6 +4,7 @@
 //   docs/previews/creator-faces.jpg        八个预设角色的脸
 //   docs/previews/creator-heritage.jpg     遗传：同一对父母，“长相”从像母亲拉到像父亲
 //   docs/previews/creator-expressions.jpg  表情
+//   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
 //   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上）
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -91,6 +92,17 @@ try {
   const ex = ['neutral', 'smile', 'laugh', 'surprise', 'angry', 'sad'];
   const es = await shoot(ex.map((e) => [`expr-${e}`, `preset=3&bare=1&cam=face&az=10&expr=${e}`]), [420, 460]);
   await grid(es, 6, 300, 330, path.join(out, 'creator-expressions.jpg'), { labels: ['平静', '微笑', '大笑', '惊讶', '生气', '难过'] });
+  // 头发：几种发型、发色，最后一格戴礼帽
+  const hair = [
+    ['hair-long', 'preset=3&hair=long01&hc=100d0b&az=35', '长直发 · 黑'],
+    ['hair-bob', 'preset=1&hair=bob02&hc=4a3020&az=30', '齐耳短发 · 棕'],
+    ['hair-pony', 'preset=5&hair=ponytail01&hc=d8b47a&az=55', '马尾 · 金'],
+    ['hair-short', 'preset=0&hair=short02&hc=2b1d14&az=30', '碎短发 · 深棕'],
+    ['hair-braid', 'preset=7&hair=braid01&hc=8a5a33&az=150', '麻花辫（背面）'],
+    ['hair-hat', 'preset=6&hair=short01&hat=fedora01&az=35', '戴礼帽'],
+  ];
+  const hh = await shoot(hair.map(([n, q]) => [n, `${q}&bare=1&cam=bust&anim=idle&t=0.5`]), [420, 460]);
+  await grid(hh, 6, 300, 330, path.join(out, 'creator-hair.jpg'), { labels: hair.map((h) => h[2]) });
   // 动作
   const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话']];
   const ms = await shoot(mo.map(([a, t]) => [`mo-${a}`, `preset=5&bare=1&az=30&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);
