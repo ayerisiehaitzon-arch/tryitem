@@ -218,13 +218,13 @@ if (params.get('bare') === '1') document.body.classList.add('bare');
 const ASSETS = params.get('assets') ?? new URL('./human/', location.href).href;
 
 // —— 资源：MakeHuman（CC0）的人体、头发、衣服、皮肤；Quaternius（CC0）的动作 ——
-const H = await HM.loadHuman(ASSETS);
+// 数据文件的后缀：仓库里是 gzip 的 .bin；只认常见文件类型的托管上换成 base64 的 .bin.txt（bin=.txt）
+const BIN = params.get('bin') ?? '';
+const H = await HM.loadHuman(ASSETS, { suffix: BIN });
 const ANIM = await (async () => {
   const meta = await (await fetch(`${ASSETS}anims.json`)).json();
-  const res = await fetch(`${ASSETS}anims.bin`);
-  let buf = new Uint8Array(await res.arrayBuffer());
-  if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
-  for (const c of meta.clips) { c.qd = new Int16Array(buf.buffer, c.q.off, c.q.n); c.hd = new Float32Array(buf.buffer, c.hips.off, c.hips.n); }
+  const buf = await HM.fetchBin(`${ASSETS}anims.bin${BIN}`);
+  for (const c of meta.clips) { c.qd = new Int16Array(buf, c.q.off, c.q.n); c.hd = new Float32Array(buf, c.hips.off, c.hips.n); }
   return meta;
 })();
 const CLIPS = Object.fromEntries(ANIM.clips.map((c) => [c.id, c]));

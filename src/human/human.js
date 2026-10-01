@@ -1,11 +1,17 @@
 // 人体：MakeHuman（CC0）的基础网格 + 形变目标 + 代理（头发、衣服、眉毛……）+ 骨骼权重，数据由 scripts/human/build.mjs 生成。
 // 这里只做纯数组运算（不依赖 three.js）：按参数算出身体顶点、把代理贴到身体上、算关节位置、合成蒙皮权重。
 
-// —— 读数据：bin 是 gzip 压缩的（有的服务器会自动解压，看前两个字节判断）——
-async function fetchBin(url) {
+// —— 读数据：bin 是 gzip 压缩的（有的服务器会自动解压，看前两个字节判断）。
+//    只认常见文件类型的静态托管上，同一份数据存成 base64 文本（xxx.bin.txt）：gzip 的 base64 总是以 “H4sI” 开头 ——
+export async function fetchBin(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${url}: ${res.status}`);
-  const buf = new Uint8Array(await res.arrayBuffer());
+  let buf = new Uint8Array(await res.arrayBuffer());
+  if (buf[0] === 0x48 && buf[1] === 0x34 && buf[2] === 0x73 && buf[3] === 0x49) {
+    const text = new TextDecoder().decode(buf).trim();
+    if (Uint8Array.fromBase64) buf = Uint8Array.fromBase64(text);
+    else { const s = atob(text); buf = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) buf[i] = s.charCodeAt(i); }
+  }
   if (buf[0] === 0x1f && buf[1] === 0x8b) {
     const ds = new DecompressionStream('gzip');
     return new Response(new Blob([buf]).stream().pipeThrough(ds)).arrayBuffer();
@@ -15,12 +21,13 @@ async function fetchBin(url) {
 const TYPES = { Float32: Float32Array, Uint16: Uint16Array, Uint32: Uint32Array, Int16: Int16Array, Uint8: Uint8Array };
 const view = (buf, ref) => (ref ? new TYPES[ref.t](buf, ref.off, ref.n) : null);
 
-export async function loadHuman(base) {
+// suffix：数据文件名后面再加的后缀（比如 '.txt' 就去读 base64 的 human.bin.txt）
+export async function loadHuman(base, { suffix = '' } = {}) {
   const meta = await (await fetch(`${base}human.json`)).json();
-  const buf = await fetchBin(`${base}human.bin`);
+  const buf = await fetchBin(`${base}human.bin${suffix}`);
   const V = (r) => view(buf, r);
   const H = {
-    base, meta, nv: meta.nv,
+    base, suffix, meta, nv: meta.nv,
     pos0: V(meta.base),
     body: { map: V(meta.body.map), uv: V(meta.body.uv), index: V(meta.body.index) },
     targets: meta.targets.map((t) => ({ ...t, i: t.i ? V(t.i) : null, d: V(t.d) })),
@@ -111,7 +118,7 @@ export async function loadProxy(H, id) {
   const p = H.proxies[id];
   if (!p) throw new Error('没有这个代理：' + id);
   if (p.data) return p;
-  const buf = await fetchBin(H.base + p.file);
+  const buf = await fetchBin(H.base + p.file + H.suffix);
   const V = (r) => view(buf, r);
   p.data = { map: V(p.map), uv: V(p.uv), index: V(p.index), ref: V(p.ref), w: V(p.w), off: V(p.off), del: V(p.del) };
   return p;

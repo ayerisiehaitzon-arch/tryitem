@@ -2150,6 +2150,9 @@ npm run fetch-human   # 下载素材到 .cache/human-src/（约 450MB：MakeHuma
 npm run build-human   # 生成 viewer/human/（约 20 秒；同样的素材、同一版本的 sharp，生成的文件逐字节相同）
 ```
 
+有的静态托管只发常见类型的文件，不发 `.bin`：把每个 `.bin` 用 base64 转成同名的 `.bin.txt`（`base64 -w0 human.bin > human.bin.txt`），
+网址加上 `?bin=.txt` 就读这一份（文件大三分之一；读的时候按开头的 `H4sI` 认出来，先解 base64 再解 gzip）。
+
 ### 素材和许可证
 
 - **MakeHuman**：程序代码是 AGPL；随 MakeHuman 发布的资源（基础网格、代理、形变目标、贴图、衣服、姿势和表情）是 CC0 1.0，
