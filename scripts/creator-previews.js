@@ -5,6 +5,7 @@
 //   docs/previews/creator-heritage.jpg     遗传：同一对父母，“长相”从像母亲拉到像父亲
 //   docs/previews/creator-expressions.jpg  表情
 //   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
+//   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
 //   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上）
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -68,9 +69,9 @@ async function grid(files, cols, w, h, file, { gap = 0, bg = '#dedcd6', labels =
 }
 
 try {
-  // 界面：桌面 1440×900（遗传）+ 手机 390×844（外观 / 头发）
+  // 界面：桌面 1440×900（遗传）+ 手机 390×844（服装和配色）
   const [desk] = await shoot([['ui-desk', 'preset=3&tab=heritage&anim=idle&t=1.2']], [1440, 900]);
-  const [phone] = await shoot([['ui-phone', 'preset=1&tab=look&look=hair&anim=idle&t=0.6']], [390, 844]);
+  const [phone] = await shoot([['ui-phone', 'preset=1&tab=outfit&anim=idle&t=0.6']], [390, 844]);
   {
     const d = await sharp(desk).resize(1440, 900).toBuffer();
     const p = await sharp(phone).resize(390, 844).toBuffer();
@@ -103,6 +104,19 @@ try {
   ];
   const hh = await shoot(hair.map(([n, q]) => [n, `${q}&bare=1&cam=bust&anim=idle&t=0.5`]), [420, 460]);
   await grid(hh, 6, 300, 330, path.join(out, 'creator-hair.jpg'), { labels: hair.map((h) => h[2]) });
+  // 衣服配色：同一个人、同一套衣服换几种颜色（第一格是原色）
+  const col = [
+    ['col-0', 'preset=0', '原色'],
+    ['col-1', 'preset=0&oc=8c1d24,1a1a1a', '红 T 恤 · 黑牛仔裤'],
+    ['col-2', 'preset=0&oc=1f2f52,c2a77d', '藏青 T 恤 · 卡其'],
+    ['col-3', 'preset=0&oc=4b5a32,e8e4da', '橄榄绿 · 白牛仔裤'],
+    ['col-4', 'preset=6', '原色（黑西装）'],
+    ['col-5', 'preset=6&oc=22304a', '藏青西装'],
+    ['col-6', 'preset=6&oc=c8b89a&hat=fedora01&hatc=6b4a32', '米色西装 · 棕礼帽'],
+    ['col-7', 'preset=3&oc=,8c1d24', '红半裙'],
+  ];
+  const cs = await shoot(col.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.9&anim=idle&t=0.6`]), [420, 720]);
+  await grid(cs, 8, 300, 520, path.join(out, 'creator-colors.jpg'), { labels: col.map((c) => c[2]) });
   // 动作
   const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话']];
   const ms = await shoot(mo.map(([a, t]) => [`mo-${a}`, `preset=5&bare=1&az=30&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);

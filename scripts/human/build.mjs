@@ -12,6 +12,7 @@ import zlib from 'node:zlib';
 import { parseObj, parseTarget, parseMhclo, parseMhmat, parseThreeJson } from './mhparse.mjs';
 import { flowMap, removeLogo, uvCoverage, edgePad } from './texfx.mjs';
 import { hairAO } from './hairao.mjs';
+import { islands, classify, partMask } from './parts.mjs';
 const require = createRequire(import.meta.url);
 const sharp = require('sharp');
 
@@ -286,13 +287,15 @@ function tex(src, name, size, { q = 82, alpha = false } = {}) {
   return dst;
 }
 // 衣服、鞋、帽子的贴图：去标志 → UV 岛往外填色（缩小、mipmap 时接缝不会漏进黑色或白色的底）→ 缩小 → WebP
-async function texCloth(src, name, size, { q = 80, geom = null, logos = [] } = {}) {
+// onData(rgba, W, H, r)：拿处理好的原尺寸贴图再做点别的（比如配色的权重图）
+async function texCloth(src, name, size, { q = 80, geom = null, logos = [], onData = null } = {}) {
   const { data, info } = await sharp(src).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, k = W / 2048;
   for (const L of logos) removeLogo(data, W, H, { ...L, box: L.box.map((x) => Math.round(x * k)), from: L.from.map((x) => Math.round(x * k)) });
   if (geom) {
     const r = renderMesh(geom.endsWith('.obj') ? parseObj(geom) : parseThreeJson(geom));
     edgePad(data, W, H, uvCoverage(r.uv, r.idx, W, H, 3));
+    if (onData) await onData(data, W, H, r);
   }
   const dst = `tex/${name}.webp`;
   texJobs.push(sharp(data, { raw: { width: W, height: H, channels: 4 } }).removeAlpha().resize(size, size, { fit: 'fill' }).webp({ quality: q, effort: 5 }).toFile(`${OUT}/${dst}`));
@@ -436,12 +439,36 @@ const LOGOS = {
   female_casualsuit01: [{ box: [1455, 300, 1770, 645], from: [-330, 0] }],
   female_casualsuit02: [{ box: [1455, 300, 1770, 645], from: [-330, 0] }],
 };
+// 配色：每套分几个部位（按裁片在身上的高度分上衣 / 下装；西装、帽子整件一个部位），每个部位可以换颜色。
+// 种类决定权重图的宽严：牛仔布洗白的地方更亮、更灰，放宽才能一起换色
+const PARTS = {
+  male_casualsuit06: [['T 恤', 'top'], ['牛仔裤', 'denim']], male_casualsuit04: [['T 恤', 'top'], ['牛仔裤', 'denim']],
+  male_casualsuit02: [['长袖 T 恤', 'top'], ['牛仔裤', 'denim']], male_casualsuit01: [['衬衫', 'top'], ['牛仔裤', 'denim']],
+  male_casualsuit03: [['条纹衬衫', 'top'], ['牛仔裤', 'denim']], male_casualsuit05: [['夹克', 'top'], ['牛仔裤', 'denim']],
+  male_elegantsuit01: [['西装', 'suit']],
+  female_casualsuit01: [['T 恤', 'top'], ['牛仔裤', 'denim']], female_casualsuit02: [['T 恤', 'top'], ['热裤', 'denim']],
+  female_elegantsuit01: [['衬衫', 'top'], ['半裙', 'bottom']], female_sportsuit01: [['运动背心', 'top'], ['紧身裤', 'bottom']],
+  fedora01: [['礼帽', 'hat']],
+};
+const KIND = { top: { tol: 0.07, qmax: 3.3 }, denim: { tol: 0.15, qmax: 7 }, bottom: { tol: 0.08, qmax: 3.3 }, suit: { tol: 0.07, qmax: 3.3 }, hat: { tol: 0.07, qmax: 3.3 } };
+// texCloth 的 onData：算部位、主色和权重图（size²，R/G/B = 部位 0/1/2，无损 WebP），结果放进 out
+const partsJob = (n, clo, out, size = 1024) => async (rgba, W, H, r) => {
+  const def = PARTS[n], isl = islands(r), cls = classify(r, restProxy(parseMhclo(clo)), isl);
+  const triPart = Int8Array.from(isl.triIsl, (k) => Math.min(cls[k], def.length - 1));
+  size = Math.min(size, W);
+  const { mask, dom } = partMask(rgba, W, H, r, triPart, def.length, { tol: def.map(([, k]) => KIND[k].tol), qmax: def.map(([, k]) => KIND[k].qmax), out: size });
+  out.file = `tex/cloth-${n}-parts.webp`;
+  await sharp(Buffer.from(mask), { raw: { width: size, height: size, channels: 3 } }).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${out.file}`);
+  out.parts = def.map(([label, kind], p) => ({ label, kind, dom: dom[p] }));
+};
 for (const [n, [label, sex]] of Object.entries(OUTFIT)) {
-  const mm = mat('clothes', n);
-  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `cloth-${n}`, 2048, { q: 80, geom: npmDir('clothes', n), logos: LOGOS[n] ?? [] }) };
+  const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
+  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `cloth-${n}`, 2048, { q: 80, geom: npmDir('clothes', n), logos: LOGOS[n] ?? [], onData: partsJob(n, clo, pj) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, `cloth-${n}-n`, 1024, { q: 85 });
   if (mm.aomapTexture) maps.ao = tex(`${mm.dir}/${mm.aomapTexture}`, `cloth-${n}-ao`, 512, { q: 80 });
-  await proxy('outfit', n, { label, geom: npmDir('clothes', n), clo: `${DEB}/clothes/${n}/${n}.mhclo`, maps, extra: { sex } });
+  maps.parts = pj.file;
+  await proxy('outfit', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { sex, parts: pj.parts } });
+  log('outfit', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
 }
 const SHOES = { shoes05: '白色运动鞋', shoes06: '蓝色运动鞋', shoes02: '旧帆布鞋', shoes01: '棕色皮鞋', shoes04: '棕色休闲鞋', shoes03: '黑色皮鞋' };
 for (const [n, label] of Object.entries(SHOES)) {
@@ -451,11 +478,12 @@ for (const [n, label] of Object.entries(SHOES)) {
   await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo: `${DEB}/clothes/${n}/${n}.mhclo`, maps });
 }
 {
-  const clo = parseMhclo(`${DEB}/clothes/fedora01/fedora.mhclo`);
+  const cf = `${DEB}/clothes/fedora01/fedora.mhclo`, clo = parseMhclo(cf), pj = {};
   const mm = parseMhmat(`${DEB}/clothes/fedora01/${clo.material}`);
-  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, 'hat-fedora01', 1024, { q: 84, geom: npmDir('clothes', 'fedora') }) };
+  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, 'hat-fedora01', 1024, { q: 84, geom: npmDir('clothes', 'fedora'), onData: partsJob('fedora01', cf, pj, 512) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, 'hat-fedora01-n', 512, { q: 85 });
-  await proxy('hat', 'fedora01', { label: '礼帽', geom: npmDir('clothes', 'fedora'), clo: `${DEB}/clothes/fedora01/fedora.mhclo`, maps });
+  maps.parts = pj.file;
+  await proxy('hat', 'fedora01', { label: '礼帽', geom: npmDir('clothes', 'fedora'), clo: cf, maps, extra: { parts: pj.parts } });
 }
 meta.proxies = proxies;
 log('proxies', proxies.length, 'raw', (proxies.reduce((s2, p) => s2 + p.bytes, 0) / 1e6).toFixed(2), 'MB');

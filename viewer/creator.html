@@ -117,6 +117,7 @@
   .sw { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; padding: 0; background: var(--c); }
   .sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--accent); }
   .sw.none { background: linear-gradient(135deg, transparent 45%, var(--muted) 45%, var(--muted) 55%, transparent 55%), var(--panel-solid); }
+  .sw.none.orig { background: var(--c); color: #fff; font-size: 11px; line-height: 24px; text-shadow: 0 0 2px #000, 0 0 1px #000; }
   .sw.custom { position: relative; overflow: hidden; background: conic-gradient(#e55, #ec5, #5c6, #5be, #75e, #e5b, #e55); }
   .sw.custom input { position: absolute; inset: -8px; width: 44px; height: 44px; opacity: 0; cursor: pointer; }
 
@@ -325,6 +326,14 @@ const HAIRC = ['#100d0b', '#2b1d14', '#4a3020', '#6b4428', '#8a5a33', '#a0522d',
 const MAKEUP = ['#b84a5a', '#c9706a', '#9b3b45', '#d98a7c', '#8c2f3f', '#e07a8a', '#7a3b6a', '#c46b4a'];
 const SHADOW = ['#5a4a40', '#3a2d28', '#7a5a6a', '#4f5f7a', '#6a5a3a', '#7a4a3a'];
 const BLUSH = ['#e08a8a', '#d9776a', '#e89a9a', '#c66a6a', '#d88aa0'];
+// 衣服配色：每种布一套色板（换的是这块布的主色，褶皱、洗白、条纹、明线、纽扣都留着）
+const CLOTHC = {
+  top: ['#f2f0eb', '#1c1c1e', '#7d7f82', '#1f2f52', '#8fb7d9', '#8c1d24', '#5a1e2c', '#e3a7b4', '#d9a326', '#c9b38f', '#4b5a32', '#2f6b4f'],
+  denim: ['#1d2a44', '#3c5a85', '#9db4cc', '#1a1a1a', '#5b5d60', '#e8e4da', '#c2a77d', '#3d4a2f'],
+  bottom: ['#1c1c1e', '#5b5d60', '#1f2f52', '#5a1e2c', '#8c1d24', '#c9b38f', '#e3a7b4', '#8fb7d9', '#2f6b4f', '#f2f0eb'],
+  suit: ['#1b1d22', '#22304a', '#5a5d63', '#3b2a22', '#c8b89a', '#4a1f26', '#2f3a2c', '#f2f0eb'],
+  hat: ['#1b1d22', '#5a5d63', '#6b4a32', '#a0522d', '#c8b89a', '#22304a', '#4a1f26', '#2f3a2c', '#f2f0eb'],
+};
 const EYEC = Object.keys(H.meta.eyeTex);
 const EYE_LABEL = { brown: '棕', brownlight: '浅棕', blue: '蓝', lightblue: '浅蓝', deepblue: '深蓝', bluegreen: '蓝绿', green: '绿', grey: '灰', ice: '冰蓝' };
 
@@ -337,18 +346,19 @@ const DEF = () => ({
   bmods: {}, feat: {},
   look: { hair: 'short02', hairColor: '', brows: 'eyebrow001', browColor: '', lashes: 'eyelashes01', eye: 'brown', beard: 0, beardColor: '', aging: 0, freckles: 0, blush: 0, blushColor: BLUSH[0], lips: 0, lipColor: MAKEUP[0], shadow: 0, shadowColor: SHADOW[0], liner: 0 },
   outfit: 'male_casualsuit06', shoes: 'shoes05', hat: '',
+  colors: {}, // 衣服、帽子的配色：{ 'outfit/<名字>': ['#rrggbb' 或 ''（原色）, …每个部位一个] }
   anim: 'idle', expr: 'neutral',
 });
 let S = DEF();
 const PRESETS = [
   { name: '阿哲', note: '碎短发，白 T 牛仔裤', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.6, skin: 0.5 }, body: { age: 26, height: 0.6, muscle: 0.6 }, feat: { jaw_b: 0.2, brow_d: 0.2 }, look: { hair: 'short02', hairColor: '#100d0b' }, outfit: 'male_casualsuit06', shoes: 'shoes05' } },
-  { name: '小满', note: '齐耳短发，T 恤热裤', s: { sex: 'f', her: { mom: 4, dad: 4, shape: 0.3, skin: 0.4 }, body: { age: 22, height: 0.35, weight: 0.4 }, feat: { eye_s: 0.3, face_round: 0.3 }, look: { hair: 'bob02', hairColor: '#4a3020', blush: 0.45, lips: 0.4, lipColor: '#c9706a' }, outfit: 'female_casualsuit02', shoes: 'shoes05' } },
+  { name: '小满', note: '齐耳短发，粉 T 恤热裤', s: { sex: 'f', her: { mom: 4, dad: 4, shape: 0.3, skin: 0.4 }, body: { age: 22, height: 0.35, weight: 0.4 }, feat: { eye_s: 0.3, face_round: 0.3 }, look: { hair: 'bob02', hairColor: '#4a3020', blush: 0.45, lips: 0.4, lipColor: '#c9706a' }, outfit: 'female_casualsuit02', colors: { 'outfit/female_casualsuit02': ['#e3a7b4', ''] }, shoes: 'shoes05' } },
   { name: '老周', note: '平头，微胖，衬衫', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.7, skin: 0.6 }, body: { age: 58, height: 0.45, weight: 0.75, muscle: 0.4 }, feat: { face_fat: 0.4, cheek_v: 0.3 }, look: { hair: 'short04', hairColor: '#8f8a85', beard: 0.35, aging: 0.6 }, outfit: 'male_casualsuit01', shoes: 'shoes01', anim: 'idle_talking' } },
   { name: '安娜', note: '长直发，衬衫半裙', s: { sex: 'f', her: { mom: 1, dad: 5, shape: 0.35, skin: 0.3 }, body: { age: 29, height: 0.6, weight: 0.4 }, feat: { cheek_b: 0.3, eye_tilt: 0.2 }, look: { hair: 'long01', hairColor: '#c08a52', eye: 'lightblue', lips: 0.6, lipColor: '#9b3b45', shadow: 0.4, liner: 0.6 }, outfit: 'female_elegantsuit01', shoes: 'shoes03', anim: 'walk_formal' } },
-  { name: '大力', note: '健身教练，T 恤牛仔裤', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: 'male_casualsuit04', shoes: 'shoes02' } },
-  { name: '阿月', note: '马尾，运动装', s: { sex: 'f', her: { mom: 3, dad: 3, shape: 0.45, skin: 0.5 }, body: { age: 24, height: 0.5, weight: 0.35, muscle: 0.65 }, look: { hair: 'ponytail01', hairColor: '#2b1d14', blush: 0.3 }, outfit: 'female_sportsuit01', shoes: 'shoes06', anim: 'jog_fwd' } },
+  { name: '大力', note: '健身教练，黑 T 恤黑牛仔裤', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: 'male_casualsuit04', colors: { 'outfit/male_casualsuit04': ['#1c1c1e', '#1a1a1a'] }, shoes: 'shoes02' } },
+  { name: '阿月', note: '马尾，运动装', s: { sex: 'f', her: { mom: 3, dad: 3, shape: 0.45, skin: 0.5 }, body: { age: 24, height: 0.5, weight: 0.35, muscle: 0.65 }, look: { hair: 'ponytail01', hairColor: '#2b1d14', blush: 0.3 }, outfit: 'female_sportsuit01', colors: { 'outfit/female_sportsuit01': ['#8fb7d9', ''] }, shoes: 'shoes06', anim: 'jog_fwd' } },
   { name: '马克', note: '黑西装，短发', s: { sex: 'm', her: { mom: 5, dad: 1, shape: 0.6, skin: 0.4 }, body: { age: 38, height: 0.7, weight: 0.5 }, feat: { chin_p: 0.25, nose_hump: 0.2 }, look: { hair: 'short01', hairColor: '#6b4428', beard: 0.25, eye: 'green' }, outfit: 'male_elegantsuit01', shoes: 'shoes03' } },
-  { name: '晴子', note: '麻花辫，T 恤牛仔裤', s: { sex: 'f', her: { mom: 4, dad: 0, shape: 0.4, skin: 0.5 }, body: { age: 21, height: 0.4, weight: 0.45 }, feat: { eye_s: 0.2, nose_tip: 0.2 }, look: { hair: 'braid01', hairColor: '#8a5a33', blush: 0.5, lips: 0.35, lipColor: '#d98a7c' }, outfit: 'female_casualsuit01', shoes: 'shoes05', anim: 'dance' } },
+  { name: '晴子', note: '麻花辫，黄 T 恤浅色牛仔裤', s: { sex: 'f', her: { mom: 4, dad: 0, shape: 0.4, skin: 0.5 }, body: { age: 21, height: 0.4, weight: 0.45 }, feat: { eye_s: 0.2, nose_tip: 0.2 }, look: { hair: 'braid01', hairColor: '#8a5a33', blush: 0.5, lips: 0.35, lipColor: '#d98a7c' }, outfit: 'female_casualsuit01', colors: { 'outfit/female_casualsuit01': ['#d9a326', '#9db4cc'] }, shoes: 'shoes05', anim: 'dance' } },
 ];
 function applyPreset(pr) {
   const d = DEF(), s = pr.s;
@@ -471,14 +481,44 @@ function weaveNormal(size = 256, threads = 16) {
 }
 const WEAVE = weaveNormal();
 const FLAT_NORMAL = (() => { const t = new THREE.DataTexture(new Uint8Array([128, 128, 255, 255]), 1, 1); t.needsUpdate = true; return t; })();
-// 衣服的材质：自己的法线贴图（没有就用平的）上再叠布纹（UDN 混合：两张法线的 xy 相加）
-function fabricMaterial(params, { scale = 40, amount = 0.3 } = {}) {
-  const u = { uWeave: { value: WEAVE }, uWeaveScale: { value: scale }, uWeaveAmt: { value: amount } };
+const NO_PARTS = (() => { const t = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); t.needsUpdate = true; return t; })();
+// 换色的公式（着色器和导出烘焙共用）：新颜色 × 亮度比（像素亮度 / 这块布主色的亮度），褶皱、洗白、布纹的明暗都留着；
+// 往亮了换很多（黑布换白、牛仔裤换卡其）时把亮度比压一压（指数 < 1），不然深色布里洗色、褶皱的深浅会被放大成脏斑
+const recolorGamma = (Ld, Lt) => 1 / (1 + 0.5 * Math.max(0, Math.log2(Math.max(1e-4, Lt) / Math.max(1e-4, Ld))));
+// 衣服的材质：自己的法线贴图（没有就用平的）上再叠布纹（UDN 混合：两张法线的 xy 相加）；
+// 有配色权重图的话（R/G/B = 部位 0/1/2），每个部位可以换颜色。
+// 配色的 uniform 不放 userData（导出 glTF 时 userData 会被写进 extras，里面有贴图就会整张转成 data URL）
+const PART_U = new WeakMap();
+function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = [] } = {}) {
+  const u = {
+    uWeave: { value: WEAVE }, uWeaveScale: { value: scale }, uWeaveAmt: { value: amount },
+    uPartMask: { value: parts ?? NO_PARTS }, uPartDom: { value: [0, 1, 2].map((p) => new THREE.Vector3(...(dom[p] ?? [0.2, 0.2, 0.2]))) },
+    uPartCol: { value: [0, 1, 2].map(() => new THREE.Vector4(0, 0, 0, 0)) },
+  };
   const mat = new THREE.MeshPhysicalMaterial({ ...params, normalMap: params.normalMap ?? FLAT_NORMAL });
+  PART_U.set(mat, u);
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, u);
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform sampler2D uWeave; uniform float uWeaveScale; uniform float uWeaveAmt;')
+      .replace('#include <common>', `#include <common>
+uniform sampler2D uWeave; uniform float uWeaveScale; uniform float uWeaveAmt;
+uniform sampler2D uPartMask; uniform vec3 uPartDom[ 3 ]; uniform vec4 uPartCol[ 3 ];
+vec3 recolorPart( vec3 c, float L, vec3 dom, vec4 col, float w ) {
+  if ( col.a < 0.5 || w <= 0.0 ) return c;
+  const vec3 LUM = vec3( 0.2126, 0.7152, 0.0722 );
+  float Ld = max( 1e-4, dot( dom, LUM ) ), Lt = max( 1e-4, dot( col.rgb, LUM ) );
+  float g = 1.0 / ( 1.0 + 0.5 * max( 0.0, log2( Lt / Ld ) ) );
+  return mix( c, min( col.rgb * pow( max( L / Ld, 1e-4 ), g ), vec3( 1.0 ) ), w );
+}`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+{
+  // 亮度按原贴图算一次，三个部位都用它
+  vec3 pw = texture2D( uPartMask, vMapUv ).rgb;
+  float L = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+  diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uPartDom[ 0 ], uPartCol[ 0 ], pw.r );
+  diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uPartDom[ 1 ], uPartCol[ 1 ], pw.g );
+  diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uPartDom[ 2 ], uPartCol[ 2 ], pw.b );
+}`)
       .replace('#include <normal_fragment_maps>', `
 vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;
 mapN.xy *= normalScale;
@@ -739,11 +779,14 @@ async function setSlot(slot, id) {
   } else {
     const fabric = p.cat === 'outfit' || p.cat === 'hat';
     const params = { map: maps[0], normalMap: maps[1] ?? null, aoMap: maps[2] ?? null, aoMapIntensity: 0.9, roughness: p.cat === 'teeth' ? 0.3 : p.cat === 'shoes' ? 0.55 : 0.82, sheen: fabric ? 0.35 : 0, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff) };
-    const mat = fabric ? fabricMaterial(params, p.cat === 'hat' ? { scale: 24, amount: 0.2 } : {}) : new THREE.MeshPhysicalMaterial(params);
+    const parts = fabric && p.maps.parts ? await tex(p.maps.parts, false) : null;
+    if (SLOTS[slot]) return;
+    const mat = fabric ? fabricMaterial(params, { ...(p.cat === 'hat' ? { scale: 24, amount: 0.2 } : {}), parts, dom: (p.parts ?? []).map((x) => x.dom) }) : new THREE.MeshPhysicalMaterial(params);
     const m = add(mat, p.cat);
     if (p.cat === 'teeth' || p.cat === 'tongue') m.castShadow = false;
   }
   SLOTS[slot] = { id, p, meshes, geo, P: new Float32Array(p.nv * 3) };
+  applyColors();
   hiddenDirty = true;
   if (cur || true) dirty.shape = true;
 }
@@ -1079,10 +1122,37 @@ async function updateSkin() {
       if (c) u.uDye.value.set(c);
     }
   }
+  applyColors();
   // 眼睛颜色
   const eyes = SLOTS.eyes?.meshes[0];
   if (eyes) { eyes.material[0].map = await tex(H.meta.eyeTex[S.look.eye] ?? H.meta.eyeTex.brown); eyes.material[0].needsUpdate = true; }
 }
+
+// 衣服、帽子的配色 → 着色器
+function applyColors() {
+  for (const slot of ['outfit', 'hat']) {
+    const s = SLOTS[slot];
+    if (!s) continue;
+    const cols = S.colors[s.id] ?? [];
+    for (const m of s.meshes) {
+      const u = PART_U.get(m.material);
+      if (!u) continue;
+      u.uPartCol.value.forEach((v, i) => {
+        if (cols[i]) { const c = new THREE.Color(cols[i]); v.set(c.r, c.g, c.b, 1); } else v.set(0, 0, 0, 0);
+      });
+    }
+  }
+}
+function setColor(id, i, c) {
+  const n = H.proxies[id]?.parts?.length ?? 0;
+  if (i >= n) return;
+  const a = (S.colors[id] ??= Array(n).fill(''));
+  a[i] = c;
+  if (a.every((x) => !x)) delete S.colors[id];
+  applyColors();
+}
+// 主色（线性）→ 网页颜色，给“原色”那一格用
+const domCss = (d) => `#${new THREE.Color().setRGB(d[0], d[1], d[2], THREE.LinearSRGBColorSpace).getHexString()}`;
 
 // —— 换装：按当前状态加载各个槽位 ——
 async function syncSlots() {
@@ -1219,11 +1289,11 @@ function slider(def, value, onInput, fmt = null) {
   if (def.ends) box.append(el('div', { class: 'ends' }, el('span', {}, def.ends[0]), el('span', {}, def.ends[1])));
   return box;
 }
-function swatches(list, value, onPick, { none = null } = {}) {
+function swatches(list, value, onPick, { none = null, noneColor = null } = {}) {
   const wrap = el('div', { class: 'swatches' });
   const draw = (cur) => {
     wrap.replaceChildren(...[
-      none ? el('button', { class: 'sw none', 'aria-label': none, title: none, 'aria-pressed': String(!cur), on: { click: () => { onPick(''); draw(''); } } }) : null,
+      none ? el('button', { class: noneColor ? 'sw none orig' : 'sw none', style: noneColor ? `--c:${noneColor}` : null, 'aria-label': none, title: none, 'aria-pressed': String(!cur), on: { click: () => { onPick(''); draw(''); } } }, noneColor ? '原' : null) : null,
       ...list.map((c) => el('button', { class: 'sw', style: `--c:${c}`, 'aria-label': `颜色 ${c}`, 'aria-pressed': String(c.toLowerCase() === (cur || '').toLowerCase()), on: { click: () => { onPick(c); draw(c); } } })),
       el('label', { class: 'sw custom', title: '自定义颜色' }, el('input', { type: 'color', value: cur || '#6b4428', 'aria-label': '自定义颜色', on: { input: (e) => onPick(e.target.value) } })),
     ].filter(Boolean));
@@ -1307,9 +1377,14 @@ function renderPane() {
     g.push(group('局部', '双击名字恢复', ...BODY_MODS.map(([id, label]) => slider({ id: `bm-${id}`, label, min: -1, max: 1, def: 0 }, S.bmods[id] ?? 0, (v) => { S.bmods[id] = v; reshape(); }))));
   } else if (tab === 'outfit') {
     const outfits = proxyList('outfit');
-    g.push(group('衣服', '整套', chips([['', '内衣'], ...outfits.filter((p) => p.sex === S.sex).map((p) => [p.name, p.label]), ...outfits.filter((p) => p.sex !== S.sex).map((p) => [p.name, p.label])], S.outfit, (id) => { S.outfit = id; syncSlots(); })));
+    // 每个部位一组色板（第一格“原”是贴图本来的颜色；最后一格自选）
+    const colorGroups = (id) => (H.proxies[id]?.parts ?? []).map((part, i) => group(`${part.label.replace(/ /g, '')}颜色`, i === 0 ? '第一格是原色' : null,
+      swatches(CLOTHC[part.kind] ?? CLOTHC.top, S.colors[id]?.[i] ?? '', (c) => setColor(id, i, c), { none: '原色', noneColor: domCss(part.dom) })));
+    g.push(group('衣服', '整套', chips([['', '内衣'], ...outfits.filter((p) => p.sex === S.sex).map((p) => [p.name, p.label]), ...outfits.filter((p) => p.sex !== S.sex).map((p) => [p.name, p.label])], S.outfit, (id) => { S.outfit = id; syncSlots(); renderPane(); })));
+    if (S.outfit) g.push(...colorGroups(`outfit/${S.outfit}`));
     g.push(group('鞋', null, chips([['', '光脚'], ...proxyList('shoes').map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots(); })));
-    g.push(group('帽子', null, chips([['', '不戴'], ...proxyList('hat').map((p) => [p.name, p.label])], S.hat, (id) => { S.hat = id; syncSlots(); })));
+    g.push(group('帽子', null, chips([['', '不戴'], ...proxyList('hat').map((p) => [p.name, p.label])], S.hat, (id) => { S.hat = id; syncSlots(); renderPane(); })));
+    if (S.hat) g.push(...colorGroups(`hat/${S.hat}`));
   } else if (tab === 'motion') {
     g.push(group('动作', 'Quaternius（CC0）', chips([['', '站着不动'], ...ANIM.clips.map((c) => [c.id, c.label])], S.anim, (id) => { S.anim = id; startAnim(id); })));
     g.push(group('表情', null, chips(Object.entries(EXPR).map(([id, e]) => [id, e.label]), S.expr, (id) => { S.expr = id; })));
@@ -1409,12 +1484,18 @@ function sanitize(o) {
     her: { mom: num(o?.her?.mom, 0, PARENTS.mom.length - 1, 0) | 0, dad: num(o?.her?.dad, 0, PARENTS.dad.length - 1, 0) | 0, shape: num(o?.her?.shape, 0, 1, 0.5), skin: num(o?.her?.skin, 0, 1, 0.5) },
     body: { ...d.body }, bmods: {}, feat: {},
     look: { ...d.look },
-    outfit: str(o?.outfit, has('outfit'), d.outfit), shoes: str(o?.shoes, has('shoes'), d.shoes), hat: str(o?.hat, has('hat'), ''),
+    outfit: str(o?.outfit, has('outfit'), d.outfit), shoes: str(o?.shoes, has('shoes'), d.shoes), hat: str(o?.hat, has('hat'), ''), colors: {},
     anim: typeof o?.anim === 'string' && (o.anim === '' || CLIPS[o.anim]) ? o.anim : 'idle', expr: EXPR[o?.expr] ? o.expr : 'neutral',
   };
   for (const [id, , min, max] of BODY) S2.body[id] = id === 'gender' ? (o?.body?.gender === null || o?.body?.gender === undefined ? null : num(o.body.gender, 0, 1, null)) : num(o?.body?.[id], min, max, d.body[id]);
   for (const k of Object.keys(BODY_MOD_DEF)) if (typeof o?.bmods?.[k] === 'number') S2.bmods[k] = num(o.bmods[k], -1, 1, 0);
   for (const [k, f] of Object.entries(FEATURE_DEF)) if (typeof o?.feat?.[k] === 'number') S2.feat[k] = num(o.feat[k], f.min, f.max, 0);
+  if (o?.colors && typeof o.colors === 'object') for (const [k, v] of Object.entries(o.colors)) {
+    const n = H.proxies[k]?.parts?.length;
+    if (!n || !Array.isArray(v)) continue;
+    const a = Array.from({ length: n }, (_, i) => col(v[i], ''));
+    if (a.some(Boolean)) S2.colors[k] = a;
+  }
   const L = o?.look ?? {};
   S2.look = {
     hair: str(L.hair, has('hair'), d.look.hair), hairColor: col(L.hairColor, ''), brows: str(L.brows, has('eyebrows'), d.look.brows), browColor: col(L.browColor, ''),
@@ -1428,7 +1509,9 @@ function sanitize(o) {
 
 // —— 捏脸码 ——
 function encode() {
-  const bytes = new TextEncoder().encode(JSON.stringify({ v: 2, ...S }));
+  const worn = [`outfit/${S.outfit}`, `hat/${S.hat}`];
+  const colors = Object.fromEntries(Object.entries(S.colors ?? {}).filter(([k]) => worn.includes(k)));
+  const bytes = new TextEncoder().encode(JSON.stringify({ v: 2, ...S, colors }));
   let bin = '';
   bytes.forEach((b) => { bin += String.fromCharCode(b); });
   return 'TRY2.' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -1481,9 +1564,16 @@ function randomize() {
       ...d.look, hair: pick(hairs).name, hairColor: r() < 0.3 ? '' : pick(HAIRC.slice(0, 11)), brows: pick(proxyList('eyebrows')).name, lashes: pick(proxyList('eyelashes')).name, eye: pick(EYEC),
       beard: sex === 'm' && r() < 0.5 ? 0.2 + r() * 0.7 : 0, lips: sex === 'f' && r() < 0.6 ? 0.2 + r() * 0.5 : 0, lipColor: pick(MAKEUP), blush: sex === 'f' ? r() * 0.5 : 0, freckles: r() < 0.2 ? r() : 0,
     },
-    outfit: pick(outfits).name, shoes: pick(proxyList('shoes')).name, hat: r() < 0.15 ? 'fedora01' : '',
+    outfit: pick(outfits).name, shoes: pick(proxyList('shoes')).name, hat: r() < 0.15 ? 'fedora01' : '', colors: {},
     anim: pick(['idle', 'idle', 'idle_talking', 'dance', 'walk']), expr: pick(['neutral', 'neutral', 'smile']),
   };
+  // 一半的部位换个颜色
+  for (const id of [`outfit/${S.outfit}`, `hat/${S.hat}`]) {
+    const parts = H.proxies[id]?.parts;
+    if (!parts) continue;
+    const a = parts.map((p) => (r() < 0.5 ? pick(CLOTHC[p.kind] ?? CLOTHC.top) : ''));
+    if (a.some(Boolean)) S.colors[id] = a;
+  }
   S.body.height = Math.max(0, Math.min(1, S.body.height)); S.body.weight = Math.max(0, Math.min(1, S.body.weight)); S.body.muscle = Math.max(0, Math.min(1, S.body.muscle)); S.body.proportions = Math.max(0, Math.min(1, S.body.proportions)); S.body.cup = Math.max(0, Math.min(1, S.body.cup));
   afterLoad();
 }
@@ -1576,6 +1666,29 @@ function bakeDye(tex, color, mean, size = 1024, absorb = false) {
   }
   return canvasTexture(out, size, 'image/png');
 }
+// 衣服配色烘焙进贴图（导出用），公式和着色器一样
+function bakeParts(map, u) {
+  const size = Math.min(2048, map.image.width || 2048);
+  const D = pixels(map.image, size), M = pixels(u.uPartMask.value.image, size), out = new Uint8ClampedArray(size * size * 4);
+  const parts = u.uPartCol.value.map((c, p) => {
+    if (c.w < 0.5) return null;
+    const d = u.uPartDom.value[p], Ld = Math.max(1e-4, 0.2126 * d.x + 0.7152 * d.y + 0.0722 * d.z), Lt = 0.2126 * c.x + 0.7152 * c.y + 0.0722 * c.z;
+    return { r: c.x, g: c.y, b: c.z, Ld, e: recolorGamma(Ld, Lt) };
+  });
+  for (let i = 0; i < size * size; i++) {
+    const o = i * 4;
+    let r = lin(D[o]), g = lin(D[o + 1]), b = lin(D[o + 2]);
+    const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    for (let p = 0; p < 3; p++) {
+      const P = parts[p], w = M[o + p] / 255;
+      if (!P || w <= 0) continue;
+      const k = Math.max(L / P.Ld, 1e-4) ** P.e;
+      r += (Math.min(1, P.r * k) - r) * w; g += (Math.min(1, P.g * k) - g) * w; b += (Math.min(1, P.b * k) - b) * w;
+    }
+    out[o] = srgb(r); out[o + 1] = srgb(g); out[o + 2] = srgb(b); out[o + 3] = 255;
+  }
+  return canvasTexture(out, size, 'image/jpeg');
+}
 async function exportModel() {
   toast('正在导出…');
   await new Promise((r) => setTimeout(r, 30));
@@ -1587,9 +1700,14 @@ async function exportModel() {
   for (const [slot, s] of Object.entries(SLOTS)) for (const m of s.meshes) {
     const mat = Array.isArray(m.material) ? m.material[0] : m.material;
     const u = mat.userData.dye;
+    const pu = PART_U.get(mat);
     if (u && u.uDyeAmt.value > 0 && mat.map) {
       const p = s.p;
       swap(m, new THREE.MeshStandardMaterial({ name: slot, map: bakeDye(mat.map, '#' + u.uDye.value.getHexString(), p.mean, 1024, slot === 'hair'), alphaTest: mat.alphaTest || 0.5, transparent: false, side: mat.side, roughness: 0.6 }));
+    } else if (pu && mat.map && pu.uPartCol.value.some((c) => c.w > 0.5)) {
+      // 换过颜色的衣服：同样的参数，贴图换成烘焙好的
+      for (const k of ['normalMap', 'aoMap']) if (mat[k]) mat[k].userData.mimeType = 'image/jpeg';
+      swap(m, new THREE.MeshPhysicalMaterial({ name: slot, map: bakeParts(mat.map, pu), normalMap: mat.normalMap, aoMap: mat.aoMap, aoMapIntensity: mat.aoMapIntensity, roughness: mat.roughness, sheen: mat.sheen, sheenRoughness: mat.sheenRoughness, sheenColor: mat.sheenColor, side: mat.side }));
     } else for (const mm of [].concat(m.material)) for (const k of ['map', 'normalMap', 'aoMap']) if (mm[k] && !mm.transparent && !mm.alphaTest && slot !== 'eyes') mm[k].userData.mimeType = 'image/jpeg';
   }
   // 导出：骨架摆回静止姿势，表情归零；所有动作按这个体型重新换算成动画片段（30 帧 / 秒）
@@ -1683,6 +1801,8 @@ else if (SHOT) S.anim = '';
 for (const k of ['hair', 'eye']) if (params.has(k)) S.look[k] = params.get(k);
 if (params.has('hc')) S.look.hairColor = /^[0-9a-f]{6}$/i.test(params.get('hc')) ? '#' + params.get('hc') : '';
 for (const k of ['outfit', 'shoes', 'hat']) if (params.has(k)) S[k] = params.get(k);
+// 配色：oc=上衣,下装（十六进制，不带 #；空着 = 原色），hatc=帽子
+for (const [k, id] of [['oc', `outfit/${S.outfit}`], ['hatc', `hat/${S.hat}`]]) if (params.has(k)) S.colors[id] = params.get(k).split(',').map((x) => (/^[0-9a-f]{6}$/i.test(x) ? '#' + x : ''));
 if (params.has('sex')) S.sex = params.get('sex') === 'f' ? 'f' : 'm';
 for (const k of ['mom', 'dad', 'shape', 'skin']) if (params.has(k)) S.her[k] = Number(params.get(k));
 for (const k of Object.keys(FEATURE_DEF)) if (params.has(k)) S.feat[k] = Number(params.get(k));
