@@ -632,7 +632,7 @@ async function setSlot(slot, id) {
 }
 
 // —— 形状：参数 → 目标权重 → 顶点 → 身体、代理、骨架 ——
-let P = new Float32Array(H.nv * 3), groundY = 0, heightCm = 0, heightOut = null;
+let P = new Float32Array(H.nv * 3), groundY = 0, topY = 1.7, heightCm = 0, heightOut = null;
 const dirty = { shape: true, skin: true };
 let hiddenDirty = true;
 function childRace() {
@@ -672,6 +672,7 @@ function updateShape() {
   for (let r = 0; r < NR; r++) { const y = pos.array[r * 3 + 1]; if (y < lo) lo = y; if (y > hi) hi = y; }
   heightCm = Math.round((hi - lo) * 100);
   if (heightOut?.isConnected) heightOut.textContent = `${heightCm}cm`;
+  let top = hi;
   for (const s of Object.values(SLOTS)) {
     const p = s.p;
     HM.fitProxy(p, P, s.P);
@@ -681,8 +682,9 @@ function updateShape() {
     a.needsUpdate = true; s.geo.attributes.normal.needsUpdate = true;
     s.geo.computeBoundingSphere();
     if (p.cat === 'shoes') for (let i = 0; i < p.nv; i++) lo = Math.min(lo, s.P[i * 3 + 1]);
+    if (p.cat === 'hair' || p.cat === 'hat') for (let i = 0; i < p.nv; i++) top = Math.max(top, s.P[i * 3 + 1]);
   }
-  groundY = lo;
+  groundY = lo; topY = top;
   bodyGeo.computeBoundingSphere();
   bindRest();
   timing.shape = performance.now() - t0;
@@ -693,10 +695,29 @@ function updateHidden() {
   const del = new Uint8Array(H.nv);
   let any = false;
   for (const s of Object.values(SLOTS)) if (s.p.data.del) { any = true; for (const v of s.p.data.del) del[v] = 1; }
-  if (!any) { bodyGeo.setIndex(new THREE.BufferAttribute(H.body.index, 1)); return; }
-  const src = H.body.index, map = H.body.map, out = [];
-  for (let t = 0; t < src.length; t += 3) if (!del[map[src[t]]] && !del[map[src[t + 1]]] && !del[map[src[t + 2]]]) out.push(src[t], src[t + 1], src[t + 2]);
-  bodyGeo.setIndex(new THREE.BufferAttribute(Uint16Array.from(out), 1));
+  if (!any) bodyGeo.setIndex(new THREE.BufferAttribute(H.body.index, 1));
+  else {
+    const src = H.body.index, map = H.body.map, out = [];
+    for (let t = 0; t < src.length; t += 3) if (!del[map[src[t]]] && !del[map[src[t + 1]]] && !del[map[src[t + 2]]]) out.push(src[t], src[t + 1], src[t + 2]);
+    bodyGeo.setIndex(new THREE.BufferAttribute(Uint16Array.from(out), 1));
+  }
+  // 叠穿：外层衣服（z 更大）盖住的那些身体顶点上，里层的鞋也不画——运动鞋里的袜子一直到小腿，穿长裤时会从裤腿里透出来。
+  // 鞋的顶点挂在身体的三个顶点上，三个都被外层盖住才算盖住；一个面的三个顶点都盖住了才不画
+  for (const s of Object.values(SLOTS)) {
+    if (s.p.cat !== 'shoes') continue;
+    const d = s.p.data, cover = new Uint8Array(H.nv);
+    let covered = false;
+    for (const o of Object.values(SLOTS)) if (o !== s && o.p.data.del && o.p.z > s.p.z) { covered = true; for (const v of o.p.data.del) cover[v] = 1; }
+    if (!covered) { s.geo.setIndex(new THREE.BufferAttribute(d.index, 1)); continue; }
+    const hid = new Uint8Array(s.p.nv);
+    for (let i = 0; i < s.p.nv; i++) {
+      hid[i] = 1;
+      for (let k = 0; k < 3; k++) if (d.w[i * 3 + k] > 1e-4 && !cover[d.ref[i * 3 + k]]) { hid[i] = 0; break; }
+    }
+    const src = d.index, out = [];
+    for (let t = 0; t < src.length; t += 3) if (!(hid[d.map[src[t]]] && hid[d.map[src[t + 1]]] && hid[d.map[src[t + 2]]])) out.push(src[t], src[t + 1], src[t + 2]);
+    s.geo.setIndex(new THREE.BufferAttribute(new src.constructor(out), 1));
+  }
 }
 
 // —— 骨架的静止姿势：关节位置跟着体型走，每次体型变了重新绑定 ——
@@ -780,13 +801,41 @@ function applyAnim(now) {
   if (!clip) { bones.forEach((b) => b.quaternion.identity()); bones[BI.pelvis].position.copy(pelvisRest); return; }
   const t = SHOT ? Number(params.get('t') ?? 0) : (now - animState.t0) / 1000;
   sampleClip(clip, t, localNow, hipsNow);
-  const hipH = pelvisRest.y + groundY; // 胯高（从地面算）
+  const hipH = pelvisRest.y - groundY; // 胯高（从地面算：整个人往下挪了 groundY，groundY 是负的）
   const b = SHOT ? 1 : Math.min(1, (now - animState.blend0) / 350), e = b * b * (3 - 2 * b);
   bones.forEach((bone, i) => bone.quaternion.copy(prevLocal[i]).slerp(localNow[i], e));
   const hp = hipsNow.multiplyScalar(hipH);
-  // 原地循环：走路、跑步的前后位移不要（相机跟不上），只留上下起伏和左右晃
-  if (clip.loop) hp.z = 0;
+  // 动作库里的循环动作本来就是原地的；蹲、坐、推这些胯往后坐的位移要留着，不然人会往前栽
   bones[BI.pelvis].position.copy(pelvisRest).add(hipsPrev.clone().lerp(hp, e));
+}
+
+// —— 头看镜头：动作库的待机是给大头卡通角色做的，低着头（脸朝下 12° 左右）；捏人的时候让脖子和头往镜头那边转一些，
+//    像 GTA 的创建器那样看着你。只在待机、说话、坐、蹲这些安静的动作里做，换到动作大的片段时慢慢放开 ——
+const LOOK_CLIPS = new Set(['idle', 'idle_talking', 'sitting_idle', 'crouch_idle']);
+let lookW = 0;
+function headLook(dt) {
+  const want = !CLIPS[animState.id] || LOOK_CLIPS.has(animState.id) ? 1 : 0;
+  lookW += (want - lookW) * Math.min(1, dt * 3);
+  if (lookW < 0.01) return;
+  rig.updateMatrixWorld(true);
+  const head = bones[BI.head], neck = bones[BI.neck_01];
+  const chest = bones[BI.spine_03].getWorldQuaternion(new THREE.Quaternion()), chestInv = chest.clone().invert();
+  // 在胸口的坐标系里算：脸现在朝哪、镜头在哪。左右最多转 34°，上下 -26° ~ +20°；镜头转到身后就不转了
+  const f = new THREE.Vector3(0, 0, 1).applyQuaternion(head.getWorldQuaternion(new THREE.Quaternion())).applyQuaternion(chestInv).normalize();
+  const d = camera.position.clone().sub(head.getWorldPosition(new THREE.Vector3())).normalize().applyQuaternion(chestInv);
+  const yaw = Math.atan2(d.x, d.z), pitch = Math.asin(Math.max(-1, Math.min(1, d.y)));
+  const w = lookW * Math.max(0, Math.min(1, (Math.PI * 0.75 - Math.abs(yaw)) / (Math.PI * 0.25)));
+  if (w < 0.01) return;
+  const cy = Math.max(-0.6, Math.min(0.6, yaw)), cp = Math.max(-0.45, Math.min(0.35, pitch));
+  const t = new THREE.Vector3(Math.sin(cy) * Math.cos(cp), Math.sin(cp), Math.cos(cy) * Math.cos(cp));
+  const R = chest.clone().multiply(new THREE.Quaternion().setFromUnitVectors(f, t)).multiply(chestInv); // 世界空间里要补的转动
+  // 脖子转 40%，头转剩下的 60%（同一根轴，分两段转，加起来正好是 R）；局部 = 父⁻¹ · R · 父 · 局部
+  for (const [bone, part] of [[neck, 0.4 * w], [head, 0.6 * w]]) {
+    const pw = bone.parent.getWorldQuaternion(new THREE.Quaternion());
+    const Rp = new THREE.Quaternion().slerp(R, part);
+    bone.quaternion.premultiply(pw).premultiply(Rp).premultiply(pw.clone().invert());
+    bone.updateMatrixWorld(true);
+  }
 }
 
 // —— 眼睛看镜头 ——
@@ -914,12 +963,14 @@ function visible() {
   return { fw: Math.max(0.3, (b.x1 - b.x0) / innerWidth), fh: Math.max(0.25, (b.y1 - b.y0) / innerHeight) };
 }
 let camAnim = null, focusKind = 'full';
-// 头顶高度：头骨尾关节（头顶）再往上一点
+// 头部取景的基准：头骨尾关节再往上一点（比头顶低一些，脸的几个镜头都按它来定）
 const headTop = () => (J ? J[H.rig.bones[BI.head].tail * 3 + 1] - groundY + 0.02 : 1.7);
+// 全身取景：整个人真正的最高点（身体、头发、帽子），从鞋底算
+const figureTop = () => topY - groundY + 0.02;
 function focus(kind, instant = false) {
   focusKind = kind;
   const f = FOCUS[kind] ?? FOCUS.full;
-  const Hh = SHOT && params.has('frameH') ? Number(params.get('frameH')) : headTop();
+  const Hh = SHOT && params.has('frameH') ? Number(params.get('frameH')) : kind === 'full' ? figureTop() : headTop();
   const t = new THREE.Vector3(...f.t(Hh));
   // 对着脸的镜头跟着头现在的位置（动作里头会晃、会低下去）
   if (kind !== 'full' && J) {
@@ -1093,7 +1144,7 @@ function renderPane() {
   } else if (tab === 'motion') {
     g.push(group('动作', 'Quaternius（CC0）', chips([['', '站着不动'], ...ANIM.clips.map((c) => [c.id, c.label])], S.anim, (id) => { S.anim = id; startAnim(id); })));
     g.push(group('表情', null, chips(Object.entries(EXPR).map(([id, e]) => [id, e.label]), S.expr, (id) => { S.expr = id; })));
-    g.push(el('p', { class: 'hint' }, '眼睛会看着镜头；平时每隔几秒眨一次眼。'));
+    g.push(el('p', { class: 'hint' }, '待机、说话、坐着的时候会转头看着镜头；眼睛一直跟着镜头，每隔几秒眨一次眼。'));
   }
   $('pane').replaceChildren(...g);
 }
@@ -1396,7 +1447,7 @@ async function exportModel() {
 function bakeClips() {
   const fps = ANIM.fps, out = [];
   const L = bones.map(() => new THREE.Quaternion()), hp = new THREE.Vector3();
-  const hipH = pelvisRest.y + groundY;
+  const hipH = pelvisRest.y - groundY;
   for (const clip of ANIM.clips) {
     const n = clip.frames + (clip.loop ? 1 : 0);
     const times = new Float32Array(n), qv = bones.map(() => new Float32Array(n * 4)), pv = new Float32Array(n * 3);
@@ -1405,7 +1456,6 @@ function bakeClips() {
       sampleClip(clip, i / fps, L, hp);
       L.forEach((q, j) => q.toArray(qv[j], i * 4));
       const p = hp.multiplyScalar(hipH);
-      if (clip.loop) p.z = 0;
       pv.set([pelvisRest.x + p.x, pelvisRest.y + p.y, pelvisRest.z + p.z], i * 3);
     }
     const tracks = bones.map((b, j) => new THREE.QuaternionKeyframeTrack(`${b.name}.quaternion`, times, qv[j]));
@@ -1507,6 +1557,7 @@ function step(now) {
   }
   applyAnim(now);
   applyExpr(dt);
+  headLook(dt);
   rig.updateMatrixWorld(true);
   eyeLook();
   renderer.render(scene, camera);
@@ -1528,7 +1579,7 @@ if (SHOT) {
         camera.position.set(t.x + d * Math.sin(a) * Math.cos(e), t.y + d * Math.sin(e), t.z + d * Math.cos(a) * Math.cos(e));
         controls.update();
       }
-      rig.updateMatrixWorld(true); eyeLook(); rig.updateMatrixWorld(true);
+      headLook(1); rig.updateMatrixWorld(true); eyeLook(); rig.updateMatrixWorld(true);
       renderer.render(scene, camera);
       setTimeout(() => { renderer.render(scene, camera); window.__ready = true; }, 80);
     });
