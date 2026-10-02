@@ -688,13 +688,14 @@ async function splitOutfit(n, geom, c, pj, maps, sex, pieces) {
     log(part === 0 ? 'top' : 'bottom', id, 'from', n, 'verts', pm.nv, 'tris', pm.tris, 'del', dels[part].length);
   }
 }
-const SHOES = { shoes05: '白色运动鞋', shoes06: '蓝色运动鞋', shoes02: '旧运动鞋', shoes01: '棕色皮鞋', shoes04: '黑色休闲皮鞋', shoes03: '黑色皮鞋' };
-for (const [n, label] of Object.entries(SHOES)) {
+// 鞋也分男女（m 男款，f 女款，u 都行），网页里按它排序、随机
+const SHOES = { shoes05: ['白色运动鞋', 'u'], shoes06: ['蓝色运动鞋', 'u'], shoes02: ['旧运动鞋', 'u'], shoes01: ['棕色皮鞋', 'm'], shoes04: ['黑色休闲皮鞋', 'm'], shoes03: ['黑色皮鞋', 'u'] };
+for (const [n, [label, sex]] of Object.entries(SHOES)) {
   const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
   const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `shoe-${n}`, 1024, { q: 84, geom: npmDir('clothes', n), onData: partsJob(n, clo, pj, { size: 512, file: `shoe-${n}`, shoe: true }) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, `shoe-${n}-n`, 1024, { q: 85 });
   maps.parts = pj.file;
-  await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { parts: pj.parts } });
+  await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { sex, parts: pj.parts } });
   log('shoes', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
 }
 // 帽子：礼帽（Ubuntu 包里的 .mhclo）；歪戴的礼帽是同一顶帽子换一套贴合数据，UV 一样，贴图和权重图共用；
@@ -799,12 +800,19 @@ for (const [n, label] of Object.entries(SHOES)) {
     suit_navy: ['toigo_male_suit_3', 'outfit', '藏青西装', [['西装', 'suit']], { sex: 'm' }],
     suit_db: ['toigo_male_double-breasted_suit', 'outfit', '双排扣西装', [['西装', 'suit']], { sex: 'm' }],
     // 高帮球鞋：贴图上黑色的鞋里子比红色鞋面占的地方大，主色直接说从红色找
-    hightops: ['culturalibre_sneakers', 'shoes', '高帮球鞋', [['鞋面', 'sneaker', { pick: '#9e3e31' }], ['鞋底', 'sole']], { z: 5 }],
-    runners: ['punkduck_running_shoes_01', 'shoes', '跑鞋', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5 }],
-    slipons: ['punkduck_comfortable_sneakers', 'shoes', '一脚蹬', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5 }],
-    oxford: ['mindfront_shoes_oxford_male', 'shoes', '牛津鞋', [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], { z: 5 }],
-    chelsea: ['toigo_ankle_boots_male', 'shoes', '切尔西靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 5 }],
-    biker_boots: ['mindfront_shoes_biker_boots_male', 'shoes', '机车靴', [['靴面', 'leather'], ['鞋底', 'sole']]],
+    hightops: ['culturalibre_sneakers', 'shoes', '高帮球鞋', [['鞋面', 'sneaker', { pick: '#9e3e31' }], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
+    runners: ['punkduck_running_shoes_01', 'shoes', '跑鞋', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
+    slipons: ['punkduck_comfortable_sneakers', 'shoes', '一脚蹬', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
+    oxford: ['mindfront_shoes_oxford_male', 'shoes', '牛津鞋', [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], { z: 5, sex: 'u' }],
+    chelsea: ['toigo_ankle_boots_male', 'shoes', '切尔西靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
+    biker_boots: ['mindfront_shoes_biker_boots_male', 'shoes', '机车靴', [['靴面', 'leather'], ['鞋底', 'sole']], { sex: 'u' }],
+    // 鞋（二）：男女都能穿的。孟克鞋男女各有一版，男版女生穿也合脚，只收一双；人字拖其实是交叉带的凉拖，露着脚趾（不藏脚）
+    monk: ['mindfront_shoes_monk_strap_male', 'shoes', '孟克鞋', [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], { z: 5, sex: 'u' }],
+    flip_flops: ['elvs_male_flip_flop_sandals1', 'shoes', '凉拖', [['拖鞋', 'sneaker']], { z: 5, sex: 'u' }],
+    kill_bill: ['punkduck_kill_bill_shoes', 'shoes', '复古训练鞋', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
+    tennis: ['punkduck_tennis_shoes', 'shoes', '网球鞋', [['鞋面', 'sneaker'], ['鞋底', 'sole'], ['袜子', 'sock']], { z: 5, sex: 'u' }],
+    cycling: ['punkduck_cycling_shoes', 'shoes', '骑行鞋', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
+    medieval: ['punkduck_medieval_boots', 'shoes', '翻边短靴', [['靴面', 'leather'], ['鞋底', 'sole']], { sex: 'u' }],
     newsboy: ['jujube_newsboy_cap', 'hat', '报童帽', [['帽子', 'hat']]],
     beanie: ['mindfront_knitted_hat_01', 'hat', '毛线帽', [['毛线帽', 'hat']]],
     // 女款：连衣裙、旗袍、西装套装、网球裙（整套），上衣、半身裙、裤子，平底鞋、马靴，帽子。高跟鞋要配 MakeHuman 专门的脚部形变才穿得上，没收；
@@ -835,10 +843,20 @@ for (const [n, label] of Object.entries(SHOES)) {
     f_jeans_patch: ['mindfront_female_trousers_1', 'bottom', '刺绣牛仔裤', [['牛仔裤', 'denim']], { sex: 'f' }],
     skinny_pants: ['elvs_disco_pants_skinny', 'bottom', '黑色紧身裤', [['长裤', 'bottom']], { sex: 'f' }],
     // 芭蕾鞋整只都很矮，按高度分会全算成鞋底：整只一个部位，主色从深灰的鞋面找（不然浅色鞋垫的面积大，会被当成主色）
-    ballet_flats: ['toigo_ballet_flats', 'shoes', '芭蕾平底鞋', [['鞋面', 'leather', { pick: '#303030' }]], { z: 5 }],
-    mary_janes: ['toigo_mj_cloth_shoes', 'shoes', '玛丽珍鞋', [['鞋面', 'leather'], ['鞋底', 'sole']], { z: 5 }],
-    ankle_boots_f: ['toigo_ankle_boots_female', 'shoes', '白色短靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 5 }],
-    riding_boots: ['punkduck_riding_boots', 'shoes', '马靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 55 }],
+    ballet_flats: ['toigo_ballet_flats', 'shoes', '芭蕾平底鞋', [['鞋面', 'leather', { pick: '#303030' }]], { z: 5, sex: 'f' }],
+    mary_janes: ['toigo_mj_cloth_shoes', 'shoes', '玛丽珍鞋', [['鞋面', 'leather'], ['鞋底', 'sole']], { z: 5, sex: 'f' }],
+    ankle_boots_f: ['toigo_ankle_boots_female', 'shoes', '白色短靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 5, sex: 'f' }],
+    riding_boots: ['punkduck_riding_boots', 'shoes', '马靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 55, sex: 'f' }],
+    // 鞋（二）：女款。几款平底鞋整只都很矮，整只一个部位。过膝长靴盖在裤子外面（牛仔裤塞进靴筒），中筒靴照作者的设置在裤腿里面。
+    // 没收的：马鞍鞋（贴图是草草改的，鞋舌上一块方形的污渍）；豹纹平底鞋（一双鞋五万多个三角形，比整个人还多）；
+    // 和收了的太像的（花朵芭蕾鞋、另一款蝴蝶结平底鞋）；卡通风格的、戏服（英雄靴、精灵鞋、盔甲靴、海盗靴）、半透明的雨靴，
+    // 十五万个三角形的高帮帆布鞋；转自 Blendswap、原许可没写清的；高跟的（要配专门的脚部形变）
+    t_bar: ['cortu_t-bar', 'shoes', 'T 字带鞋', [['鞋面', 'leather'], ['鞋底', 'sole']], { z: 5, sex: 'f' }],
+    flats_bow: ['toigo_ballet_flats_with_bows', 'shoes', '蝴蝶结芭蕾鞋', [['鞋面', 'leather']], { z: 5, sex: 'f' }],
+    two_tone: ['elvs_flatshoe_pointy1', 'shoes', '拼色平底鞋', [['鞋面', 'leather']], { z: 5, sex: 'f' }],
+    woven: ['elvs_flatshoe_plain1', 'shoes', '编织平底鞋', [['鞋面', 'leather']], { z: 5, sex: 'f' }],
+    overknee: ['cortu_floppy_overknee_shoes', 'shoes', '过膝长靴', [['靴面', 'leather']], { z: 55, sex: 'f' }],
+    calf_boots: ['madmanny_tight_leather_boots', 'shoes', '中筒靴', [['靴面', 'leather'], ['鞋底', 'sole']], { sex: 'f' }],
     cloche: ['aethelraed_unraed_cloche_hat', 'hat', '钟形帽', [['帽子', 'hat']]],
     bowler: ['culturalibre_cl_bowler_hat', 'hat', '圆顶礼帽', [['帽子', 'hat']]],
     visor: ['punkduck_sun_visor_sports_visor', 'hat', '遮阳帽', [['帽子', 'hat']]],

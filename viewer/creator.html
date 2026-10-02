@@ -1456,8 +1456,9 @@ const FOCUS = {
   eyes: { t: (Hh) => [0, Hh - 0.12, 0.08], span: () => [0.2, 0.22], el: 2 },
   mouth: { t: (Hh) => [0, Hh - 0.17, 0.08], span: () => [0.2, 0.2], el: 2 },
   side: { t: (Hh) => [0, Hh - 0.13, 0.02], span: () => [0.36, 0.36], el: 3, az: 70 },
-  // 脚：对着两只脚（脚踝、脚掌四个关节的平均，动作里脚会挪），离地 10cm
-  feet: { t: () => { const c = new THREE.Vector3(), v = new THREE.Vector3(); for (const b of ['foot_l', 'ball_l', 'foot_r', 'ball_r']) c.add(bones[BI[b]].getWorldPosition(v)); return [c.x / 4, 0.1, c.z / 4]; }, span: () => [0.42, 0.9], el: 16, az: 25 },
+  // 脚：对着两只脚（脚踝、脚掌四个关节的平均，动作里脚会挪），离地 10cm；长靴（马靴、过膝长靴）按靴筒高出 30cm 的部分往上拉，
+  // 整只靴子都在画面里（低帮鞋连着的袜子不到 30cm，取景不变）
+  feet: { t: () => { const c = new THREE.Vector3(), v = new THREE.Vector3(); for (const b of ['foot_l', 'ball_l', 'foot_r', 'ball_r']) c.add(bones[BI[b]].getWorldPosition(v)); return [c.x / 4, 0.1 + bootLift() * 0.75, c.z / 4]; }, span: () => [0.42 + bootLift() * 2, 0.9], el: 16, az: 25 },
 };
 function band() {
   const w = innerWidth, h = innerHeight;
@@ -1478,6 +1479,14 @@ let camAnim = null, focusKind = 'full';
 const headTop = () => (J ? J[H.rig.bones[BI.head].tail * 3 + 1] - groundY + 0.02 : 1.7);
 // 全身取景：整个人真正的最高点（身体、头发、帽子），从鞋底算
 const figureTop = () => topY - groundY + 0.02;
+// 靴筒高出 30cm 的部分（鞋的最高点离地多高，静止形状）
+function bootLift() {
+  const s = SLOTS.shoes;
+  if (!s) return 0;
+  let t = -Infinity;
+  for (let i = 0; i < s.p.nv; i++) t = Math.max(t, s.P[i * 3 + 1]);
+  return Math.max(0, t - groundY - 0.3);
+}
 function focus(kind, instant = false) {
   focusKind = kind;
   const f = FOCUS[kind] ?? FOCUS.full;
@@ -1608,13 +1617,14 @@ function renderPane() {
     g.push(group('预设角色', '点一下换上',
       el('div', { class: 'cards' }, PRESETS.map((pr) => el('button', { class: 'card', 'aria-pressed': String(S.name === pr.name), on: { click: () => { applyPreset(pr); afterLoad(); } } }, el('b', {}, pr.name), el('span', {}, pr.note))))));
     g.push(group('我的角色', '只保存在这台设备上', savedList()));
-    g.push(el('p', { class: 'hint' }, '人体、皮肤、套装、男款单件和最早的 10 款发型来自 MakeHuman（CC0）；其余的发型、衣服、鞋、帽子是 MakeHuman 社区作者的作品（CC0 或 CC BY，每件的作者和许可写在发型页、服装页里）；动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
+    g.push(el('p', { class: 'hint' }, '人体、皮肤、套装、男款单件和最早的 10 款发型来自 MakeHuman（CC0）；其余的发型、胡子、衣服、鞋、帽子是 MakeHuman 社区作者的作品（CC0 或 CC BY，每件的作者和许可写在发型页、胡子页、服装页里）；动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
   } else if (tab === 'heritage') {
     g.push(group('性别', null, chips([['f', '女'], ['m', '男']], S.sex, (v) => {
       S.sex = v; S.body.gender = null;
-      // 换性别：穿着另一性别的整套（或者男性穿着上衣下装——都是女装）就换成这个性别的默认一套
+      // 换性别：穿着另一性别的整套（或者男性穿着上衣下装——都是女装）就换成这个性别的默认一套；鞋不合这个性别的换成白色运动鞋
       const fits = (cat, id) => !id || fitsSex(H.proxies[`${cat}/${id}`], v);
       if (S.top || S.bottom ? !(fits('top', S.top) && fits('bottom', S.bottom)) : !S.outfit || PROXY_SEX(S.outfit) !== v) { S.outfit = v === 'f' ? 'female_casualsuit01' : 'male_casualsuit06'; S.top = ''; S.bottom = ''; }
+      if (!fits('shoes', S.shoes)) S.shoes = 'shoes05';
       syncSlots(); reshape(); reskin(); renderPane();
     })));
     g.push(group('母亲', PARENTS.mom[S.her.mom].name, parentPicker('mom')));
@@ -1673,7 +1683,8 @@ function renderPane() {
       swatches(CLOTHC[part.kind] ?? CLOTHC.top, S.colors[id]?.[i] ?? '', (c) => setColor(id, i, c), { none: '原色', noneColor: domCss(part.dom) })));
     if (wearSub === 'shoes') {
       const shoeCredit = H.proxies[`shoes/${S.shoes}`]?.credit;
-      g.push(group('鞋', shoeCredit ? `${shoeCredit.author} · ${shoeCredit.license}` : null, chips([['', '光脚'], ...proxyList('shoes').map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots(); renderPane(); })));
+      // 本性别的鞋排在前面，男女都能穿的跟在后面；换了鞋重新取景（靴筒高矮不一样）
+      g.push(group('鞋', shoeCredit ? `${shoeCredit.author} · ${shoeCredit.license}` : null, chips([['', '光脚'], ...bySex(proxyList('shoes')).map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots().then(() => { dirty.shape = false; updateShape(); focus(tabFocus()); }); renderPane(); })));
       if (S.shoes) g.push(...colorGroups(`shoes/${S.shoes}`));
     } else if (wearSub === 'hat') {
       // 社区作者的帽子（CC BY）在标题右边署名
@@ -1901,7 +1912,7 @@ function randomize() {
       beard: sex === 'm' && r() < 0.5 ? 0.2 + r() * 0.7 : 0, beardStyle: beard3?.name ?? '', moustache: stache, lips: sex === 'f' && r() < 0.6 ? 0.2 + r() * 0.5 : 0, lipColor: pick(MAKEUP), blush: sex === 'f' ? r() * 0.5 : 0, freckles: r() < 0.2 ? r() : 0,
     },
     outfit: sep ? '' : pick(outfits).name, top: sep ? pick(proxyList('top').filter((p) => fitsSex(p, sex))).name : '', bottom: sep ? pick(proxyList('bottom').filter((p) => fitsSex(p, sex))).name : '',
-    shoes: pick(proxyList('shoes')).name, hat: r() < 0.25 ? pick(proxyList('hat')).name : '', colors: {},
+    shoes: pick(proxyList('shoes').filter((p) => fitsSex(p, sex))).name, hat: r() < 0.25 ? pick(proxyList('hat')).name : '', colors: {},
     anim: pick(['idle', 'idle', 'idle_talking', 'dance', 'walk']), expr: pick(['neutral', 'neutral', 'smile']),
   };
   // 一半左右的部位换个颜色（鞋底少换一点，太花）

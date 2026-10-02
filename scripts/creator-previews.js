@@ -13,6 +13,7 @@
 //   docs/previews/creator-clothes-women2.jpg 女装（二）：旗袍、连衣裙、西装套装，上衣、半身裙、裤子随意搭，平底鞋、马靴、帽子
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
 //   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
+//   docs/previews/creator-shoes2.jpg       鞋（二）：社区资源包里的 12 双鞋（孟克鞋、凉拖、训练鞋、网球鞋、骑行鞋、短靴，女款平底鞋、长靴）
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
 //   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上）
 import fs from 'node:fs/promises';
@@ -248,6 +249,23 @@ try {
   ];
   const ss = await shoot(shoe.map(([n, q]) => [n, `preset=1&${q}&bare=1&cam=feet&az=25&el=16&anim=idle&t=0.5`]), [480, 420]);
   await grid(ss, 4, 360, 315, path.join(out, 'creator-shoes.jpg'), { labels: shoe.map((c) => c[2]) });
+  // 鞋（二）：资源包里后来补的鞋（男女都能穿的放在短裤、热裤底下，女款配裙子；长靴的镜头按靴筒高度自己往上拉）
+  const shoe2 = [
+    ['shoe2-0', 'preset=4&shoes=monk', '孟克鞋'],
+    ['shoe2-1', 'preset=4&shoes=flip_flops', '凉拖'],
+    ['shoe2-2', 'preset=1&shoes=kill_bill', '复古训练鞋'],
+    ['shoe2-3', 'preset=4&shoes=tennis', '网球鞋'],
+    ['shoe2-4', 'preset=5&shoes=cycling', '骑行鞋'],
+    ['shoe2-5', 'preset=1&shoes=medieval', '翻边短靴'],
+    ['shoe2-6', 'preset=1&shoes=t_bar', 'T 字带鞋'],
+    ['shoe2-7', 'preset=7&shoes=flats_bow', '蝴蝶结芭蕾鞋'],
+    ['shoe2-8', 'preset=3&shoes=two_tone', '拼色平底鞋'],
+    ['shoe2-9', 'preset=1&shoes=woven', '编织平底鞋'],
+    ['shoe2-10', 'preset=1&shoes=overknee', '过膝长靴'],
+    ['shoe2-11', 'preset=3&shoes=calf_boots&sc=6b4a32,', '中筒靴 · 换成棕色'],
+  ];
+  const ss2 = await shoot(shoe2.map(([n, q]) => [n, `${q}&bare=1&cam=feet&az=25&el=16&anim=idle&t=0.5`]), [480, 420]);
+  await grid(ss2, 4, 360, 315, path.join(out, 'creator-shoes2.jpg'), { labels: shoe2.map((c) => c[2]) });
   // 帽子：四种款式，再换几个颜色、几种发型
   const hat = [
     ['hat-0', 'preset=6&hat=fedora01', '礼帽'],
