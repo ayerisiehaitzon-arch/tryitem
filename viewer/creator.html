@@ -441,18 +441,27 @@ const texCache = new Map();
 function tex(path, srgb = true) {
   const k = path + srgb;
   if (texCache.has(k)) return texCache.get(k);
+  const load = (url) => new Promise((res, rej) => loader.load(url, res, undefined, rej));
   const p = (async () => {
-    // 打了包的贴图：从包里切出那一段，当成本地文件（blob:）读
     const bytes = await packed(path);
-    const url = bytes ? URL.createObjectURL(new Blob([bytes], { type: 'image/webp' })) : ASSETS + path;
-    return new Promise((res, rej) => loader.load(url, (t) => {
-      if (bytes) URL.revokeObjectURL(url);
-      t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-      t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      res(t);
-    }, undefined, rej));
-  })();
+    if (!bytes) return load(ASSETS + path);
+    // 打了包的贴图：从包里切出那一段，当成本地文件（blob:）读；托管的内容安全策略不让图片读 blob: 网址的话，
+    // 解码以后画到画布上当贴图（不经过网址；半透明的地方颜色精度差一点）
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'image/webp' }));
+    try { return await load(url); }
+    catch {
+      const bmp = await createImageBitmap(new Blob([bytes], { type: 'image/webp' }));
+      const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+      c.getContext('2d').drawImage(bmp, 0, 0); bmp.close();
+      return new THREE.Texture(c);
+    } finally { URL.revokeObjectURL(url); }
+  })().then((t) => {
+    t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.needsUpdate = true;
+    return t;
+  });
   texCache.set(k, p);
   return p;
 }
