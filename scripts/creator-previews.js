@@ -7,6 +7,7 @@
 //   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
 //   docs/previews/creator-clothes.jpg      衣服款式：连衣裙、大衣，上衣和下装随意搭，雪地靴
 //   docs/previews/creator-clothes-men.jpg  男装：几套男装拆成单件上衣、下装重新搭，工装背带裤
+//   docs/previews/creator-clothes-men2.jpg 男装（二）：社区资源包里的卫衣、毛衣、Polo 衫、短裤、礼服、西装、鞋、帽子
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
 //   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
@@ -130,7 +131,7 @@ try {
     ['men-0', 'preset=2', '衬衫 · 工装背带裤'],
     ['men-1', 'preset=0&outfit=male_worksuit01', '白 T 恤工装背带裤'],
     ['men-2', 'preset=6&top=m_suit_jacket&bottom=m_jeans', '西装外套 · 牛仔裤'],
-    ['men-3', 'preset=4&top=m_jacket&bottom=m_suit_trousers', '夹克 · 西裤'],
+    ['men-3', 'preset=4&top=m_jacket&bottom=m_suit_trousers&shoes=shoes02', '夹克 · 西裤'],
     ['men-4', 'preset=0&top=m_shirt_stripe&bottom=m_jeans_grey', '条纹衬衫 · 灰牛仔裤'],
     ['men-5', 'preset=4&top=tank_top&bottom=m_jeans&shoes=winter_boots', '运动背心 · 雪地靴'],
     ['men-6', 'preset=6&top=m_longsleeve&bottom=m_suit_trousers', '长袖 T 恤 · 西裤'],
@@ -138,6 +139,23 @@ try {
   ];
   const mw = await shoot(men.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.95&anim=idle&t=0.6`]), [420, 720]);
   await grid(mw, 8, 300, 520, path.join(out, 'creator-clothes-men.jpg'), { labels: men.map((c) => c[2]) });
+  // 男装（二）：MakeHuman 社区资源包里的男装、鞋、帽子；卫衣、毛衣、开衫男女都能穿（最后一排有两格女生）
+  const men2 = [
+    ['men2-0', 'preset=4', '连帽卫衣 · 休闲短裤 · 跑鞋'],
+    ['men2-1', 'preset=0&top=sweater_grey&bottom=worn_jeans&shoes=chelsea&hat=beanie', '粗针毛衣 · 做旧牛仔裤 · 毛线帽'],
+    ['men2-2', 'preset=2&top=polo&bottom=wool_pants&shoes=chelsea&hat=newsboy', '报童帽 · Polo 衫 · 羊毛西裤'],
+    ['men2-3', 'preset=0&top=shirt_casual&bottom=board_shorts&shoes=slipons', '休闲衬衫 · 沙滩短裤 · 一脚蹬'],
+    ['men2-4', 'preset=6&top=fisherman&bottom=cargo&shoes=biker_boots', '罗纹毛衣 · 工装裤 · 机车靴'],
+    ['men2-5', 'preset=0&top=lusekofta&bottom=m_jeans&shoes=hightops', '挪威毛衣开衫 · 高帮球鞋'],
+    ['men2-6', 'preset=6&outfit=dinner_jacket&shoes=oxford', '白色礼服 · 牛津鞋'],
+    ['men2-7', 'preset=0&outfit=suit_navy&shoes=oxford', '藏青西装'],
+    ['men2-8', 'preset=2&outfit=suit_db&shoes=chelsea&hat=', '双排扣西装 · 切尔西靴'],
+    ['men2-9', 'preset=0&top=hoodie&bottom=cargo&shoes=hightops&tc=8c1d24&bc=c9b38f&sc=2b59c3', '换色：红卫衣 · 卡其工装裤'],
+    ['men2-10', 'preset=1&top=hoodie&bottom=tight_jeans&shoes=hightops', '女生穿连帽卫衣'],
+    ['men2-11', 'preset=3&top=lusekofta&bottom=miniskirt&shoes=winter_boots', '女生穿挪威毛衣开衫'],
+  ];
+  const mw2 = await shoot(men2.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.95&anim=idle&t=0.6`]), [420, 720]);
+  await grid(mw2, 6, 300, 520, path.join(out, 'creator-clothes-men2.jpg'), { labels: men2.map((c) => c[2]) });
   // 衣服配色：同一个人、同一套衣服换几种颜色（第一格是原色）
   const col = [
     ['col-0', 'preset=0', '原色'],

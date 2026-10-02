@@ -3,6 +3,7 @@
 //   MH_GH  = makehumancommunity/makehuman 仓库里的 makehuman/data（基础网格、形变目标、默认骨骼和权重、眼球，全是文本）
 //   MH_DEB = MakeHuman 1.1.1 的资源目录（Ubuntu 的 makehuman-data 包解开后的 usr/share/makehuman/data：皮肤、头发、衣服、眉毛、睫毛的贴图和 .mhclo）
 //   MH_NPM = npm 包 makehuman-data 的 public/data（头发、衣服等代理网格的 JSON 版，和 .mhclo 一一对应）
+//   MH_PACKS = MakeHuman 社区资源包里用到的衣服（clothes/<名字>/ 下的 .mhclo、.obj、.mhmat、贴图，packs/<包>.json 记作者和许可）
 // 只读文本和图片，不碰任何二进制归档（.npz）。动作另由 anims.mjs 生成。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,8 +21,9 @@ const ROOT = fileURLToPath(new URL('../..', import.meta.url)), SRC = path.join(R
 const GH = process.env.MH_GH ?? `${SRC}/makehuman/makehuman/data`;
 const DEB = process.env.MH_DEB ?? `${SRC}/deb/usr/share/makehuman/data`;
 const NPM = process.env.MH_NPM ?? `${SRC}/npm/package/public/data`;
+const PACKS = process.env.MH_PACKS ?? `${SRC}/packs`;
 const OUT = process.env.OUT ?? path.join(ROOT, 'viewer/human');
-for (const [k, d] of [['MH_GH', GH], ['MH_DEB', DEB], ['MH_NPM', NPM]]) {
+for (const [k, d] of [['MH_GH', GH], ['MH_DEB', DEB], ['MH_NPM', NPM], ['MH_PACKS', PACKS]]) {
   if (!fs.existsSync(d)) { console.error(`找不到 ${d}：先运行 bash scripts/human/fetch.sh，或者用 ${k} 指到素材目录`); process.exit(1); }
 }
 fs.mkdirSync(OUT, { recursive: true });
@@ -669,6 +671,63 @@ for (const [n, label] of Object.entries(SHOES)) {
   await proxy('outfit', n, { label: '白 T 恤工装背带裤', geom, clo, maps, extra: { sex: 'm', parts: pj.parts } });
   log('outfit', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
   await splitOutfit(n, geom, clo, pj, maps, 'm', [null, ['m_overalls', '工装背带裤', { z: 52 }]]);
+}
+// MakeHuman 社区资源包（files.makehumancommunity.org/asset_packs，fetch.sh 下载）里的衣服：每件是作者原版的 .mhclo（贴合数据、缩放参考）
+// + .obj + .mhmat + 贴图，作者、许可从包里的 packs/<包>.json 读。贴图缩到 1024²，法线 512²。
+// 塞进裤腰的那件衬衫领带（elvs_male_shirt_tie_tucked1）下摆很高，配别的裤子腰上都露一截皮肤，没收
+{
+  const info = {};
+  for (const f of fs.readdirSync(`${PACKS}/packs`)) Object.assign(info, JSON.parse(fs.readFileSync(`${PACKS}/packs/${f}`, 'utf8')));
+  // 文件名大小写不一定和 .mhmat 里写的一样
+  const find = (dir, rel) => rel.split('/').reduce((d, seg) => {
+    const hit = fs.readdirSync(d).find((f) => f.toLowerCase() === seg.toLowerCase());
+    if (!hit) throw new Error(`${d} 里没有 ${seg}`);
+    return `${d}/${hit}`;
+  }, dir);
+  // z：叠穿的里外（越大越外）。系统自带的鞋是 5（裤腿盖在鞋外面），雪地靴 55（裤腿塞进靴筒）；
+  // 不塞进裤子的衬衫放到牛仔裤（50）外面、背带裤（52）里面
+  const C = {
+    hoodie: ['elvs_hooded_sweat_jacket1', 'top', '连帽卫衣', [['卫衣', 'top']], { sex: 'u' }],
+    sweater_grey: ['mindfront_knitted_sweater_01', 'top', '粗针毛衣', [['毛衣', 'top']], { sex: 'u' }],
+    fisherman: ['toigo_fisherman_sweater', 'top', '罗纹毛衣', [['毛衣', 'top']], { sex: 'u' }],
+    lusekofta: ['mindfront_lusekofta', 'top', '挪威毛衣开衫', [['开衫', 'top']], { sex: 'u' }],
+    polo: ['namuhekam_male_polo_shirt', 'top', 'Polo 衫', [['Polo 衫', 'top']], { sex: 'm' }],
+    shirt_casual: ['elvs_male_shirt_untucked_bd1', 'top', '休闲衬衫', [['衬衫', 'top']], { sex: 'm', z: 51 }],
+    cargo: ['cortu_cargo_pants', 'bottom', '工装裤', [['工装裤', 'bottom']], { sex: 'm' }],
+    shorts: ['elvs_male_trouser_short_1', 'bottom', '休闲短裤', [['短裤', 'bottom']], { sex: 'm' }],
+    board_shorts: ['mindfront_male_swimming_trunks_01', 'bottom', '沙滩短裤', [['短裤', 'bottom']], { sex: 'm' }],
+    worn_jeans: ['mindfront_male_trousers_1', 'bottom', '做旧牛仔裤', [['牛仔裤', 'denim']], { sex: 'm' }],
+    wool_pants: ['toigo_wool_pants', 'bottom', '羊毛西裤', [['西裤', 'bottom']], { sex: 'm' }],
+    // 白色礼服：白外套、深灰西裤分两个部位（主色按白色取，黑色的驳领、领结不跟着换）
+    dinner_jacket: ['toigo_suit_with_dinner_jacket', 'outfit', '白色礼服', [['外套', 'suit', { pick: '#f0efee' }], ['西裤', 'suit']], { sex: 'm' }],
+    suit_navy: ['toigo_male_suit_3', 'outfit', '藏青西装', [['西装', 'suit']], { sex: 'm' }],
+    suit_db: ['toigo_male_double-breasted_suit', 'outfit', '双排扣西装', [['西装', 'suit']], { sex: 'm' }],
+    // 高帮球鞋：贴图上黑色的鞋里子比红色鞋面占的地方大，主色直接说从红色找
+    hightops: ['culturalibre_sneakers', 'shoes', '高帮球鞋', [['鞋面', 'sneaker', { pick: '#9e3e31' }], ['鞋底', 'sole']], { z: 5 }],
+    runners: ['punkduck_running_shoes_01', 'shoes', '跑鞋', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5 }],
+    slipons: ['punkduck_comfortable_sneakers', 'shoes', '一脚蹬', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5 }],
+    oxford: ['mindfront_shoes_oxford_male', 'shoes', '牛津鞋', [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], { z: 5 }],
+    chelsea: ['toigo_ankle_boots_male', 'shoes', '切尔西靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 5 }],
+    biker_boots: ['mindfront_shoes_biker_boots_male', 'shoes', '机车靴', [['靴面', 'leather'], ['鞋底', 'sole']]],
+    newsboy: ['jujube_newsboy_cap', 'hat', '报童帽', [['帽子', 'hat']]],
+    beanie: ['mindfront_knitted_hat_01', 'hat', '毛线帽', [['毛线帽', 'hat']]],
+  };
+  for (const [id, [src, slot, label, parts, over]] of Object.entries(C)) {
+    PARTS[id] = parts;
+    // 没写 material 的（报童帽）用目录里唯一的那个 .mhmat
+    const dir = `${PACKS}/clothes/${src}`, clo = parseMhclo(find(dir, `${src}.mhclo`)), geom = find(dir, clo.obj);
+    const mm = parseMhmat(find(dir, clo.material ?? fs.readdirSync(dir).find((f) => f.endsWith('.mhmat'))));
+    const shoe = slot === 'shoes', file = `${shoe ? 'shoe' : slot === 'hat' ? 'hat' : 'cloth'}-${id}`, pj = {};
+    const maps = { map: await texCloth(find(dir, mm.diffuseTexture), file, 1024, { q: 84, geom, onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe && parts.length === 2 ? [0, 1, 0] : null }) }) };
+    if (mm.normalmapTexture) maps.normal = tex(find(dir, mm.normalmapTexture), `${file}-n`, 512, { q: 85 });
+    maps.parts = pj.file;
+    // 许可按包里的清单；CC BY 的版本号写在 .mhclo 开头的注释里（有的写了）
+    const ver = fs.readFileSync(find(dir, `${src}.mhclo`), 'utf8').match(/^#\s*license:?\s*cc[\s_-]*by\s*(\d\.\d)/im)?.[1];
+    const license = info[src].license.replace(/^CC-BY$/, 'CC BY') + (ver && info[src].license === 'CC-BY' ? ` ${ver}` : '');
+    const credit = { author: info[src].author, license, url: info[src].source };
+    const pm = await proxy(slot, id, { label, geom, clo, maps, extra: { parts: pj.parts, credit, ...over } });
+    log(slot, id, 'verts', pm.nv, 'tris', pm.tris, 'z', pm.z, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '), credit.author, credit.license);
+  }
 }
 meta.proxies = proxies;
 log('proxies', proxies.length, 'raw', (proxies.reduce((s2, p) => s2 + p.bytes, 0) / 1e6).toFixed(2), 'MB');

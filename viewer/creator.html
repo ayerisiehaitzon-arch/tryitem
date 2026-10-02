@@ -365,7 +365,7 @@ const PRESETS = [
   { name: '小满', note: '齐耳短发，粉 T 恤热裤', s: { sex: 'f', her: { mom: 4, dad: 4, shape: 0.3, skin: 0.4 }, body: { age: 22, height: 0.35, weight: 0.4 }, feat: { eye_s: 0.3, face_round: 0.3 }, look: { hair: 'bob02', hairColor: '#4a3020', blush: 0.45, lips: 0.4, lipColor: '#c9706a' }, outfit: 'female_casualsuit02', colors: { 'outfit/female_casualsuit02': ['#e3a7b4', ''], 'shoes/shoes05': ['', '', '#f2f0eb'] }, shoes: 'shoes05' } },
   { name: '老周', note: '平头，微胖，衬衫配工装背带裤，渔夫帽', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.7, skin: 0.6 }, body: { age: 58, height: 0.45, weight: 0.75, muscle: 0.4 }, feat: { face_fat: 0.4, cheek_v: 0.3 }, look: { hair: 'short04', hairColor: '#8f8a85', beard: 0.35, aging: 0.6 }, outfit: '', top: 'm_shirt', bottom: 'm_overalls', shoes: 'shoes01', hat: 'fishing_hat', colors: { 'hat/fishing_hat': ['#c2a77d'], 'bottom/m_overalls': ['#3c5a85'] }, anim: 'idle_talking' } },
   { name: '安娜', note: '长直发，酒红连衣裙', s: { sex: 'f', her: { mom: 1, dad: 5, shape: 0.35, skin: 0.3 }, body: { age: 29, height: 0.6, weight: 0.4 }, feat: { cheek_b: 0.3, eye_tilt: 0.2 }, look: { hair: 'long01', hairColor: '#c08a52', eye: 'lightblue', lips: 0.6, lipColor: '#9b3b45', shadow: 0.4, liner: 0.6 }, outfit: 'dress_wine', colors: { 'outfit/dress_wine': ['#5e1520'] }, shoes: 'shoes03', anim: 'walk_formal' } },
-  { name: '大力', note: '健身教练，黑 T 恤黑牛仔裤', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: 'male_casualsuit04', colors: { 'outfit/male_casualsuit04': ['#1c1c1e', '#1a1a1a'] }, shoes: 'shoes02' } },
+  { name: '大力', note: '健身教练，连帽卫衣配短裤、跑鞋', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: '', top: 'hoodie', bottom: 'shorts', shoes: 'runners' } },
   { name: '阿月', note: '马尾，运动装', s: { sex: 'f', her: { mom: 3, dad: 3, shape: 0.45, skin: 0.5 }, body: { age: 24, height: 0.5, weight: 0.35, muscle: 0.65 }, look: { hair: 'ponytail01', hairColor: '#2b1d14', blush: 0.3 }, outfit: 'female_sportsuit01', colors: { 'outfit/female_sportsuit01': ['#8fb7d9', ''] }, shoes: 'shoes06', anim: 'jog_fwd' } },
   { name: '马克', note: '黑西装，短发', s: { sex: 'm', her: { mom: 5, dad: 1, shape: 0.6, skin: 0.4 }, body: { age: 38, height: 0.7, weight: 0.5 }, feat: { chin_p: 0.25, nose_hump: 0.2 }, look: { hair: 'short01', hairColor: '#6b4428', beard: 0.25, eye: 'green' }, outfit: 'male_elegantsuit01', shoes: 'shoes03' } },
   { name: '晴子', note: '麻花辫，黄 T 恤浅色牛仔裤', s: { sex: 'f', her: { mom: 4, dad: 0, shape: 0.4, skin: 0.5 }, body: { age: 21, height: 0.4, weight: 0.45 }, feat: { eye_s: 0.2, nose_tip: 0.2 }, look: { hair: 'braid01', hairColor: '#8a5a33', blush: 0.5, lips: 0.35, lipColor: '#d98a7c' }, outfit: 'female_casualsuit01', colors: { 'outfit/female_casualsuit01': ['#d9a326', '#9db4cc'] }, shoes: 'shoes05', anim: 'dance' } },
@@ -1558,7 +1558,7 @@ function renderPane() {
     g.push(group('预设角色', '点一下换上',
       el('div', { class: 'cards' }, PRESETS.map((pr) => el('button', { class: 'card', 'aria-pressed': String(S.name === pr.name), on: { click: () => { applyPreset(pr); afterLoad(); } } }, el('b', {}, pr.name), el('span', {}, pr.note))))));
     g.push(group('我的角色', '只保存在这台设备上', savedList()));
-    g.push(el('p', { class: 'hint' }, '人体、皮肤、头发、套装和男款单件来自 MakeHuman（CC0）；连衣裙、大衣、女款单件、运动背心、雪地靴、渔夫帽、探险帽是 MakeHuman 社区作者 punkduck、Mindfront、DredNicolson 的作品（CC BY，每件的作者写在服装页里）；动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
+    g.push(el('p', { class: 'hint' }, '人体、皮肤、头发、套装和男款单件来自 MakeHuman（CC0）；其余的衣服、鞋、帽子是 MakeHuman 社区作者的作品（CC0 或 CC BY，每件的作者和许可写在服装页里）；动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
   } else if (tab === 'heritage') {
     g.push(group('性别', null, chips([['f', '女'], ['m', '男']], S.sex, (v) => {
       S.sex = v; S.body.gender = null;
@@ -1953,10 +1953,10 @@ function bakeParts(map, u) {
   }
   return canvasTexture(out, size, 'image/jpeg');
 }
-// 导出的素材来源：MakeHuman、Quaternius 都是 CC0；社区作者的部件（CC BY）要署名，穿戴了哪件写哪件
+// 导出的素材来源：MakeHuman、Quaternius 都是 CC0；社区作者的部件要署名（CC BY 必须写，CC0 也写上），穿戴了哪件写哪件，有原始页面的附上地址
 function credits() {
   const lines = ['人体、皮肤、头发、衣服：MakeHuman（https://www.makehumancommunity.org），CC0 1.0', '动作：Quaternius Universal Animation Library（https://quaternius.com），CC0 1.0'];
-  for (const s of Object.values(SLOTS)) if (s.p.credit) lines.push(`${s.p.label}：${s.p.credit.author}，${s.p.credit.license}，MakeHuman 社区资源`);
+  for (const s of Object.values(SLOTS)) if (s.p.credit) lines.push(`${s.p.label}：${s.p.credit.author}，${s.p.credit.license}，MakeHuman 社区资源${s.p.credit.url ? `（${s.p.credit.url}）` : ''}`);
   return lines.join('\n') + '\n';
 }
 async function exportModel() {
@@ -2083,6 +2083,9 @@ if (params.has('top') || params.has('bottom')) {
   // 网址里只给了一半、原来也没穿的，另一半按性别给一件
   if (S.top && !S.bottom && !params.has('bottom')) S.bottom = SEP_DEF[S.sex][1];
   if (S.bottom && !S.top && !params.has('top')) S.top = SEP_DEF[S.sex][0];
+} else if (params.get('outfit')) {
+  // 网址只给了整套：预设里原来穿的单件脱掉（比如老周的衬衫、背带裤）
+  S.top = ''; S.bottom = '';
 }
 // 配色：oc=整套的上衣,下装（十六进制，不带 #；空着 = 原色），tc=上衣，bc=下装，sc=鞋面,鞋底,袜子，hatc=帽子
 for (const [k, id] of [['oc', `outfit/${S.outfit}`], ['tc', `top/${S.top}`], ['bc', `bottom/${S.bottom}`], ['sc', `shoes/${S.shoes}`], ['hatc', `hat/${S.hat}`]]) if (params.has(k)) S.colors[id] = params.get(k).split(',').map((x) => (/^[0-9a-f]{6}$/i.test(x) ? '#' + x : ''));

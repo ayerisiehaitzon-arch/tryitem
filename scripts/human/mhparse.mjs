@@ -64,12 +64,21 @@ export function parseMhclo(file) {
       case 'x_scale': out.scale[0] = [+p[1], +p[2], +p[3]]; break;
       case 'y_scale': out.scale[1] = [+p[1], +p[2], +p[3]]; break;
       case 'z_scale': out.scale[2] = [+p[1], +p[2], +p[3]]; break;
+      // 新一点的写法（社区资源包里有的衣服用）：shear_x / l_shear_x / r_shear_x … “顶点 a、顶点 b、做衣服时 a 和 b 在这个轴上的坐标”。
+      // MakeHuman 用这两个点围成的盒子算一个仿射矩阵，盒子和坐标轴对齐，矩阵就是三个轴各自的缩放，和 *_scale 一样，原始距离 = |坐标差|；
+      // 有不分左右的先用，没有就用左边的（MakeHuman 也是这个顺序，左右两份本来就是镜像，距离相同）
+      case 'shear_x': case 'shear_y': case 'shear_z': case 'l_shear_x': case 'l_shear_y': case 'l_shear_z': case 'r_shear_x': case 'r_shear_y': case 'r_shear_z': {
+        const side = p[0].length > 7 ? p[0][0] : '', axis = 'xyz'.indexOf(p[0].at(-1));
+        ((out.shear ??= { '': [], l: [], r: [] })[side][axis] = [+p[1], +p[2], Math.abs(+p[3] - +p[4])]);
+        break;
+      }
       case 'z_depth': out.zDepth = +p[1]; break;
       case 'tag': out.tags.push(p.slice(1).join(' ').toLowerCase()); break;
       case 'verts': mode = 'verts'; break;
       case 'delete_verts': mode = 'delete_verts'; break;
     }
   }
+  if (!out.scale.some(Boolean) && out.shear) out.scale = ['', 'l', 'r'].map((s) => out.shear[s]).find((a) => a.filter(Boolean).length === 3) ?? out.scale;
   return out;
 }
 
