@@ -309,10 +309,11 @@ const npmDir = (cat, name) => {
   return `${d}/${hit}/${jf}`;
 };
 const proxies = [];
+// clo：.mhclo 的路径，或者已经读好的贴合数据（npmClo）
 async function proxy(cat, name, { label, geom, clo, maps, alpha = false, cull = true, extra = {}, split = null, bake = null }) {
   const g = geom.endsWith('.obj') ? parseObj(geom) : parseThreeJson(geom);
-  const c = parseMhclo(clo);
-  const uuidOf = (f) => fs.readFileSync(f, 'utf8').match(/^uuid\s+(\S+)/m)?.[1];
+  const c = typeof clo === 'string' ? parseMhclo(clo) : clo;
+  const uuidOf = (f) => (typeof f === 'string' ? fs.readFileSync(f, 'utf8').match(/^uuid\s+(\S+)/m)?.[1] : f.uuid);
   if (g.meta?.uuid && uuidOf(clo) && g.meta.uuid !== uuidOf(clo)) throw new Error(`${name}: 网格和贴合数据不是同一版（uuid ${g.meta.uuid} ≠ ${uuidOf(clo)}）`);
   const nv = c.ref.length / 3;
   if (g.v.length / 3 !== nv) throw new Error(`${name}: 顶点数对不上 ${g.v.length / 3} vs ${nv}`);
@@ -347,6 +348,17 @@ async function proxy(cat, name, { label, geom, clo, maps, alpha = false, cull = 
   return m;
 }
 const mat = (cat, name, file) => parseMhmat(`${DEB}/${cat}/${name}/${file ?? `${name}.mhmat`}`);
+// 只在 npm 包里有的社区资源没有 .mhclo：贴合数据就在 JSON 里（和 .mhclo 一样的单位和顺序，礼帽两份逐项核对过相同），
+// 只缺三个方向的缩放参考（偏移跟着身体尺寸缩放用），由调用的人给（帽子都借礼帽的：头的宽、高、深）
+function npmClo(cat, name, scale) {
+  const j = JSON.parse(fs.readFileSync(npmDir(cat, name), 'utf8'));
+  const three = (a, f) => a.flatMap((x) => (Array.isArray(x) ? x : f(x)));
+  return {
+    uuid: j.metadata.uuid, name, scale, zDepth: j.metadata.z_depth ?? 50,
+    ref: three(j.ref_vIdxs, (v) => [v, v, v]), w: three(j.weights, () => [1, 0, 0]), off: three(j.offsets, () => [0, 0, 0]),
+    del: j.metadata.deleteVerts.flatMap((d, i) => (d ? [i] : [])),
+  };
+}
 
 // 眼球（GitHub 的 obj + mhclo）：角膜那几圈三角形单独一组（UV 落在贴图右下角的透明圆里）
 {
@@ -449,7 +461,7 @@ const PARTS = {
   male_elegantsuit01: [['西装', 'suit']],
   female_casualsuit01: [['T 恤', 'top'], ['牛仔裤', 'denim']], female_casualsuit02: [['T 恤', 'top'], ['热裤', 'denim']],
   female_elegantsuit01: [['衬衫', 'top'], ['半裙', 'bottom']], female_sportsuit01: [['运动背心', 'top'], ['紧身裤', 'bottom']],
-  fedora01: [['礼帽', 'hat']],
+  fedora01: [['礼帽', 'hat']], fishing_hat: [['渔夫帽', 'bucket']], pith_helmet: [['探险帽', 'helmet']],
   shoes01: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], shoes03: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']],
   shoes04: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], shoes06: [['鞋面', 'sneaker'], ['鞋底', 'sole'], ['袜子', 'sock']],
   // 旧运动鞋：鞋面是磨旧的皮，按皮面的宽严；鞋舌那块浅色帆布（贴图上的两个框，u0 v0 u1 v1）不换色
@@ -458,12 +470,13 @@ const PARTS = {
   shoes05: [['鞋面', 'sneaker', { pick: '#f0f0f0' }], ['鞋底', 'sole'], ['袜子', 'sock']],
 };
 const KIND = {
-  top: { tol: 0.07, qmax: 3.3 }, denim: { tol: 0.15, qmax: 7 }, bottom: { tol: 0.08, qmax: 3.3 }, suit: { tol: 0.07, qmax: 3.3 }, hat: { tol: 0.07, qmax: 3.3 },
+  top: { tol: 0.07, qmax: 3.3 }, denim: { tol: 0.15, qmax: 7 }, bottom: { tol: 0.08, qmax: 3.3 }, suit: { tol: 0.07, qmax: 3.3 },
+  hat: { tol: 0.07, qmax: 3.3 }, bucket: { tol: 0.08, qmax: 3.3 }, helmet: { tol: 0.08, qmax: 3.3 },
   leather: { tol: 0.12, qmax: 4.5, qmin: 0.12, pick: 'coverage' }, sneaker: { tol: 0.07, qmax: 3.3, pick: 'coverage' }, sole: { tol: 0.08, qmax: 3.3, pick: 'coverage' }, sock: { tol: 0.08, qmax: 3.3, pick: 'coverage' },
 };
 // texCloth 的 onData：算部位、主色和权重图（size²，R/G/B = 部位 0/1/2，无损 WebP，文件名跟着贴图：<file>-parts.webp），结果放进 out
 const partsJob = (n, clo, out, { size = 1024, file, shoe = false }) => async (rgba, W, H, r) => {
-  const def = PARTS[n], isl = islands(r), pos = restProxy(parseMhclo(clo));
+  const def = PARTS[n], isl = islands(r), pos = restProxy(typeof clo === 'string' ? parseMhclo(clo) : clo);
   const cls = shoe ? classifyShoe(r, pos, isl) : classify(r, pos, isl);
   const triPart = Int8Array.from(isl.triIsl, (k) => Math.min(cls[k], def.length - 1));
   size = Math.min(size, W);
@@ -493,6 +506,8 @@ for (const [n, label] of Object.entries(SHOES)) {
   await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { parts: pj.parts } });
   log('shoes', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
 }
+// 帽子：礼帽（Ubuntu 包里的 .mhclo）；歪戴的礼帽是同一顶帽子换一套贴合数据，UV 一样，贴图和权重图共用；
+// 渔夫帽、探险帽是 npm 包里的社区资源（CC BY，作者和许可记进 credit，网页和导出的素材来源里都写上）
 {
   const cf = `${DEB}/clothes/fedora01/fedora.mhclo`, clo = parseMhclo(cf), pj = {};
   const mm = parseMhmat(`${DEB}/clothes/fedora01/${clo.material}`);
@@ -500,6 +515,22 @@ for (const [n, label] of Object.entries(SHOES)) {
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, 'hat-fedora01-n', 512, { q: 85 });
   maps.parts = pj.file;
   await proxy('hat', 'fedora01', { label: '礼帽', geom: npmDir('clothes', 'fedora'), clo: cf, maps, extra: { parts: pj.parts } });
+  const uvOf = (n) => { const r = renderMesh(parseThreeJson(npmDir('clothes', n))); return JSON.stringify([r.uv, r.idx]); };
+  if (uvOf('fedora') !== uvOf('fedora_cocked')) throw new Error('歪戴礼帽和礼帽的 UV 不一样，不能共用贴图');
+  await proxy('hat', 'fedora01_cocked', { label: '歪戴礼帽', geom: npmDir('clothes', 'fedora_cocked'), clo: `${DEB}/clothes/fedora01/fedora_cocked.mhclo`, maps, extra: { parts: pj.parts } });
+  const COMMUNITY = {
+    fishing_hat: { src: 'Fishing_Hat_01', label: '渔夫帽', map: 'Fishing_Hat_01.png', normal: 'Fishing_Hat_01_NRM.png' },
+    pith_helmet: { src: 'pith_helmet', label: '探险帽', map: 'pith_helmet_diff.jpg', normal: 'pith_helmet_nrml.jpg' },
+  };
+  for (const [n, h] of Object.entries(COMMUNITY)) {
+    const geom = npmDir('clothes', h.src), dir = path.dirname(geom), hc = npmClo('clothes', h.src, clo.scale), hp = {};
+    const lic = JSON.parse(fs.readFileSync(geom, 'utf8')).metadata.license;
+    const hm = { map: await texCloth(`${dir}/textures/${h.map}`, `hat-${n}`, 512, { q: 86, geom, onData: partsJob(n, hc, hp, { size: 512, file: `hat-${n}` }) }) };
+    hm.normal = tex(`${dir}/textures/${h.normal}`, `hat-${n}-n`, 512, { q: 85 });
+    hm.parts = hp.file;
+    await proxy('hat', n, { label: h.label, geom, clo: hc, maps: hm, extra: { parts: hp.parts, credit: { author: lic.author, license: lic.license.replace(/^CCBY$/, 'CC BY') } } });
+    log('hat', n, hp.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '), lic.author, lic.license);
+  }
 }
 meta.proxies = proxies;
 log('proxies', proxies.length, 'raw', (proxies.reduce((s2, p) => s2 + p.bytes, 0) / 1e6).toFixed(2), 'MB');

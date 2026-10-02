@@ -333,6 +333,9 @@ const CLOTHC = {
   bottom: ['#1c1c1e', '#5b5d60', '#1f2f52', '#5a1e2c', '#8c1d24', '#c9b38f', '#e3a7b4', '#8fb7d9', '#2f6b4f', '#f2f0eb'],
   suit: ['#1b1d22', '#22304a', '#5a5d63', '#3b2a22', '#c8b89a', '#4a1f26', '#2f3a2c', '#f2f0eb'],
   hat: ['#1b1d22', '#5a5d63', '#6b4a32', '#a0522d', '#c8b89a', '#22304a', '#4a1f26', '#2f3a2c', '#f2f0eb'],
+  // 渔夫帽（帆布）、探险帽
+  bucket: ['#4b5a32', '#c2a77d', '#d8c9a3', '#1f2f52', '#1c1c1e', '#f2f0eb', '#d9682b', '#8c1d24', '#8fb7d9', '#7d7f82', '#e3a7b4', '#e0b52a'],
+  helmet: ['#c8b48a', '#ece8e0', '#d8c9a3', '#4b5a32', '#6b4a32', '#1b1d22', '#22304a', '#7d7f82'],
   // 鞋：皮鞋鞋面、球鞋鞋面、鞋底、袜子
   leather: ['#151515', '#3b2418', '#6b3f22', '#9a6a3c', '#8e4a1e', '#4a1a1c', '#1f2a40', '#55575a', '#ece8e0'],
   sneaker: ['#f2f0eb', '#1c1c1e', '#7d7f82', '#1f2f52', '#2b59c3', '#8fb7d9', '#b0262c', '#e3a7b4', '#e0b52a', '#d9682b', '#2f6b4f', '#c9b38f'],
@@ -358,7 +361,7 @@ let S = DEF();
 const PRESETS = [
   { name: '阿哲', note: '碎短发，白 T 牛仔裤', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.6, skin: 0.5 }, body: { age: 26, height: 0.6, muscle: 0.6 }, feat: { jaw_b: 0.2, brow_d: 0.2 }, look: { hair: 'short02', hairColor: '#100d0b' }, outfit: 'male_casualsuit06', shoes: 'shoes05' } },
   { name: '小满', note: '齐耳短发，粉 T 恤热裤', s: { sex: 'f', her: { mom: 4, dad: 4, shape: 0.3, skin: 0.4 }, body: { age: 22, height: 0.35, weight: 0.4 }, feat: { eye_s: 0.3, face_round: 0.3 }, look: { hair: 'bob02', hairColor: '#4a3020', blush: 0.45, lips: 0.4, lipColor: '#c9706a' }, outfit: 'female_casualsuit02', colors: { 'outfit/female_casualsuit02': ['#e3a7b4', ''], 'shoes/shoes05': ['', '', '#f2f0eb'] }, shoes: 'shoes05' } },
-  { name: '老周', note: '平头，微胖，衬衫', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.7, skin: 0.6 }, body: { age: 58, height: 0.45, weight: 0.75, muscle: 0.4 }, feat: { face_fat: 0.4, cheek_v: 0.3 }, look: { hair: 'short04', hairColor: '#8f8a85', beard: 0.35, aging: 0.6 }, outfit: 'male_casualsuit01', shoes: 'shoes01', anim: 'idle_talking' } },
+  { name: '老周', note: '平头，微胖，衬衫，渔夫帽', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.7, skin: 0.6 }, body: { age: 58, height: 0.45, weight: 0.75, muscle: 0.4 }, feat: { face_fat: 0.4, cheek_v: 0.3 }, look: { hair: 'short04', hairColor: '#8f8a85', beard: 0.35, aging: 0.6 }, outfit: 'male_casualsuit01', shoes: 'shoes01', hat: 'fishing_hat', colors: { 'hat/fishing_hat': ['#c2a77d'] }, anim: 'idle_talking' } },
   { name: '安娜', note: '长直发，衬衫半裙', s: { sex: 'f', her: { mom: 1, dad: 5, shape: 0.35, skin: 0.3 }, body: { age: 29, height: 0.6, weight: 0.4 }, feat: { cheek_b: 0.3, eye_tilt: 0.2 }, look: { hair: 'long01', hairColor: '#c08a52', eye: 'lightblue', lips: 0.6, lipColor: '#9b3b45', shadow: 0.4, liner: 0.6 }, outfit: 'female_elegantsuit01', shoes: 'shoes03', anim: 'walk_formal' } },
   { name: '大力', note: '健身教练，黑 T 恤黑牛仔裤', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: 'male_casualsuit04', colors: { 'outfit/male_casualsuit04': ['#1c1c1e', '#1a1a1a'] }, shoes: 'shoes02' } },
   { name: '阿月', note: '马尾，运动装', s: { sex: 'f', her: { mom: 3, dad: 3, shape: 0.45, skin: 0.5 }, body: { age: 24, height: 0.5, weight: 0.35, muscle: 0.65 }, look: { hair: 'ponytail01', hairColor: '#2b1d14', blush: 0.3 }, outfit: 'female_sportsuit01', colors: { 'outfit/female_sportsuit01': ['#8fb7d9', ''] }, shoes: 'shoes06', anim: 'jog_fwd' } },
@@ -1201,8 +1204,8 @@ const FOCUS = {
   eyes: { t: (Hh) => [0, Hh - 0.12, 0.08], span: () => [0.2, 0.22], el: 2 },
   mouth: { t: (Hh) => [0, Hh - 0.17, 0.08], span: () => [0.2, 0.2], el: 2 },
   side: { t: (Hh) => [0, Hh - 0.13, 0.02], span: () => [0.36, 0.36], el: 3, az: 70 },
-  // 脚：对着两只脚（脚踝、脚掌四个关节的平均，动作里脚会挪），离地 8cm
-  feet: { t: () => { const c = new THREE.Vector3(), v = new THREE.Vector3(); for (const b of ['foot_l', 'ball_l', 'foot_r', 'ball_r']) c.add(bones[BI[b]].getWorldPosition(v)); return [c.x / 4, 0.08, c.z / 4]; }, span: () => [0.3, 0.72], el: 16, az: 25 },
+  // 脚：对着两只脚（脚踝、脚掌四个关节的平均，动作里脚会挪），离地 10cm
+  feet: { t: () => { const c = new THREE.Vector3(), v = new THREE.Vector3(); for (const b of ['foot_l', 'ball_l', 'foot_r', 'ball_r']) c.add(bones[BI[b]].getWorldPosition(v)); return [c.x / 4, 0.1, c.z / 4]; }, span: () => [0.42, 0.9], el: 16, az: 25 },
 };
 function band() {
   const w = innerWidth, h = innerHeight;
@@ -1228,6 +1231,8 @@ function focus(kind, instant = false) {
   const f = FOCUS[kind] ?? FOCUS.full;
   const Hh = SHOT && params.has('frameH') ? Number(params.get('frameH')) : kind === 'full' ? figureTop() : headTop();
   const t = new THREE.Vector3(...f.t(Hh));
+  // 戴帽子时胸像、肖像镜头往上抬一点（帽子高出头顶的一半，最多 6cm），帽顶不出画
+  if (SLOTS.hat && (kind === 'bust' || kind === 'portrait')) t.y += Math.min(0.06, Math.max(0, figureTop() - headTop()) * 0.5);
   // 对着脸的镜头跟着头现在的位置（动作里头会晃、会低下去）
   if (kind !== 'full' && kind !== 'feet' && J) {
     const hp = bones[BI.head].getWorldPosition(new THREE.Vector3());
@@ -1268,9 +1273,13 @@ const TABS = [
 ];
 const LOOK_SUB = [{ id: 'hair', label: '头发', focus: 'bust' }, { id: 'brows', label: '眉毛睫毛', focus: 'eyes' }, { id: 'eyes', label: '眼睛', focus: 'eyes' }, { id: 'beard', label: '胡子', focus: 'face' }, { id: 'makeup', label: '妆容', focus: 'face' }, { id: 'skin', label: '皮肤', focus: 'face' }];
 let tab = params.get('tab') ?? 'preset';
+// 服装分三页：衣服看全身，鞋看脚，帽子看胸像
+const WEAR_SUB = [{ id: 'clothes', label: '衣服', focus: 'full' }, { id: 'shoes', label: '鞋', focus: 'feet' }, { id: 'hat', label: '帽子', focus: 'bust' }];
 let featSub = params.get('feat') ?? 'shape';
 let lookSub = params.get('look') ?? 'hair';
-const tabFocus = () => tab === 'features' ? FEATURES.find((f) => f.id === featSub)?.focus ?? 'face' : tab === 'look' ? LOOK_SUB.find((l) => l.id === lookSub)?.focus ?? 'bust' : TABS.find((t) => t.id === tab)?.focus ?? 'full';
+let wearSub = params.get('wear') ?? 'clothes';
+const tabFocus = () => tab === 'features' ? FEATURES.find((f) => f.id === featSub)?.focus ?? 'face' : tab === 'look' ? LOOK_SUB.find((l) => l.id === lookSub)?.focus ?? 'bust'
+  : tab === 'outfit' ? WEAR_SUB.find((w) => w.id === wearSub)?.focus ?? 'full' : TABS.find((t) => t.id === tab)?.focus ?? 'full';
 
 function el(tag, attrs = {}, ...kids) {
   const e = document.createElement(tag);
@@ -1284,7 +1293,8 @@ function el(tag, attrs = {}, ...kids) {
 }
 function renderTabs() {
   $('tabs').replaceChildren(...TABS.map((t) => el('button', { class: 'tab', role: 'tab', 'aria-selected': String(t.id === tab), on: { click: () => { tab = t.id; renderTabs(); renderPane(); focus(tabFocus()); } } }, t.label)));
-  const subs = tab === 'features' ? FEATURES.map((f) => [f.id, f.label, featSub, (id) => { featSub = id; }]) : tab === 'look' ? LOOK_SUB.map((f) => [f.id, f.label, lookSub, (id) => { lookSub = id; }]) : [];
+  const subs = tab === 'features' ? FEATURES.map((f) => [f.id, f.label, featSub, (id) => { featSub = id; }]) : tab === 'look' ? LOOK_SUB.map((f) => [f.id, f.label, lookSub, (id) => { lookSub = id; }])
+    : tab === 'outfit' ? WEAR_SUB.map((f) => [f.id, f.label, wearSub, (id) => { wearSub = id; }]) : [];
   $('sub').replaceChildren(...subs.map(([id, label, cur, set]) => el('button', { class: 'chip', role: 'tab', 'aria-pressed': String(id === cur), on: { click: () => { set(id); renderTabs(); renderPane(); focus(tabFocus()); } } }, label)));
 }
 function slider(def, value, onInput, fmt = null) {
@@ -1346,7 +1356,7 @@ function renderPane() {
     g.push(group('预设角色', '点一下换上',
       el('div', { class: 'cards' }, PRESETS.map((pr) => el('button', { class: 'card', 'aria-pressed': String(S.name === pr.name), on: { click: () => { applyPreset(pr); afterLoad(); } } }, el('b', {}, pr.name), el('span', {}, pr.note))))));
     g.push(group('我的角色', '只保存在这台设备上', savedList()));
-    g.push(el('p', { class: 'hint' }, '人体、皮肤、头发、衣服来自 MakeHuman（CC0），动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
+    g.push(el('p', { class: 'hint' }, '人体、皮肤、头发、衣服来自 MakeHuman（CC0），渔夫帽、探险帽是 MakeHuman 社区作者 Mindfront、DredNicolson 的作品（CC BY），动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
   } else if (tab === 'heritage') {
     g.push(group('性别', null, chips([['f', '女'], ['m', '男']], S.sex, (v) => { S.sex = v; S.body.gender = null; if (!S.outfit || PROXY_SEX(S.outfit) !== v) S.outfit = v === 'f' ? 'female_casualsuit01' : 'male_casualsuit06'; syncSlots(); reshape(); reskin(); renderPane(); })));
     g.push(group('母亲', PARENTS.mom[S.her.mom].name, parentPicker('mom')));
@@ -1397,12 +1407,18 @@ function renderPane() {
     // 每个部位一组色板（第一格“原”是贴图本来的颜色；最后一格自选）
     const colorGroups = (id) => (H.proxies[id]?.parts ?? []).map((part, i) => group(`${part.label.replace(/ /g, '')}颜色`, i === 0 ? '第一格是原色' : null,
       swatches(CLOTHC[part.kind] ?? CLOTHC.top, S.colors[id]?.[i] ?? '', (c) => setColor(id, i, c), { none: '原色', noneColor: domCss(part.dom) })));
-    g.push(group('衣服', '整套', chips([['', '内衣'], ...outfits.filter((p) => p.sex === S.sex).map((p) => [p.name, p.label]), ...outfits.filter((p) => p.sex !== S.sex).map((p) => [p.name, p.label])], S.outfit, (id) => { S.outfit = id; syncSlots(); renderPane(); })));
-    if (S.outfit) g.push(...colorGroups(`outfit/${S.outfit}`));
-    g.push(group('鞋', null, chips([['', '光脚'], ...proxyList('shoes').map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots(); renderPane(); })));
-    if (S.shoes) g.push(...colorGroups(`shoes/${S.shoes}`));
-    g.push(group('帽子', null, chips([['', '不戴'], ...proxyList('hat').map((p) => [p.name, p.label])], S.hat, (id) => { S.hat = id; syncSlots(); renderPane(); })));
-    if (S.hat) g.push(...colorGroups(`hat/${S.hat}`));
+    if (wearSub === 'shoes') {
+      g.push(group('鞋', null, chips([['', '光脚'], ...proxyList('shoes').map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots(); renderPane(); })));
+      if (S.shoes) g.push(...colorGroups(`shoes/${S.shoes}`));
+    } else if (wearSub === 'hat') {
+      // 社区作者的帽子（CC BY）在标题右边署名
+      const hatCredit = H.proxies[`hat/${S.hat}`]?.credit;
+      g.push(group('帽子', hatCredit ? `${hatCredit.author} · ${hatCredit.license}` : null, chips([['', '不戴'], ...proxyList('hat').map((p) => [p.name, p.label])], S.hat, (id) => { S.hat = id; syncSlots().then(() => { dirty.shape = false; updateShape(); focus(tabFocus()); }); renderPane(); })));
+      if (S.hat) g.push(...colorGroups(`hat/${S.hat}`));
+    } else {
+      g.push(group('衣服', '整套', chips([['', '内衣'], ...outfits.filter((p) => p.sex === S.sex).map((p) => [p.name, p.label]), ...outfits.filter((p) => p.sex !== S.sex).map((p) => [p.name, p.label])], S.outfit, (id) => { S.outfit = id; syncSlots(); renderPane(); })));
+      if (S.outfit) g.push(...colorGroups(`outfit/${S.outfit}`));
+    }
   } else if (tab === 'motion') {
     g.push(group('动作', 'Quaternius（CC0）', chips([['', '站着不动'], ...ANIM.clips.map((c) => [c.id, c.label])], S.anim, (id) => { S.anim = id; startAnim(id); })));
     g.push(group('表情', null, chips(Object.entries(EXPR).map(([id, e]) => [id, e.label]), S.expr, (id) => { S.expr = id; })));
@@ -1582,7 +1598,7 @@ function randomize() {
       ...d.look, hair: pick(hairs).name, hairColor: r() < 0.3 ? '' : pick(HAIRC.slice(0, 11)), brows: pick(proxyList('eyebrows')).name, lashes: pick(proxyList('eyelashes')).name, eye: pick(EYEC),
       beard: sex === 'm' && r() < 0.5 ? 0.2 + r() * 0.7 : 0, lips: sex === 'f' && r() < 0.6 ? 0.2 + r() * 0.5 : 0, lipColor: pick(MAKEUP), blush: sex === 'f' ? r() * 0.5 : 0, freckles: r() < 0.2 ? r() : 0,
     },
-    outfit: pick(outfits).name, shoes: pick(proxyList('shoes')).name, hat: r() < 0.15 ? 'fedora01' : '', colors: {},
+    outfit: pick(outfits).name, shoes: pick(proxyList('shoes')).name, hat: r() < 0.25 ? pick(proxyList('hat')).name : '', colors: {},
     anim: pick(['idle', 'idle', 'idle_talking', 'dance', 'walk']), expr: pick(['neutral', 'neutral', 'smile']),
   };
   // 一半左右的部位换个颜色（鞋底少换一点，太花）
@@ -1707,6 +1723,12 @@ function bakeParts(map, u) {
   }
   return canvasTexture(out, size, 'image/jpeg');
 }
+// 导出的素材来源：MakeHuman、Quaternius 都是 CC0；社区作者的部件（CC BY）要署名，穿戴了哪件写哪件
+function credits() {
+  const lines = ['人体、皮肤、头发、衣服：MakeHuman（https://www.makehumancommunity.org），CC0 1.0', '动作：Quaternius Universal Animation Library（https://quaternius.com），CC0 1.0'];
+  for (const s of Object.values(SLOTS)) if (s.p.credit) lines.push(`${s.p.label}：${s.p.credit.author}，${s.p.credit.license}，MakeHuman 社区资源`);
+  return lines.join('\n') + '\n';
+}
 async function exportModel() {
   toast('正在导出…');
   await new Promise((r) => setTimeout(r, 30));
@@ -1748,7 +1770,7 @@ async function exportModel() {
     await saveFile(`${fileName()}.zip`, zipStore([
       { name: `${fileName()}.glb`, data: new Uint8Array(glb) },
       { name: '捏脸码.txt', data: new TextEncoder().encode(encode() + '\n') },
-      { name: '素材来源.txt', data: new TextEncoder().encode('人体、皮肤、头发、衣服：MakeHuman（https://www.makehumancommunity.org），CC0 1.0\n动作：Quaternius Universal Animation Library（https://quaternius.com），CC0 1.0\n') },
+      { name: '素材来源.txt', data: new TextEncoder().encode(credits()) },
     ]));
   } finally {
     // 换回原来的材质；只释放导出时烘焙出来的贴图（别的贴图还在用）

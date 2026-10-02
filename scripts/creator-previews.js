@@ -7,6 +7,7 @@
 //   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
 //   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
+//   docs/previews/creator-hats.jpg         帽子的款式和配色
 //   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上）
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -131,6 +132,19 @@ try {
   ];
   const ss = await shoot(shoe.map(([n, q]) => [n, `preset=1&${q}&bare=1&cam=feet&az=25&el=16&anim=idle&t=0.5`]), [480, 420]);
   await grid(ss, 4, 360, 315, path.join(out, 'creator-shoes.jpg'), { labels: shoe.map((c) => c[2]) });
+  // 帽子：四种款式，再换几个颜色、几种发型
+  const hat = [
+    ['hat-0', 'preset=6&hat=fedora01', '礼帽'],
+    ['hat-1', 'preset=6&hat=fedora01_cocked&hatc=22304a', '歪戴礼帽 · 藏青'],
+    ['hat-2', 'preset=2', '渔夫帽 · 卡其'],
+    ['hat-3', 'preset=0&hat=fishing_hat', '渔夫帽 · 原色'],
+    ['hat-4', 'preset=1&hat=pith_helmet', '探险帽'],
+    ['hat-5', 'preset=4&hat=pith_helmet&hatc=ece8e0', '探险帽 · 白'],
+    ['hat-6', 'preset=5&hat=fishing_hat&hatc=d9682b&az=140', '马尾 + 渔夫帽（背面）'],
+    ['hat-7', 'preset=3&hat=fedora01_cocked&hatc=4a1f26', '长发 + 歪戴礼帽'],
+  ];
+  const hs2 = await shoot(hat.map(([n, q]) => [n, `${q}&bare=1&cam=bust${q.includes('az=') ? '' : '&az=30'}&anim=idle&t=0.5`]), [420, 460]);
+  await grid(hs2, 4, 300, 330, path.join(out, 'creator-hats.jpg'), { labels: hat.map((h) => h[2]) });
   // 动作
   const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话']];
   const ms = await shoot(mo.map(([a, t]) => [`mo-${a}`, `preset=5&bare=1&az=30&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);
