@@ -474,6 +474,26 @@ async function meanColor(file) {
   const c = [lin(r), lin(g2), lin(b)];
   return { rgb: c.map((x) => +x.toFixed(4)), lum: +(0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]).toFixed(4) };
 }
+// 胡子总是染色（网页里跟着发色或者选的颜色），贴图只管明暗层次。有几款的贴图几乎是黑的（不透明部分的平均亮度不到 0.05，
+// 达利胡干脆全黑，形状全在 alpha 里），存成 WebP 以后层次就没了，染出来也发黑：先把颜色按比例提亮，提到平均亮度 0.18（线性；
+// 亮的发丝提过头会截在 1，比例用二分法找，让截过以后的平均正好是 0.18）
+async function brighten(src) {
+  const { data, info } = await sharp(src).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const lin = (x) => (x / 255 <= 0.04045 ? x / 255 / 12.92 : ((x / 255 + 0.055) / 1.055) ** 2.4);
+  const srgb = (x) => Math.round(255 * (x <= 0.0031308 ? x * 12.92 : 1.055 * x ** (1 / 2.4) - 0.055));
+  const px = [];
+  for (let i = 0; i < data.length; i += 4) if (data[i + 3] > 160) px.push([lin(data[i]), lin(data[i + 1]), lin(data[i + 2])]);
+  const mean = (k) => px.reduce((s, [r, g, b]) => s + 0.2126 * Math.min(1, r * k) + 0.7152 * Math.min(1, g * k) + 0.0722 * Math.min(1, b * k), 0) / (px.length || 1);
+  if (mean(1) >= 0.05) return src;
+  let k = 0;
+  if (mean(1e4) > 0.18) {
+    let lo = 1, hi = 1e4;
+    for (let it = 0; it < 40; it++) { const mid = Math.sqrt(lo * hi); if (mean(mid) < 0.18) lo = mid; else hi = mid; }
+    k = lo;
+  }
+  for (let i = 0; i < data.length; i += 4) for (let c = 0; c < 3; c++) data[i + c] = k ? srgb(Math.min(1, lin(data[i + c]) * k)) : srgb(0.18);
+  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
+}
 // 头发烘焙用的身体：基础网格（米）+ 身体三角形；头的中心 = 头顶往下 11cm 那一圈的中心
 const P0 = Float32Array.from(base.v, (x) => x * 0.1);
 const bodyTris = Uint32Array.from(body.idx, (i) => body.map[i]);
@@ -495,21 +515,23 @@ function restProxy(c) {
   }
   return out;
 }
-// 一款头发：贴图（带 alpha，原图比 2048 小的不放大）、法线、发丝流向图（网页里沿发丝方向打高光）、烘焙的自遮挡
-async function hairProxy(n, { label, src, normal, geom, clo, extra }) {
-  const { width, height } = await sharp(src).metadata(), size = Math.min(2048, Math.max(width, height)), fsz = Math.min(1024, size);
-  const maps = { map: tex(src, `hair-${n}`, size, { q: 86, alpha: true }) };
-  if (normal) maps.normal = tex(normal, `hair-${n}-n`, fsz, { q: 88 });
+// 一款头发（胡子也一样，cat 换成 beard、moustache）：贴图（带 alpha，原图比 2048 小的不放大，胡子最大 1024）、法线、
+// 发丝流向图（网页里沿发丝方向打高光）、烘焙的自遮挡
+async function hairProxy(n, { cat = 'hair', label, src, normal, geom, clo, extra }) {
+  if (cat !== 'hair') src = await brighten(src);
+  const { width, height } = await sharp(src).metadata(), size = Math.min(cat === 'hair' ? 2048 : 1024, Math.max(width, height)), fsz = Math.min(1024, size);
+  const maps = { map: tex(src, `${cat}-${n}`, size, { q: 86, alpha: true }) };
+  if (normal) maps.normal = tex(normal, `${cat}-${n}-n`, fsz, { q: 88 });
   const { data: px, info } = await sharp(src).resize(fsz, fsz, { fit: 'fill' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const flow = flowMap(px, info.width, info.height);
-  maps.flow = `tex/hairflow-${n}.webp`;
+  maps.flow = `tex/${cat}flow-${n}.webp`;
   await sharp(flow, { raw: { width: info.width, height: info.height, channels: 3 } }).resize(fsz / 2, fsz / 2).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${maps.flow}`);
   const alphaAt = (u, v) => px[(Math.min(info.height - 1, Math.max(0, Math.floor((1 - v) * info.height))) * info.width + Math.min(info.width - 1, Math.max(0, Math.floor(u * info.width)))) * 4 + 3] / 255;
-  const m = await proxy('hair', n, {
+  const m = await proxy(cat, n, {
     label, geom, clo, maps, alpha: true, cull: false, extra: { mean: await meanColor(src), ...extra },
     bake: ({ c, r }) => ({ ao: hairAO({ pos: restProxy(c), index: r.idx, map: r.map, uv: r.uv, alphaAt, body: { pos: P0, index: bodyTris }, center: headCenter }) }),
   });
-  log('hair', n, 'verts', m.nv, 'tris', m.tris, extra.credit ? `${extra.credit.author} ${extra.credit.license}` : '');
+  log(cat, n, 'verts', m.nv, 'tris', m.tris, extra.credit ? `${extra.credit.author} ${extra.credit.license}` : '');
 }
 for (const [n, [label, sex]] of Object.entries(HAIR)) {
   const mm = mat('hair', n);
@@ -518,6 +540,25 @@ for (const [n, [label, sex]] of Object.entries(HAIR)) {
 for (const [n, [src, label, sex]] of Object.entries(HAIR_PACK)) {
   const { dir, clo, geom, mm, credit } = packItem('hair', src);
   await hairProxy(n, { label, src: packFile(dir, mm.diffuseTexture), normal: mm.normalmapTexture && packFile(dir, mm.normalmapTexture), geom, clo, extra: { sex, credit } });
+}
+// 胡子：资源包里的 3D 胡须、小胡子（包里放在 clothes/ 下），和头发一样的发片、一样的材质，网页里和画在皮肤上的胡茬叠着用。
+// id → [包里的目录, 名字, 胡须自带小胡子（随机时不再另加）]
+const BEARD = {
+  faun: ['culturalibre_faun_beard', '山羊胡'],
+  scruffy: ['elvs_scruffy_beard1', '蓬乱长须', true],
+  sigmund: ['grinsegold_beard_sigmund_wip', '短络腮胡', true],
+  full: ['grinsegold_full_beard', '络腮胡'],
+  viking: ['rehmanpolanski_beard_viking', '维京长须'],
+  messy: ['wdg_scruffy_beard', '粗犷络腮胡'],
+};
+const MOUSTACHE = {
+  dali: ['culturalibre_dal_moustache', '达利胡'],
+  thin: ['grinsegold_moustache', '八字胡'],
+  viking: ['rehmanpolanski_moustache_viking', '一字胡'],
+};
+for (const [cat, list] of [['beard', BEARD], ['moustache', MOUSTACHE]]) for (const [n, [src, label, stache]] of Object.entries(list)) {
+  const { dir, clo, geom, mm, credit } = packItem('clothes', src);
+  await hairProxy(n, { cat, label, src: packFile(dir, mm.diffuseTexture), normal: mm.normalmapTexture && packFile(dir, mm.normalmapTexture), geom, clo, extra: { credit, ...(stache ? { stache } : {}) } });
 }
 // 衣服（整套）、鞋、帽子
 const OUTFIT = {

@@ -4,7 +4,7 @@
 #   deb/        Ubuntu 的 makehuman-data 1.1.1 包（皮肤、头发、衣服、眉毛、睫毛的贴图和 .mhclo）
 #   npm/        npm 包 makehuman-data 0.0.2（头发、衣服这些代理网格的 JSON 版）
 #   ual/        Quaternius Universal Animation Library 的 glTF 版
-#   packs/      MakeHuman 社区资源包（files.makehumancommunity.org/asset_packs，CC0 / CC BY）里用到的那几款发型和衣服、鞋、帽子：
+#   packs/      MakeHuman 社区资源包（files.makehumancommunity.org/asset_packs，CC0 / CC BY）里用到的那几款发型、胡子和衣服、鞋、帽子：
 #               hair/、clothes/ 下的 .mhclo、.obj、.mhmat 和贴图，还有包里记作者、许可、来源页的 packs/<包>.json（下载的 zip 放在 assetpacks/）
 # 一共下载约 2.5GB（社区资源包占 2GB，其中 dress03 一个包就 490MB）；之后 npm run build-human 生成 viewer/human/（仓库里已经带着生成好的数据，只有改了构建脚本才需要重来）。
 # 只用 git、curl、ar、tar、unzip；固定到构建时用的版本，校验和对不上就停。
@@ -91,5 +91,9 @@ fetch_pack hair02 hair02_ccby.zip c681e5efd37df4007a52253a8d071aedbfe3b614f199d8
   elvs_that_80s_babe_hair elvs_braided_rows elvs_micky_afro elvs_50s_updo elvs_adrienne_hair elvs_ashley_may_hair elvs_braid_bun elvs_short_daisy_hair \
   elvs_hazel_hair elvs_island_princess_hair elvs_katherine_hair elvs_lara_hair
 fetch_pack hats03 hats03_cc-by.zip 2702d58fa04e57235881551c45adcda36a6eafde8043c2695375bc0b4b79f550 mindfront_knitted_hat_01 culturalibre_cl_bowler_hat punkduck_sun_visor_sports_visor
+fetch_pack bodyparts05 bodyparts05_cc0.zip 262bba42246f85b2a91f493dd920296b258a3b4544eb495c91c4d08e57c528fd culturalibre_faun_beard grinsegold_beard_sigmund_wip \
+  rehmanpolanski_beard_viking rehmanpolanski_moustache_viking wdg_scruffy_beard
+fetch_pack bodyparts06 bodyparts06_cc-by.zip 09ed71439c853eac01a92f6e4463f15d0701f08b7d9ff777771d10c3e590e770 culturalibre_dal_moustache elvs_scruffy_beard1 \
+  grinsegold_full_beard grinsegold_moustache
 
 echo "好了：$(pwd)。接着运行 npm run build-human"

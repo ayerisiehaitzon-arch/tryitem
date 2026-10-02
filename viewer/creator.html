@@ -366,7 +366,7 @@ const DEF = () => ({
   her: { mom: 0, dad: 0, shape: 0.5, skin: 0.5 },
   body: { gender: null, age: 25, height: 0.5, weight: 0.5, muscle: 0.5, proportions: 0.5, cup: 0.5 },
   bmods: {}, feat: {},
-  look: { hair: 'short02', hairColor: '', brows: 'eyebrow001', browColor: '', lashes: 'eyelashes01', eye: 'brown', beard: 0, beardColor: '', aging: 0, freckles: 0, blush: 0, blushColor: BLUSH[0], lips: 0, lipColor: MAKEUP[0], shadow: 0, shadowColor: SHADOW[0], liner: 0 },
+  look: { hair: 'short02', hairColor: '', brows: 'eyebrow001', browColor: '', lashes: 'eyelashes01', eye: 'brown', beard: 0, beardStyle: '', moustache: '', beardColor: '', aging: 0, freckles: 0, blush: 0, blushColor: BLUSH[0], lips: 0, lipColor: MAKEUP[0], shadow: 0, shadowColor: SHADOW[0], liner: 0 },
   outfit: 'male_casualsuit06', top: '', bottom: '', shoes: 'shoes05', hat: '', // 整套（outfit）和上衣 + 下装（top、bottom）二选一
   colors: {}, // 衣服、鞋、帽子的配色：{ 'outfit/<名字>': ['#rrggbb' 或 ''（原色）, …每个部位一个] }
   anim: 'idle', expr: 'neutral',
@@ -375,9 +375,9 @@ let S = DEF();
 const PRESETS = [
   { name: '阿哲', note: '碎短发，白 T 牛仔裤', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.6, skin: 0.5 }, body: { age: 26, height: 0.6, muscle: 0.6 }, feat: { jaw_b: 0.2, brow_d: 0.2 }, look: { hair: 'short02', hairColor: '#100d0b' }, outfit: 'male_casualsuit06', shoes: 'shoes05' } },
   { name: '小满', note: '齐耳短发，粉 T 恤热裤', s: { sex: 'f', her: { mom: 4, dad: 4, shape: 0.3, skin: 0.4 }, body: { age: 22, height: 0.35, weight: 0.4 }, feat: { eye_s: 0.3, face_round: 0.3 }, look: { hair: 'bob02', hairColor: '#4a3020', blush: 0.45, lips: 0.4, lipColor: '#c9706a' }, outfit: 'female_casualsuit02', colors: { 'outfit/female_casualsuit02': ['#e3a7b4', ''], 'shoes/shoes05': ['', '', '#f2f0eb'] }, shoes: 'shoes05' } },
-  { name: '老周', note: '平头，微胖，衬衫配工装背带裤，渔夫帽', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.7, skin: 0.6 }, body: { age: 58, height: 0.45, weight: 0.75, muscle: 0.4 }, feat: { face_fat: 0.4, cheek_v: 0.3 }, look: { hair: 'short04', hairColor: '#8f8a85', beard: 0.35, aging: 0.6 }, outfit: '', top: 'm_shirt', bottom: 'm_overalls', shoes: 'shoes01', hat: 'fishing_hat', colors: { 'hat/fishing_hat': ['#c2a77d'], 'bottom/m_overalls': ['#3c5a85'] }, anim: 'idle_talking' } },
+  { name: '老周', note: '平头，短络腮胡，微胖，衬衫配工装背带裤，渔夫帽', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.7, skin: 0.6 }, body: { age: 58, height: 0.45, weight: 0.75, muscle: 0.4 }, feat: { face_fat: 0.4, cheek_v: 0.3 }, look: { hair: 'short04', hairColor: '#8f8a85', beard: 0.35, beardStyle: 'sigmund', aging: 0.6 }, outfit: '', top: 'm_shirt', bottom: 'm_overalls', shoes: 'shoes01', hat: 'fishing_hat', colors: { 'hat/fishing_hat': ['#c2a77d'], 'bottom/m_overalls': ['#3c5a85'] }, anim: 'idle_talking' } },
   { name: '安娜', note: '长直发，酒红连衣裙', s: { sex: 'f', her: { mom: 1, dad: 5, shape: 0.35, skin: 0.3 }, body: { age: 29, height: 0.6, weight: 0.4 }, feat: { cheek_b: 0.3, eye_tilt: 0.2 }, look: { hair: 'long01', hairColor: '#c08a52', eye: 'lightblue', lips: 0.6, lipColor: '#9b3b45', shadow: 0.4, liner: 0.6 }, outfit: 'dress_wine', colors: { 'outfit/dress_wine': ['#5e1520'] }, shoes: 'shoes03', anim: 'walk_formal' } },
-  { name: '大力', note: '健身教练，连帽卫衣配短裤、跑鞋', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: '', top: 'hoodie', bottom: 'shorts', shoes: 'runners' } },
+  { name: '大力', note: '健身教练，络腮胡，连帽卫衣配短裤、跑鞋', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5, beardStyle: 'full' }, outfit: '', top: 'hoodie', bottom: 'shorts', shoes: 'runners' } },
   { name: '阿月', note: '马尾，运动装', s: { sex: 'f', her: { mom: 3, dad: 3, shape: 0.45, skin: 0.5 }, body: { age: 24, height: 0.5, weight: 0.35, muscle: 0.65 }, look: { hair: 'ponytail01', hairColor: '#2b1d14', blush: 0.3 }, outfit: 'female_sportsuit01', colors: { 'outfit/female_sportsuit01': ['#8fb7d9', ''] }, shoes: 'shoes06', anim: 'jog_fwd' } },
   { name: '马克', note: '黑西装，短发', s: { sex: 'm', her: { mom: 5, dad: 1, shape: 0.6, skin: 0.4 }, body: { age: 38, height: 0.7, weight: 0.5 }, feat: { chin_p: 0.25, nose_hump: 0.2 }, look: { hair: 'short01', hairColor: '#6b4428', beard: 0.25, eye: 'green' }, outfit: 'male_elegantsuit01', shoes: 'shoes03' } },
   { name: '晴子', note: '麻花辫，红色旗袍', s: { sex: 'f', her: { mom: 4, dad: 0, shape: 0.4, skin: 0.5 }, body: { age: 21, height: 0.4, weight: 0.45 }, feat: { eye_s: 0.2, nose_tip: 0.2 }, look: { hair: 'braid01', hairColor: '#8a5a33', blush: 0.5, lips: 0.35, lipColor: '#d98a7c' }, outfit: 'qipao', shoes: 'ballet_flats', anim: 'dance' } },
@@ -755,8 +755,10 @@ bodyGeo.setIndex(new THREE.BufferAttribute(H.body.index, 1));
 const body = skinnedMesh(bodyGeo, skinMat, 'body');
 body.updateMorphTargets();
 
-// —— 代理（眼球、眉毛、睫毛、牙齿、舌头、头发、衣服、鞋、帽子）——
+// —— 代理（眼球、眉毛、睫毛、牙齿、舌头、头发、胡子、衣服、鞋、帽子）——
 const SLOTS = {};
+// 用头发材质的类别（发片 + alpha）
+const HAIRY = ['hair', 'beard', 'moustache'];
 async function setSlot(slot, id) {
   const cur = SLOTS[slot];
   if (cur && cur.id === id) return;
@@ -775,8 +777,8 @@ async function setSlot(slot, id) {
   geo.setAttribute('skinIndex', new THREE.BufferAttribute(si, 4));
   geo.setAttribute('skinWeight', new THREE.BufferAttribute(sw, 4));
   geo.setIndex(new THREE.BufferAttribute(d.index, 1));
-  // 脸上的代理跟着表情动：代理顶点的增量 = 三个参考顶点增量的加权和
-  const face = ['eyebrows', 'eyelashes', 'teeth', 'tongue'].includes(p.cat);
+  // 脸上的代理（眉毛、睫毛、牙齿、舌头、胡子）跟着表情动：代理顶点的增量 = 三个参考顶点增量的加权和
+  const face = ['eyebrows', 'eyelashes', 'teeth', 'tongue', 'beard', 'moustache'].includes(p.cat);
   if (face) {
     geo.morphAttributes.position = UNIT_DENSE.map((D) => {
       const o = new Float32Array(p.nv * 3);
@@ -803,8 +805,8 @@ async function setSlot(slot, id) {
     const cornea = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.03, transparent: true, opacity: 0.12, depthWrite: false, specularIntensity: 1, clearcoat: 1, clearcoatRoughness: 0.02 });
     const m = add([eyeMat, cornea], 'eyes');
     m.castShadow = false;
-  } else if (p.cat === 'hair') {
-    // 头发：两遍——先不透明（alpha 截断）写深度，再画半透明的发梢，边缘就是软的
+  } else if (HAIRY.includes(p.cat)) {
+    // 头发、胡子：两遍——先不透明（alpha 截断）写深度，再画半透明的发梢，边缘就是软的
     const base = { map: maps[0], normalMap: maps[1] ?? null, side: THREE.DoubleSide };
     const flow = p.maps.flow ? await tex(p.maps.flow, false) : null;
     // 烘焙的自遮挡（每个代理顶点一个，展开到渲染顶点）
@@ -813,7 +815,7 @@ async function setSlot(slot, id) {
     geo.setAttribute('hairAO', new THREE.BufferAttribute(ao, 1));
     const solid = hairMaterial({ ...base, alphaTest: 0.5, alphaToCoverage: true }, p.mean, flow);
     const soft = hairMaterial({ ...base, transparent: true, depthWrite: false, alphaTest: 0.02 }, p.mean, flow);
-    add(solid, 'hair'); const b = add(soft, 'hair_soft');
+    add(solid, p.cat); const b = add(soft, `${p.cat}_soft`);
     b.castShadow = false; b.renderOrder = 2;
   } else if (p.cat === 'eyebrows' || p.cat === 'eyelashes') {
     const m = add(dyeMaterial(new THREE.MeshStandardMaterial({ map: maps[0], transparent: true, depthWrite: false, alphaTest: 0.02, roughness: 0.8, side: p.cull ? THREE.FrontSide : THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), p.mean), p.cat);
@@ -1347,6 +1349,12 @@ function skinTextures(st) {
   const agedKey = st.body.age >= 60 || st.look.aging > 0.5 ? 'old' : 'middleage';
   return Promise.all([skinId(mom.skin, st.sex), skinId(dad.skin, st.sex), skinId(domRace, st.sex, agedKey)].map((id) => tex(H.meta.skins[id])));
 }
+// 胡子（胡茬和 3D 的胡须、小胡子）的颜色：选了就用选的，不然跟着发色——染了发用染的颜色，没染用这款头发贴图本来的颜色，光头用深棕
+function beardColor() {
+  if (S.look.beardColor || S.look.hairColor) return S.look.beardColor || S.look.hairColor;
+  const m = H.proxies[`hair/${S.look.hair}`]?.mean?.rgb;
+  return m ? `#${new THREE.Color().setRGB(m[0], m[1], m[2], THREE.LinearSRGBColorSpace).getHexString()}` : '#2b1d14';
+}
 async function updateSkin() {
   dirty.skin = false;
   const age = S.body.age;
@@ -1361,16 +1369,16 @@ async function updateSkin() {
   skinU.uBlush.value = col(S.look.blushColor, hasMask ? S.look.blush * 0.6 : 0);
   skinU.uLips.value = col(S.look.lipColor, hasMask ? S.look.lips * 0.75 : 0);
   skinU.uShadow.value = col(S.look.shadowColor, hasMask ? S.look.shadow * 0.6 : 0);
-  const hc = S.look.beardColor || S.look.hairColor || '#2b1d14';
-  skinU.uBeard.value = col(hc, hasMask ? S.look.beard * 0.85 : 0);
+  skinU.uBeard.value = col(beardColor(), hasMask ? S.look.beard * 0.85 : 0);
   skinU.uFreckle.value = hasMask ? S.look.freckles : 0;
   skinU.uLiner.value = hasMask ? S.look.liner * 0.8 : 0;
   skinMat.needsUpdate = true;
-  // 发色、眉色
-  for (const [slot, colorKey] of [['hair', 'hairColor'], ['brows', 'browColor'], ['lashes', 'browColor']]) {
+  // 发色、眉色、胡子的颜色
+  for (const slot of ['hair', 'brows', 'lashes', 'beard', 'moustache']) {
     const s = SLOTS[slot];
     if (!s) continue;
-    let c = slot === 'hair' ? S.look.hairColor : (S.look.browColor || (S.look.hairColor ? new THREE.Color(S.look.hairColor).multiplyScalar(0.8).getStyle() : ''));
+    let c = slot === 'hair' ? S.look.hairColor : slot === 'beard' || slot === 'moustache' ? beardColor()
+      : (S.look.browColor || (S.look.hairColor ? new THREE.Color(S.look.hairColor).multiplyScalar(0.8).getStyle() : ''));
     // 睫毛：总是深色（跟眉色走，再压暗一些），贴图本身偏白，不染会发灰
     if (slot === 'lashes') c = new THREE.Color(c || '#2b1d14').multiplyScalar(0.45).getStyle();
     for (const m of s.meshes) {
@@ -1421,6 +1429,8 @@ async function syncSlots() {
     setSlot('teeth', 'teeth/teeth_base'),
     setSlot('tongue', 'tongue/tongue01'),
     setSlot('hair', S.look.hair ? `hair/${S.look.hair}` : ''),
+    setSlot('beard', S.look.beardStyle ? `beard/${S.look.beardStyle}` : ''),
+    setSlot('moustache', S.look.moustache ? `moustache/${S.look.moustache}` : ''),
     setSlot('outfit', S.outfit ? `outfit/${S.outfit}` : ''),
     setSlot('top', S.top ? `top/${S.top}` : ''),
     setSlot('bottom', S.bottom ? `bottom/${S.bottom}` : ''),
@@ -1632,8 +1642,12 @@ function renderPane() {
         slider({ id: 'shadow', label: '眼影', min: 0, max: 1, def: 0 }, S.look.shadow, (v) => { S.look.shadow = v; reskin(); }),
         swatches(SHADOW, S.look.shadowColor, (c) => { S.look.shadowColor = c; reskin(); })));
     } else if (lookSub === 'beard') {
-      g.push(group('胡子', null, slider({ id: 'beard', label: '浓密', min: 0, max: 1, def: 0 }, S.look.beard, (v) => { S.look.beard = v; reskin(); }),
-        swatches(HAIRC, S.look.beardColor, (c) => { S.look.beardColor = c; reskin(); }, { none: '跟着发色' })));
+      // 胡须、小胡子是 3D 的（社区作者的，标题右边署名），可以搭着用，也可以再叠一层画在皮肤上的胡茬
+      const credit = (id) => { const c = H.proxies[id]?.credit; return c ? `${c.author} · ${c.license}` : null; };
+      g.push(group('胡须', credit(`beard/${S.look.beardStyle}`), chips([['', '无'], ...proxyList('beard').map((p) => [p.name, p.label])], S.look.beardStyle, (id) => { S.look.beardStyle = id; syncSlots(); renderPane(); })));
+      g.push(group('小胡子', credit(`moustache/${S.look.moustache}`), chips([['', '无'], ...proxyList('moustache').map((p) => [p.name, p.label])], S.look.moustache, (id) => { S.look.moustache = id; syncSlots(); renderPane(); })));
+      g.push(group('胡茬', null, slider({ id: 'beard', label: '浓密', min: 0, max: 1, def: 0 }, S.look.beard, (v) => { S.look.beard = v; reskin(); })));
+      g.push(group('胡子颜色', '不选就跟着发色', swatches(HAIRC, S.look.beardColor, (c) => { S.look.beardColor = c; reskin(); }, { none: '跟着发色' })));
     } else if (lookSub === 'makeup') {
       g.push(group('口红', null, slider({ id: 'lips', label: '浓淡', min: 0, max: 1, def: 0 }, S.look.lips, (v) => { S.look.lips = v; reskin(); }), swatches(MAKEUP, S.look.lipColor, (c) => { S.look.lipColor = c; reskin(); })));
       g.push(group('腮红', null, slider({ id: 'blush', label: '浓淡', min: 0, max: 1, def: 0 }, S.look.blush, (v) => { S.look.blush = v; reskin(); }), swatches(BLUSH, S.look.blushColor, (c) => { S.look.blushColor = c; reskin(); })));
@@ -1739,7 +1753,7 @@ async function renderParent(kind, i) {
   paused = true;
   S = tmp;
   const vis = [];
-  for (const [slot, s] of Object.entries(SLOTS)) if (['hair', 'outfit', 'top', 'bottom', 'hat', 'shoes'].includes(slot)) for (const m of s.meshes) { vis.push([m, m.visible]); m.visible = false; }
+  for (const [slot, s] of Object.entries(SLOTS)) if (['hair', 'beard', 'moustache', 'outfit', 'top', 'bottom', 'hat', 'shoes'].includes(slot)) for (const m of s.meshes) { vis.push([m, m.visible]); m.visible = false; }
   updateShape(); await updateSkin();
   bones.forEach((b) => b.quaternion.identity()); bones[BI.pelvis].position.copy(pelvisRest);
   rig.updateMatrixWorld(true);
@@ -1818,7 +1832,7 @@ function sanitize(o) {
   S2.look = {
     hair: str(L.hair, has('hair'), d.look.hair), hairColor: col(L.hairColor, ''), brows: str(L.brows, has('eyebrows'), d.look.brows), browColor: col(L.browColor, ''),
     lashes: str(L.lashes, (v) => !!H.proxies[`eyelashes/${v}`], d.look.lashes), eye: EYEC.includes(L.eye) ? L.eye : 'brown',
-    beard: num(L.beard, 0, 1, 0), beardColor: col(L.beardColor, ''), aging: num(L.aging, 0, 1, 0), freckles: num(L.freckles, 0, 1, 0),
+    beard: num(L.beard, 0, 1, 0), beardStyle: str(L.beardStyle, has('beard'), ''), moustache: str(L.moustache, has('moustache'), ''), beardColor: col(L.beardColor, ''), aging: num(L.aging, 0, 1, 0), freckles: num(L.freckles, 0, 1, 0),
     blush: num(L.blush, 0, 1, 0), blushColor: col(L.blushColor, d.look.blushColor) || d.look.blushColor, lips: num(L.lips, 0, 1, 0), lipColor: col(L.lipColor, d.look.lipColor) || d.look.lipColor,
     shadow: num(L.shadow, 0, 1, 0), shadowColor: col(L.shadowColor, d.look.shadowColor) || d.look.shadowColor, liner: num(L.liner, 0, 1, 0),
   };
@@ -1872,6 +1886,9 @@ function randomize() {
   const feat = {};
   for (const [id, f] of Object.entries(FEATURE_DEF)) if (r() < 0.45) feat[id] = f.min < 0 ? gauss() * 0.45 : r() * 0.4;
   const hairs = proxyList('hair').filter((p) => fitsSex(p, sex));
+  // 男的三成留 3D 胡须，没胡须的一成多留小胡子（有胡须的再加小胡子的机会大一些，自带小胡子的胡须不再加）
+  const beard3 = sex === 'm' && r() < 0.3 ? pick(proxyList('beard')) : null;
+  const stache = sex === 'm' && !beard3?.stache && r() < (beard3 ? 0.35 : 0.15) ? pick(proxyList('moustache')).name : '';
   const outfits = proxyList('outfit').filter((p) => p.sex === sex);
   const sep = r() < 0.4; // 四成机会上衣、下装分开搭（男女各挑适合自己的单件）
   S = {
@@ -1881,7 +1898,7 @@ function randomize() {
     bmods: {}, feat,
     look: {
       ...d.look, hair: pick(hairs).name, hairColor: r() < 0.3 ? '' : pick(HAIRC.slice(0, 11)), brows: pick(proxyList('eyebrows')).name, lashes: pick(proxyList('eyelashes')).name, eye: pick(EYEC),
-      beard: sex === 'm' && r() < 0.5 ? 0.2 + r() * 0.7 : 0, lips: sex === 'f' && r() < 0.6 ? 0.2 + r() * 0.5 : 0, lipColor: pick(MAKEUP), blush: sex === 'f' ? r() * 0.5 : 0, freckles: r() < 0.2 ? r() : 0,
+      beard: sex === 'm' && r() < 0.5 ? 0.2 + r() * 0.7 : 0, beardStyle: beard3?.name ?? '', moustache: stache, lips: sex === 'f' && r() < 0.6 ? 0.2 + r() * 0.5 : 0, lipColor: pick(MAKEUP), blush: sex === 'f' ? r() * 0.5 : 0, freckles: r() < 0.2 ? r() : 0,
     },
     outfit: sep ? '' : pick(outfits).name, top: sep ? pick(proxyList('top').filter((p) => fitsSex(p, sex))).name : '', bottom: sep ? pick(proxyList('bottom').filter((p) => fitsSex(p, sex))).name : '',
     shoes: pick(proxyList('shoes')).name, hat: r() < 0.25 ? pick(proxyList('hat')).name : '', colors: {},
@@ -2029,7 +2046,7 @@ async function exportModel() {
     const pu = PART_U.get(mat);
     if (u && u.uDyeAmt.value > 0 && mat.map) {
       const p = s.p;
-      swap(m, new THREE.MeshStandardMaterial({ name: slot, map: bakeDye(mat.map, '#' + u.uDye.value.getHexString(), p.mean, 1024, slot === 'hair'), alphaTest: mat.alphaTest || 0.5, transparent: false, side: mat.side, roughness: 0.6 }));
+      swap(m, new THREE.MeshStandardMaterial({ name: slot, map: bakeDye(mat.map, '#' + u.uDye.value.getHexString(), p.mean, 1024, HAIRY.includes(p.cat)), alphaTest: mat.alphaTest || 0.5, transparent: false, side: mat.side, roughness: 0.6 }));
     } else if (pu && mat.map) {
       // 衣服、鞋、帽子：导出用一份同样参数的普通材质，换过颜色的贴图烘焙好。没有法线贴图时着色器里垫的那张平的不导出
       // （导出器要把法线贴图画到画布上翻转 Y，1×1 的数据贴图画不了，整个导出会失败）
@@ -2047,7 +2064,7 @@ async function exportModel() {
   bones[BI.pelvis].position.copy(pelvisRest);
   const savedM = [...skinned].map((m) => [m, m.morphTargetInfluences?.slice()]);
   for (const m of skinned) if (m.morphTargetInfluences) m.morphTargetInfluences.fill(0);
-  const softHair = [...skinned].filter((m) => m.name === 'hair_soft');
+  const softHair = [...skinned].filter((m) => m.name.endsWith('_soft'));
   softHair.forEach((m) => { m.visible = false; });
   const name = rig.name;
   rig.name = S.name || 'character';
@@ -2130,7 +2147,7 @@ if (params.has('code')) { try { S = decode(params.get('code')); } catch { /* 忽
 if (EXPR[params.get('expr')]) S.expr = params.get('expr');
 if (params.has('anim')) S.anim = CLIPS[params.get('anim')] ? params.get('anim') : '';
 else if (SHOT) S.anim = '';
-for (const k of ['hair', 'eye']) if (params.has(k)) S.look[k] = params.get(k);
+for (const k of ['hair', 'eye', 'beardStyle', 'moustache']) if (params.has(k)) S.look[k] = params.get(k);
 if (params.has('hc')) S.look.hairColor = /^[0-9a-f]{6}$/i.test(params.get('hc')) ? '#' + params.get('hc') : '';
 if (params.has('sex')) S.sex = params.get('sex') === 'f' ? 'f' : 'm';
 for (const k of ['outfit', 'top', 'bottom', 'shoes', 'hat']) if (params.has(k)) S[k] = params.get(k);

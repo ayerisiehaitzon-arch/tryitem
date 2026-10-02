@@ -6,6 +6,7 @@
 //   docs/previews/creator-expressions.jpg  表情
 //   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
 //   docs/previews/creator-hair2.jpg        发型（二）：社区资源包里的 22 款发型（有的换了发色、转到背面），最后两格戴帽子
+//   docs/previews/creator-beards.jpg       胡子：社区资源包里的 6 款胡须、3 款小胡子（跟着发色染色），搭着用、大笑、侧面
 //   docs/previews/creator-clothes.jpg      衣服款式：连衣裙、大衣，上衣和下装随意搭，雪地靴
 //   docs/previews/creator-clothes-men.jpg  男装：几套男装拆成单件上衣、下装重新搭，工装背带裤
 //   docs/previews/creator-clothes-men2.jpg 男装（二）：社区资源包里的卫衣、毛衣、Polo 衫、短裤、礼服、西装、鞋、帽子
@@ -140,6 +141,23 @@ try {
   ];
   const h2 = await shoot(hair2.map(([n, q]) => [n, `${q}${q.includes('az=') ? '' : '&az=30'}&bare=1&cam=bust&anim=idle&t=0.5`]), [420, 460]);
   await grid(h2, 6, 300, 330, path.join(out, 'creator-hair2.jpg'), { labels: hair2.map((h) => h[2]) });
+  // 胡子：MakeHuman 社区资源包里的胡须、小胡子，颜色跟着头发
+  const beards = [
+    ['b-faun', 'preset=0&beardStyle=faun', '山羊胡'],
+    ['b-scruffy', 'preset=6&beardStyle=scruffy', '蓬乱长须'],
+    ['b-sigmund', 'preset=2&beardStyle=sigmund', '短络腮胡（老周）'],
+    ['b-full', 'preset=4&beardStyle=full', '络腮胡（大力）'],
+    ['b-viking', 'preset=6&beardStyle=viking&hc=d8b47a', '维京长须 · 金'],
+    ['b-messy', 'preset=0&beardStyle=messy', '粗犷络腮胡'],
+    ['b-dali', 'preset=6&moustache=dali&hc=100d0b', '达利胡 · 黑'],
+    ['b-thin', 'preset=0&moustache=thin', '八字胡'],
+    ['b-mviking', 'preset=2&moustache=viking&beardStyle=', '一字胡'],
+    ['b-combo', 'preset=4&beardStyle=full&moustache=viking', '络腮胡 + 一字胡'],
+    ['b-laugh', 'preset=6&beardStyle=sigmund&expr=laugh', '大笑时跟着嘴动'],
+    ['b-side', 'preset=6&beardStyle=viking&hc=d8b47a&az=90', '维京长须（侧面）'],
+  ];
+  const bs = await shoot(beards.map(([n, q]) => [n, `${q}${q.includes('az=') ? '' : '&az=25'}&bare=1&cam=face&anim=idle&t=0.5`]), [420, 460]);
+  await grid(bs, 6, 300, 330, path.join(out, 'creator-beards.jpg'), { labels: beards.map((h) => h[2]) });
   // 衣服款式：MakeHuman 社区的连衣裙、大衣、上衣、下装和雪地靴（上衣和下装可以随意搭）
   const wear = [
     ['wear-0', 'preset=3&outfit=dress_wine', '酒红连衣裙'],
