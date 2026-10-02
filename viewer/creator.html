@@ -1313,15 +1313,17 @@ function applyExpr(dt) {
 // —— 皮肤、发色、化妆 ——
 const maskTex = tex('tex/facemask.webp', false).catch(() => null);
 const eyeMaskTex = tex('tex/eyemask.webp', false).catch(() => null);
+// 一个人要用的三张皮肤贴图：两位家长的（按这个人的性别），和老化用的——年龄 40 岁以后（或“老化”滑杆）换成同人种的中年、老年皮肤
+function skinTextures(st) {
+  const mom = PARENTS.mom[st.her.mom], dad = PARENTS.dad[st.her.dad];
+  const domRace = st.her.skin < 0.5 ? mom.skin : dad.skin;
+  const agedKey = st.body.age >= 60 || st.look.aging > 0.5 ? 'old' : 'middleage';
+  return Promise.all([skinId(mom.skin, st.sex), skinId(dad.skin, st.sex), skinId(domRace, st.sex, agedKey)].map((id) => tex(H.meta.skins[id])));
+}
 async function updateSkin() {
   dirty.skin = false;
-  const mom = PARENTS.mom[S.her.mom], dad = PARENTS.dad[S.her.dad];
   const age = S.body.age;
-  const [a, b] = await Promise.all([tex(H.meta.skins[skinId(mom.skin, S.sex)]), tex(H.meta.skins[skinId(dad.skin, S.sex)])]);
-  // 老化：年龄 40 岁以后（或“老化”滑杆）换成同人种的中年、老年皮肤
-  const domRace = S.her.skin < 0.5 ? mom.skin : dad.skin;
-  const agedKey = age >= 60 || S.look.aging > 0.5 ? 'old' : 'middleage';
-  const o = await tex(H.meta.skins[skinId(domRace, S.sex, agedKey)]);
+  const [a, b, o] = await skinTextures(S);
   skinMat.map = a; skinU.uSkinB.value = b; skinU.uSkinOld.value = o;
   skinU.uSkinMix.value = S.her.skin;
   skinU.uAging.value = Math.min(0.85, Math.max(S.look.aging, Math.max(0, (age - 38) / 45)));
@@ -1569,7 +1571,7 @@ function renderPane() {
     g.push(group('预设角色', '点一下换上',
       el('div', { class: 'cards' }, PRESETS.map((pr) => el('button', { class: 'card', 'aria-pressed': String(S.name === pr.name), on: { click: () => { applyPreset(pr); afterLoad(); } } }, el('b', {}, pr.name), el('span', {}, pr.note))))));
     g.push(group('我的角色', '只保存在这台设备上', savedList()));
-    g.push(el('p', { class: 'hint' }, '人体、皮肤、头发、套装和男款单件来自 MakeHuman（CC0）；其余的衣服、鞋、帽子是 MakeHuman 社区作者的作品（CC0 或 CC BY，每件的作者和许可写在服装页里）；动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
+    g.push(el('p', { class: 'hint' }, '人体、皮肤、套装、男款单件和最早的 10 款发型来自 MakeHuman（CC0）；其余的发型、衣服、鞋、帽子是 MakeHuman 社区作者的作品（CC0 或 CC BY，每件的作者和许可写在发型页、服装页里）；动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
   } else if (tab === 'heritage') {
     g.push(group('性别', null, chips([['f', '女'], ['m', '男']], S.sex, (v) => {
       S.sex = v; S.body.gender = null;
@@ -1588,7 +1590,9 @@ function renderPane() {
     g.push(group(f.label, '双击名字恢复', ...f.items.map(([id, label, , min = -1, max = 1]) => slider({ id, label, min, max, def: 0 }, S.feat[id] ?? 0, (v) => { S.feat[id] = v; reshape(); }))));
   } else if (tab === 'look') {
     if (lookSub === 'hair') {
-      g.push(group('发型', null, chips([['', '光头'], ...proxyList('hair').map((p) => [p.name, p.label])], S.look.hair, (id) => { S.look.hair = id; syncSlots(); })));
+      // 本性别的发型排在前面；社区作者的发型在标题右边署名
+      const hairCredit = H.proxies[`hair/${S.look.hair}`]?.credit;
+      g.push(group('发型', hairCredit ? `${hairCredit.author} · ${hairCredit.license}` : null, chips([['', '光头'], ...bySex(proxyList('hair')).map((p) => [p.name, p.label])], S.look.hair, (id) => { S.look.hair = id; syncSlots(); renderPane(); })));
       g.push(group('发色', '第一个是原色', swatches(HAIRC, S.look.hairColor, (c) => { S.look.hairColor = c; reskin(); }, { none: '原色' })));
     } else if (lookSub === 'brows') {
       g.push(group('眉形', null, chips([['', '无'], ...proxyList('eyebrows').map((p) => [p.name, p.label])], S.look.brows, (id) => { S.look.brows = id; syncSlots(); })));
@@ -1637,7 +1641,6 @@ function renderPane() {
       if (S.hat) g.push(...colorGroups(`hat/${S.hat}`));
     } else {
       // 整套（套装、连衣裙、大衣）和上衣 + 下装二选一：选了整套就脱掉上衣、下装；选了上衣或下装就脱掉整套，另一半还没穿的话先给一件
-      const bySex = (list) => [...list.filter((p) => p.sex === S.sex), ...list.filter((p) => p.sex === 'u'), ...list.filter((p) => !fitsSex(p, S.sex))];
       const note = (id, def) => { const c = H.proxies[id]?.credit; return c ? `${c.author} · ${c.license}` : def; };
       const wear = (k, id) => {
         S[k] = id;
@@ -1662,6 +1665,8 @@ function renderPane() {
 const PROXY_SEX = (name) => H.proxies[`outfit/${name}`]?.sex;
 // 这件衣服适不适合这个性别（'u' 是男女都行）
 const fitsSex = (p, sex) => !p?.sex || p.sex === 'u' || p.sex === sex;
+// 列表排序：本性别的在前，男女都行的其次，另一个性别的放最后
+const bySex = (list) => [...list.filter((p) => p.sex === S.sex), ...list.filter((p) => p.sex === 'u'), ...list.filter((p) => !fitsSex(p, S.sex))];
 // 只穿上衣或下装时，另一半先给一件：女生 V 领背心、紧身牛仔裤，男生白 T 恤、牛仔裤
 const SEP_DEF = { f: ['vneck_top', 'tight_jeans'], m: ['m_tee_white', 'm_jeans'] };
 
@@ -1678,6 +1683,8 @@ const portraits = (() => {
       const k = `${kind}-${i}-${S.sex}`;
       if (!cache.has(k)) cache.set(k, await renderParent(kind, i));
       c.getContext('2d').drawImage(cache.get(k), 0, 0, c.width, c.height);
+      // 画完一张让出一下主线程：贴图都在缓存里时整串头像是一口气画完的，这期间点什么都没反应
+      await new Promise((r) => setTimeout(r, 0));
     }
     busy = false;
   }
@@ -1685,14 +1692,25 @@ const portraits = (() => {
 })();
 let paused = false;
 async function renderParent(kind, i) {
-  // 把状态临时换成“这位家长本人”（长相 100% 像他 / 她，性别跟家长），画完再换回来；这期间主画面暂停
+  // 把状态临时换成“这位家长本人”（长相 100% 像他 / 她，性别跟家长），画完再换回来；这期间主画面暂停。
+  // 要用的贴图先下载好：换状态到换回来的整段里不能有真的等待——等下载时用户点了按钮，改的是临时状态，换回来就丢了
+  // （遗传页一打开就在一张张画头像，这时候点“女”会白点）。贴图都在缓存里时 await 只排进微任务，点击这类事件插不进来。
+  // 下载的时候人被改了（点了重置、随机、载入捏脸码，或者调了老化），按改过的再准备一遍
+  let real, tmp;
+  for (;;) {
+    real = S;
+    const snap = JSON.stringify(real);
+    tmp = JSON.parse(snap);
+    tmp.her = { ...tmp.her, [kind]: i, shape: kind === 'mom' ? 0 : 1, skin: kind === 'mom' ? 0 : 1 };
+    tmp.sex = kind === 'mom' ? 'f' : 'm';
+    tmp.body = { ...tmp.body, gender: null, age: 45 };
+    tmp.feat = {}; tmp.bmods = {};
+    tmp.expr = 'neutral';
+    await Promise.all([skinTextures(tmp), maskTex, eyeMaskTex, tex(H.meta.eyeTex[tmp.look.eye] ?? H.meta.eyeTex.brown)]);
+    if (S === real && JSON.stringify(S) === snap) break;
+  }
   paused = true;
-  const saved = JSON.parse(JSON.stringify(S));
-  S.her = { ...S.her, [kind]: i, shape: kind === 'mom' ? 0 : 1, skin: kind === 'mom' ? 0 : 1 };
-  S.sex = kind === 'mom' ? 'f' : 'm';
-  S.body = { ...S.body, gender: null, age: 45 };
-  S.feat = {}; S.bmods = {};
-  S.expr = 'neutral';
+  S = tmp;
   const vis = [];
   for (const [slot, s] of Object.entries(SLOTS)) if (['hair', 'outfit', 'top', 'bottom', 'hat', 'shoes'].includes(slot)) for (const m of s.meshes) { vis.push([m, m.visible]); m.visible = false; }
   updateShape(); await updateSkin();
@@ -1713,7 +1731,7 @@ async function renderParent(kind, i) {
   renderer.setScissorTest(false); renderer.setViewport(0, 0, size.x, size.y);
   ground.visible = true; scene.background = bg;
   for (const [m, v] of vis) m.visible = v;
-  S = saved;
+  S = real;
   dirty.shape = true; dirty.skin = true;
   updateShape(); await updateSkin();
   paused = false;
@@ -1826,7 +1844,7 @@ function randomize() {
   const sex = r() < 0.5 ? 'f' : 'm';
   const feat = {};
   for (const [id, f] of Object.entries(FEATURE_DEF)) if (r() < 0.45) feat[id] = f.min < 0 ? gauss() * 0.45 : r() * 0.4;
-  const hairs = proxyList('hair').filter((p) => (sex === 'f' ? !['short04', 'short02'].includes(p.name) : ['short01', 'short02', 'short04', 'afro01', 'short03'].includes(p.name)));
+  const hairs = proxyList('hair').filter((p) => fitsSex(p, sex));
   const outfits = proxyList('outfit').filter((p) => p.sex === sex);
   const sep = r() < 0.4; // 四成机会上衣、下装分开搭（男女各挑适合自己的单件）
   S = {

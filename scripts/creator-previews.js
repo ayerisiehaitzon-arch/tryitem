@@ -5,6 +5,7 @@
 //   docs/previews/creator-heritage.jpg     遗传：同一对父母，“长相”从像母亲拉到像父亲
 //   docs/previews/creator-expressions.jpg  表情
 //   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
+//   docs/previews/creator-hair2.jpg        发型（二）：社区资源包里的 22 款发型（有的换了发色、转到背面），最后两格戴帽子
 //   docs/previews/creator-clothes.jpg      衣服款式：连衣裙、大衣，上衣和下装随意搭，雪地靴
 //   docs/previews/creator-clothes-men.jpg  男装：几套男装拆成单件上衣、下装重新搭，工装背带裤
 //   docs/previews/creator-clothes-men2.jpg 男装（二）：社区资源包里的卫衣、毛衣、Polo 衫、短裤、礼服、西装、鞋、帽子
@@ -110,6 +111,35 @@ try {
   ];
   const hh = await shoot(hair.map(([n, q]) => [n, `${q}&bare=1&cam=bust&anim=idle&t=0.5`]), [420, 460]);
   await grid(hh, 6, 300, 330, path.join(out, 'creator-hair.jpg'), { labels: hair.map((h) => h[2]) });
+  // 发型（二）：MakeHuman 社区资源包里的发型
+  const hair2 = [
+    ['h2-male02', 'preset=0&hair=male02&hc=2b1d14', '纹理短发'],
+    ['h2-maxwell', 'preset=6&hair=maxwell', '刺猬头'],
+    ['h2-grump', 'preset=4&hair=grump', '三七分'],
+    ['h2-keylth', 'preset=6&hair=keylth&az=150', '半扎发（背面）'],
+    ['h2-jungle', 'preset=0&hair=jungle', '中长碎发'],
+    ['h2-cornrows', 'preset=4&hair=cornrows&az=50', '玉米辫'],
+    ['h2-tousled', 'preset=3&hair=tousled&hc=100d0b', '蓬松长发 · 黑'],
+    ['h2-adrienne', 'preset=7&hair=adrienne', '侧分长卷发'],
+    ['h2-hazel', 'preset=5&hair=hazel&hc=c08a52', '长波浪 · 金棕'],
+    ['h2-island', 'preset=1&hair=island&hc=100d0b', '公主头 · 黑'],
+    ['h2-lara', 'preset=3&hair=lara&az=150', '长辫子（背面）'],
+    ['h2-double', 'preset=7&hair=double_braid&az=150', '双麻花辫（背面）'],
+    ['h2-blunt', 'preset=1&hair=blunt_bob&hc=100d0b', '齐刘海波波头 · 黑'],
+    ['h2-curled', 'preset=3&hair=curled_bob', '内扣短发'],
+    ['h2-inverted', 'preset=5&hair=inverted_bob&hc=d8b47a&az=60', '前长后短波波头 · 金'],
+    ['h2-ashley', 'preset=7&hair=ashley', '羽毛剪'],
+    ['h2-katherine', 'preset=1&hair=katherine&hc=c96f86', '斜刘海中长发 · 粉'],
+    ['h2-daisy', 'preset=5&hair=daisy', '中长发'],
+    ['h2-updo', 'preset=3&hair=updo50s&az=60', '复古盘发'],
+    ['h2-braidbun', 'preset=1&hair=braid_bun&az=60', '编发丸子头'],
+    ['h2-puffs', 'preset=5&hair=afro_puffs&hc=100d0b', '双丸子头'],
+    ['h2-bun', 'preset=7&hair=bun&az=120', '发髻（背面）'],
+    ['h2-hat1', 'preset=1&hair=island&hc=100d0b&hat=cloche', '公主头 + 钟形帽'],
+    ['h2-hat2', 'preset=4&hair=cornrows&hat=newsboy', '玉米辫 + 报童帽'],
+  ];
+  const h2 = await shoot(hair2.map(([n, q]) => [n, `${q}${q.includes('az=') ? '' : '&az=30'}&bare=1&cam=bust&anim=idle&t=0.5`]), [420, 460]);
+  await grid(h2, 6, 300, 330, path.join(out, 'creator-hair2.jpg'), { labels: hair2.map((h) => h[2]) });
   // 衣服款式：MakeHuman 社区的连衣裙、大衣、上衣、下装和雪地靴（上衣和下装可以随意搭）
   const wear = [
     ['wear-0', 'preset=3&outfit=dress_wine', '酒红连衣裙'],

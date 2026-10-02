@@ -3,7 +3,7 @@
 //   MH_GH  = makehumancommunity/makehuman 仓库里的 makehuman/data（基础网格、形变目标、默认骨骼和权重、眼球，全是文本）
 //   MH_DEB = MakeHuman 1.1.1 的资源目录（Ubuntu 的 makehuman-data 包解开后的 usr/share/makehuman/data：皮肤、头发、衣服、眉毛、睫毛的贴图和 .mhclo）
 //   MH_NPM = npm 包 makehuman-data 的 public/data（头发、衣服等代理网格的 JSON 版，和 .mhclo 一一对应）
-//   MH_PACKS = MakeHuman 社区资源包里用到的衣服（clothes/<名字>/ 下的 .mhclo、.obj、.mhmat、贴图，packs/<包>.json 记作者和许可）
+//   MH_PACKS = MakeHuman 社区资源包里用到的头发和衣服（hair/<名字>/、clothes/<名字>/ 下的 .mhclo、.obj、.mhmat、贴图，packs/<包>.json 记作者和许可）
 // 只读文本和图片，不碰任何二进制归档（.npz）。动作另由 anims.mjs 生成。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -411,8 +411,60 @@ for (let i = 1; i <= 4; i++) {
 }
 await proxy('teeth', 'teeth_base', { label: '牙齿', geom: npmDir('teeth', 'teeth_base'), clo: `${DEB}/teeth/teeth_base/teeth_base.mhclo`, maps: { map: tex(`${DEB}/teeth/materials/teeth.png`, 'teeth', 512, { q: 85 }) } });
 await proxy('tongue', 'tongue01', { label: '舌头', geom: npmDir('tongue', 'tongue01'), clo: `${DEB}/tongue/tongue01/tongue01.mhclo`, maps: { map: tex(`${DEB}/tongue/tongue01/${mat('tongue', 'tongue01').diffuseTexture}`, 'tongue', 512, { q: 85 }) } });
-// 头发
-const HAIR = { short04: '平头', short02: '碎短发', short01: '短发', short03: '女式短发', bob02: '齐耳短发', bob01: '斜刘海波波头', long01: '长直发', ponytail01: '马尾', braid01: '麻花辫', afro01: '爆炸头' };
+// MakeHuman 社区资源包（files.makehumancommunity.org/asset_packs，fetch.sh 下载）里的头发、衣服：每件是作者原版的 .mhclo（贴合数据、缩放参考）
+// + .obj + .mhmat + 贴图，作者、许可、来源页从包里的 packs/<包>.json 读
+const packInfo = {};
+for (const f of fs.readdirSync(`${PACKS}/packs`)) Object.assign(packInfo, JSON.parse(fs.readFileSync(`${PACKS}/packs/${f}`, 'utf8')));
+// 文件名大小写不一定和 .mhclo、.mhmat 里写的一样
+const packFile = (dir, rel) => rel.split('/').reduce((d, seg) => {
+  const hit = fs.readdirSync(d).find((f) => f.toLowerCase() === seg.toLowerCase());
+  if (!hit) throw new Error(`${d} 里没有 ${seg}`);
+  return `${d}/${hit}`;
+}, dir);
+// kind：clothes 或 hair。没写 material 的（报童帽）用目录里唯一的那个 .mhmat；
+// 许可按包里的清单，CC BY 的版本号写在 .mhclo 开头的注释里（有的写了）。有的 .mhclo 注释里写着 AGPL3，那是 MakeClothes 导出时默认填的，不算数
+function packItem(kind, src) {
+  const dir = `${PACKS}/${kind}/${src}`, file = packFile(dir, `${src}.mhclo`), clo = parseMhclo(file);
+  const mm = parseMhmat(packFile(dir, clo.material ?? fs.readdirSync(dir).find((f) => f.endsWith('.mhmat'))));
+  const ver = fs.readFileSync(file, 'utf8').match(/^#\s*license:?\s*cc[\s_-]*by\s*(\d\.\d)/im)?.[1], lic = packInfo[src].license;
+  const credit = { author: packInfo[src].author, license: lic.replace(/^CC-BY$/, 'CC BY') + (ver && lic === 'CC-BY' ? ` ${ver}` : ''), url: packInfo[src].source };
+  return { dir, clo, geom: packFile(dir, clo.obj), mm, credit };
+}
+
+// 头发：MakeHuman 自带的 10 款（网格用 npm 包里的 JSON，.mhclo 和贴图从 Ubuntu 包里取）。
+// 第二项是男女（m 男款，f 女款，u 都行），网页里按它排序、随机
+const HAIR = {
+  short04: ['平头', 'm'], short02: ['碎短发', 'm'], short01: ['短发', 'u'], short03: ['女式短发', 'u'], bob02: ['齐耳短发', 'f'], bob01: ['斜刘海波波头', 'f'],
+  long01: ['长直发', 'f'], ponytail01: ['马尾', 'f'], braid01: ['麻花辫', 'f'], afro01: ['爆炸头', 'u'],
+};
+// 资源包里的发型：id → [包里的目录, 名字, 男女]。每款都在男女几种身材上、几段动作里、戴帽子时看过；
+// 没收的：几款低多边形的卡通发型（cortu 的几款、culturalibre 的卡通头）；遮住半张脸的卷发波波头；染色后发片斑驳的狼尾长发和学生头（o4saken）；
+// 和已经收了的太像的（MargaretToigo 的六款波波头只留三款，Elvaerwyn 用 MakeHuman 麻花辫改的几款只留双麻花辫）；
+// 原作者不明、许可说不清的（MakeHuman alpha 7 的几款旧发型改的、Sketchfab 上转来的）
+const HAIR_PACK = {
+  male02: ['culturalibre_hair_02', '纹理短发', 'm'],
+  maxwell: ['elvs_maxwell_hair', '刺猬头', 'm'],
+  grump: ['elvs_grump_hair', '三七分', 'm'],
+  keylth: ['elvs_keylth_hair', '半扎发', 'u'],
+  tousled: ['elvs_that_80s_babe_hair', '蓬松长发', 'u'],
+  jungle: ['sonntag78_junglebook_hair', '中长碎发', 'u'],
+  cornrows: ['elvs_braided_rows', '玉米辫', 'u'],
+  afro_puffs: ['elvs_micky_afro', '双丸子头', 'f'],
+  blunt_bob: ['toigo_blunt_bob_with_bangs', '齐刘海波波头', 'f'],
+  curled_bob: ['toigo_curled_under_bob', '内扣短发', 'f'],
+  inverted_bob: ['toigo_inverted_bob', '前长后短波波头', 'f'],
+  updo50s: ['elvs_50s_updo', '复古盘发', 'f'],
+  adrienne: ['elvs_adrienne_hair', '侧分长卷发', 'f'],
+  ashley: ['elvs_ashley_may_hair', '羽毛剪', 'f'],
+  braid_bun: ['elvs_braid_bun', '编发丸子头', 'f'],
+  daisy: ['elvs_short_daisy_hair', '中长发', 'f'],
+  hazel: ['elvs_hazel_hair', '长波浪', 'f'],
+  island: ['elvs_island_princess_hair', '公主头', 'f'],
+  katherine: ['elvs_katherine_hair', '斜刘海中长发', 'f'],
+  lara: ['elvs_lara_hair', '长辫子', 'f'],
+  double_braid: ['elvs_double_mh_braid', '双麻花辫', 'f'],
+  bun: ['rehmanpolanski_hair_bun_brown', '发髻', 'f'],
+};
 // 发色、眉色可以染：记下贴图里不透明部分的平均亮度和颜色，网页里按“亮度 / 平均亮度 × 染的颜色”重新上色
 async function meanColor(file) {
   const { data, info } = await sharp(file).resize(256, 256).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -443,22 +495,29 @@ function restProxy(c) {
   }
   return out;
 }
-for (const [n, label] of Object.entries(HAIR)) {
-  const mm = mat('hair', n);
-  const src = `${mm.dir}/${mm.diffuseTexture}`;
-  const maps = { map: tex(src, `hair-${n}`, 2048, { q: 86, alpha: true }) };
-  if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, `hair-${n}-n`, 1024, { q: 88 });
-  // 发丝流向图（网页里沿发丝方向打高光）
-  const { data: px, info } = await sharp(src).resize(1024, 1024, { fit: 'fill' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+// 一款头发：贴图（带 alpha，原图比 2048 小的不放大）、法线、发丝流向图（网页里沿发丝方向打高光）、烘焙的自遮挡
+async function hairProxy(n, { label, src, normal, geom, clo, extra }) {
+  const { width, height } = await sharp(src).metadata(), size = Math.min(2048, Math.max(width, height)), fsz = Math.min(1024, size);
+  const maps = { map: tex(src, `hair-${n}`, size, { q: 86, alpha: true }) };
+  if (normal) maps.normal = tex(normal, `hair-${n}-n`, fsz, { q: 88 });
+  const { data: px, info } = await sharp(src).resize(fsz, fsz, { fit: 'fill' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const flow = flowMap(px, info.width, info.height);
   maps.flow = `tex/hairflow-${n}.webp`;
-  await sharp(flow, { raw: { width: info.width, height: info.height, channels: 3 } }).resize(512, 512).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${maps.flow}`);
+  await sharp(flow, { raw: { width: info.width, height: info.height, channels: 3 } }).resize(fsz / 2, fsz / 2).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${maps.flow}`);
   const alphaAt = (u, v) => px[(Math.min(info.height - 1, Math.max(0, Math.floor((1 - v) * info.height))) * info.width + Math.min(info.width - 1, Math.max(0, Math.floor(u * info.width)))) * 4 + 3] / 255;
-  await proxy('hair', n, {
-    label, geom: npmDir('hair', n), clo: `${DEB}/hair/${n}/${n}.mhclo`, maps, alpha: true, cull: false, extra: { mean: await meanColor(src) },
+  const m = await proxy('hair', n, {
+    label, geom, clo, maps, alpha: true, cull: false, extra: { mean: await meanColor(src), ...extra },
     bake: ({ c, r }) => ({ ao: hairAO({ pos: restProxy(c), index: r.idx, map: r.map, uv: r.uv, alphaAt, body: { pos: P0, index: bodyTris }, center: headCenter }) }),
   });
-  log('hair', n);
+  log('hair', n, 'verts', m.nv, 'tris', m.tris, extra.credit ? `${extra.credit.author} ${extra.credit.license}` : '');
+}
+for (const [n, [label, sex]] of Object.entries(HAIR)) {
+  const mm = mat('hair', n);
+  await hairProxy(n, { label, src: `${mm.dir}/${mm.diffuseTexture}`, normal: mm.normalmapTexture && `${mm.dir}/${mm.normalmapTexture}`, geom: npmDir('hair', n), clo: `${DEB}/hair/${n}/${n}.mhclo`, extra: { sex } });
+}
+for (const [n, [src, label, sex]] of Object.entries(HAIR_PACK)) {
+  const { dir, clo, geom, mm, credit } = packItem('hair', src);
+  await hairProxy(n, { label, src: packFile(dir, mm.diffuseTexture), normal: mm.normalmapTexture && packFile(dir, mm.normalmapTexture), geom, clo, extra: { sex, credit } });
 }
 // 衣服（整套）、鞋、帽子
 const OUTFIT = {
@@ -677,18 +736,9 @@ for (const [n, label] of Object.entries(SHOES)) {
   log('outfit', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
   await splitOutfit(n, geom, clo, pj, maps, 'm', [null, ['m_overalls', '工装背带裤', { z: 52 }]]);
 }
-// MakeHuman 社区资源包（files.makehumancommunity.org/asset_packs，fetch.sh 下载）里的衣服：每件是作者原版的 .mhclo（贴合数据、缩放参考）
-// + .obj + .mhmat + 贴图，作者、许可从包里的 packs/<包>.json 读。贴图缩到 1024²，法线 512²。
+// 资源包里的衣服、鞋、帽子（packItem 见头发那里）：贴图缩到 1024²，法线 512²。
 // 塞进裤腰的那件衬衫领带（elvs_male_shirt_tie_tucked1）下摆很高，配别的裤子腰上都露一截皮肤，没收
 {
-  const info = {};
-  for (const f of fs.readdirSync(`${PACKS}/packs`)) Object.assign(info, JSON.parse(fs.readFileSync(`${PACKS}/packs/${f}`, 'utf8')));
-  // 文件名大小写不一定和 .mhmat 里写的一样
-  const find = (dir, rel) => rel.split('/').reduce((d, seg) => {
-    const hit = fs.readdirSync(d).find((f) => f.toLowerCase() === seg.toLowerCase());
-    if (!hit) throw new Error(`${d} 里没有 ${seg}`);
-    return `${d}/${hit}`;
-  }, dir);
   // z：叠穿的里外（越大越外）。系统自带的鞋是 5（裤腿盖在鞋外面），雪地靴 55（裤腿塞进靴筒）；
   // 不塞进裤子的衬衫放到牛仔裤（50）外面、背带裤（52）里面
   const C = {
@@ -754,17 +804,11 @@ for (const [n, label] of Object.entries(SHOES)) {
   };
   for (const [id, [src, slot, label, parts, over]] of Object.entries(C)) {
     PARTS[id] = parts;
-    // 没写 material 的（报童帽）用目录里唯一的那个 .mhmat
-    const dir = `${PACKS}/clothes/${src}`, clo = parseMhclo(find(dir, `${src}.mhclo`)), geom = find(dir, clo.obj);
-    const mm = parseMhmat(find(dir, clo.material ?? fs.readdirSync(dir).find((f) => f.endsWith('.mhmat'))));
+    const { dir, clo, geom, mm, credit } = packItem('clothes', src);
     const shoe = slot === 'shoes', file = `${shoe ? 'shoe' : slot === 'hat' ? 'hat' : 'cloth'}-${id}`, pj = {};
-    const maps = { map: await texCloth(find(dir, mm.diffuseTexture), file, 1024, { q: 84, geom, onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe && parts.length === 2 ? [0, 1, 0] : null }) }) };
-    if (mm.normalmapTexture) maps.normal = tex(find(dir, mm.normalmapTexture), `${file}-n`, 512, { q: 85 });
+    const maps = { map: await texCloth(packFile(dir, mm.diffuseTexture), file, 1024, { q: 84, geom, onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe && parts.length === 2 ? [0, 1, 0] : null }) }) };
+    if (mm.normalmapTexture) maps.normal = tex(packFile(dir, mm.normalmapTexture), `${file}-n`, 512, { q: 85 });
     maps.parts = pj.file;
-    // 许可按包里的清单；CC BY 的版本号写在 .mhclo 开头的注释里（有的写了）
-    const ver = fs.readFileSync(find(dir, `${src}.mhclo`), 'utf8').match(/^#\s*license:?\s*cc[\s_-]*by\s*(\d\.\d)/im)?.[1];
-    const license = info[src].license.replace(/^CC-BY$/, 'CC BY') + (ver && info[src].license === 'CC-BY' ? ` ${ver}` : '');
-    const credit = { author: info[src].author, license, url: info[src].source };
     const pm = await proxy(slot, id, { label, geom, clo, maps, extra: { parts: pj.parts, credit, ...over } });
     log(slot, id, 'verts', pm.nv, 'tris', pm.tris, 'z', pm.z, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '), credit.author, credit.license);
   }

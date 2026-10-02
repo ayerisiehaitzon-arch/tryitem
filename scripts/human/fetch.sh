@@ -4,9 +4,9 @@
 #   deb/        Ubuntu 的 makehuman-data 1.1.1 包（皮肤、头发、衣服、眉毛、睫毛的贴图和 .mhclo）
 #   npm/        npm 包 makehuman-data 0.0.2（头发、衣服这些代理网格的 JSON 版）
 #   ual/        Quaternius Universal Animation Library 的 glTF 版
-#   packs/      MakeHuman 社区资源包（files.makehumancommunity.org/asset_packs，CC0 / CC BY）里用到的那几件衣服、鞋、帽子：
-#               .mhclo、.obj、.mhmat 和贴图，还有包里记作者、许可、来源页的 packs/<包>.json（下载的 zip 放在 assetpacks/）
-# 一共下载约 2.2GB（社区资源包占 1.7GB，其中 dress03 一个包就 490MB）；之后 npm run build-human 生成 viewer/human/（仓库里已经带着生成好的数据，只有改了构建脚本才需要重来）。
+#   packs/      MakeHuman 社区资源包（files.makehumancommunity.org/asset_packs，CC0 / CC BY）里用到的那几款发型和衣服、鞋、帽子：
+#               hair/、clothes/ 下的 .mhclo、.obj、.mhmat 和贴图，还有包里记作者、许可、来源页的 packs/<包>.json（下载的 zip 放在 assetpacks/）
+# 一共下载约 2.5GB（社区资源包占 2GB，其中 dress03 一个包就 490MB）；之后 npm run build-human 生成 viewer/human/（仓库里已经带着生成好的数据，只有改了构建脚本才需要重来）。
 # 只用 git、curl、ar、tar、unzip；固定到构建时用的版本，校验和对不上就停。
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -54,14 +54,14 @@ fetch_git ual https://github.com/J-Ponzo/gltf-universal-animation-library.git e2
 
 echo '5/5 MakeHuman 社区资源包'
 # 每个包只解出用得到的那几件，而且只要文本（.obj .mhclo .mhmat）和图片，别的文件不解
-fetch_pack() { # 包 文件 sha256 衣服目录…
+fetch_pack() { # 包 文件 sha256 目录…（发型包里的在 hair/ 下，其余的在 clothes/ 下）
   local pack=$1 file=$2 sum=$3 d; shift 3
   mkdir -p assetpacks packs
   fetch_file "assetpacks/$file" "https://files.makehumancommunity.org/asset_packs/$pack/$file" "$sum"
   unzip -q -o "assetpacks/$file" "packs/$pack.json" -d packs
   for d in "$@"; do
-    [ -d "packs/clothes/$d" ] && continue
-    unzip -Z1 "assetpacks/$file" | grep -iE "^clothes/$d/[^/]+\.(obj|mhclo|mhmat|png|jpg)$" | xargs -d '\n' unzip -q -o "assetpacks/$file" -d packs
+    [ -d "packs/clothes/$d" ] || [ -d "packs/hair/$d" ] && continue
+    unzip -Z1 "assetpacks/$file" | grep -iE "^(clothes|hair)/$d/[^/]+\.(obj|mhclo|mhmat|png|jpg)$" | xargs -d '\n' unzip -q -o "assetpacks/$file" -d packs
   done
 }
 fetch_pack shirts01 shirts01_cc0.zip a5a723b0e84a109bb190fcfeac7f1de4138d875da3e30fe5b3340eac9f38bcd3 toigo_fisherman_sweater namuhekam_male_polo_shirt
@@ -85,6 +85,11 @@ fetch_pack shoes01 shoes01_cc0.zip ded3f70428505eabbf1f6d7b5f61196a7366ef2075710
 fetch_pack shoes02 shoes02_ccby.zip 1b544d87dd8b3d3a9c8317e4f059be456491be979cbc9984fc53f403046f5061 culturalibre_sneakers punkduck_running_shoes_01 punkduck_comfortable_sneakers mindfront_shoes_oxford_male
 fetch_pack shoes03 shoes03_ccby.zip 7818b43a520a90bb0286aaa1e137ddb9bbe59640c3edbdf4d9d849064ec2761b mindfront_shoes_biker_boots_male punkduck_riding_boots
 fetch_pack hats01 hats01_cc0.zip 97b70d7bd90e74ee87a49faeb7c4a1b2762b311902974db575851daaae05b50e jujube_newsboy_cap aethelraed_unraed_cloche_hat
+fetch_pack hair01 hair01_cc0.zip 49445d69848a313ec41a9970f6a0fe4bcf925c9f1c6ef40a76f119c2e07940c9 culturalibre_hair_02 sonntag78_junglebook_hair \
+  toigo_blunt_bob_with_bangs toigo_curled_under_bob toigo_inverted_bob elvs_double_mh_braid rehmanpolanski_hair_bun_brown
+fetch_pack hair02 hair02_ccby.zip c681e5efd37df4007a52253a8d071aedbfe3b614f199d8dae4ae76d5bd7d95c9 elvs_maxwell_hair elvs_grump_hair elvs_keylth_hair \
+  elvs_that_80s_babe_hair elvs_braided_rows elvs_micky_afro elvs_50s_updo elvs_adrienne_hair elvs_ashley_may_hair elvs_braid_bun elvs_short_daisy_hair \
+  elvs_hazel_hair elvs_island_princess_hair elvs_katherine_hair elvs_lara_hair
 fetch_pack hats03 hats03_cc-by.zip 2702d58fa04e57235881551c45adcda36a6eafde8043c2695375bc0b4b79f550 mindfront_knitted_hat_01 culturalibre_cl_bowler_hat punkduck_sun_visor_sports_visor
 
 echo "好了：$(pwd)。接着运行 npm run build-human"
