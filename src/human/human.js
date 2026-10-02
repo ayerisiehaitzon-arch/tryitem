@@ -133,17 +133,21 @@ export function fitProxy(p, P, out = new Float32Array(p.nv * 3)) {
   }
   return out;
 }
-// 代理顶点的蒙皮权重：三个参考顶点的权重按贴合权重混合，取最大的 4 个
-export function proxySkin(H, p) {
+// 代理顶点的蒙皮权重：三个参考顶点的权重按贴合权重混合，取最大的 4 个。
+// alt（可选）：{ to, k }——第 i 个代理顶点的每个参考顶点 v，有 k[i] 的份额换成 to[v] 的权重（比如换成下面皮肤顶点的）
+export function proxySkin(H, p, alt = null) {
   const { ref, w } = p.data, si = H.rig.skinIndex, sw = H.rig.skinWeight;
   const outI = new Uint16Array(p.nv * 4), outW = new Float32Array(p.nv * 4);
   const acc = new Map();
+  const add = (v, f) => { for (let j = 0; j < 4; j++) { const b = si[v * 4 + j], x = (sw[v * 4 + j] / 255) * f; if (x) acc.set(b, (acc.get(b) ?? 0) + x); } };
   for (let i = 0; i < p.nv; i++) {
     acc.clear();
+    const t = alt ? alt.k[i] : 0;
     for (let k = 0; k < 3; k++) {
       const v = ref[i * 3 + k], wk = w[i * 3 + k];
       if (!wk) continue;
-      for (let j = 0; j < 4; j++) { const b = si[v * 4 + j], x = (sw[v * 4 + j] / 255) * wk; if (x) acc.set(b, (acc.get(b) ?? 0) + x); }
+      if (t < 1) add(v, wk * (1 - t));
+      if (t > 0) add(alt.to[v], wk * t);
     }
     const top = [...acc.entries()].filter((e) => e[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 4);
     const sum = top.reduce((s, e) => s + e[1], 0) || 1;

@@ -5,6 +5,7 @@
 //   docs/previews/creator-heritage.jpg     遗传：同一对父母，“长相”从像母亲拉到像父亲
 //   docs/previews/creator-expressions.jpg  表情
 //   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
+//   docs/previews/creator-clothes.jpg      衣服款式：连衣裙、大衣，上衣和下装随意搭，雪地靴
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
 //   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
@@ -106,6 +107,23 @@ try {
   ];
   const hh = await shoot(hair.map(([n, q]) => [n, `${q}&bare=1&cam=bust&anim=idle&t=0.5`]), [420, 460]);
   await grid(hh, 6, 300, 330, path.join(out, 'creator-hair.jpg'), { labels: hair.map((h) => h[2]) });
+  // 衣服款式：MakeHuman 社区的连衣裙、大衣、上衣、下装和雪地靴（上衣和下装可以随意搭）
+  const wear = [
+    ['wear-0', 'preset=3&outfit=dress_wine', '酒红连衣裙'],
+    ['wear-1', 'preset=1&outfit=dress_mint', '薄荷绿背心裙'],
+    ['wear-2', 'preset=5&outfit=dress_black&shoes=shoes03', '黑色小礼服'],
+    ['wear-3', 'preset=7&outfit=tube_dress', '白色抹胸裙'],
+    ['wear-4', 'preset=3&outfit=coat&shoes=winter_boots', '毛领大衣 · 雪地靴'],
+    ['wear-5', 'preset=7&top=tunic&bottom=tight_jeans', '碎花长衫 · 紧身牛仔裤'],
+    ['wear-6', 'preset=5&top=tank_top&bottom=jean_shorts', '运动背心 · 牛仔短裤'],
+    ['wear-7', 'preset=1&top=sleeveless&bottom=jean_skirt', '无袖系带衬衫 · 牛仔短裙'],
+    ['wear-8', 'preset=3&top=tube_top&bottom=miniskirt', '抹胸 · 黑色短裙'],
+    ['wear-9', 'preset=7&top=vneck_top&bottom=tight_jeans&shoes=winter_boots', 'V 领背心 · 雪地靴'],
+    ['wear-10', 'preset=1&top=cami&bottom=jean_shorts&tc=e3a7b4', '吊带衫（粉）· 牛仔短裤'],
+    ['wear-11', 'preset=5&top=camo_tee&bottom=miniskirt', '迷彩短 T · 黑色短裙'],
+  ];
+  const ws = await shoot(wear.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.9&anim=idle&t=0.6`]), [420, 720]);
+  await grid(ws, 6, 300, 520, path.join(out, 'creator-clothes.jpg'), { labels: wear.map((c) => c[2]) });
   // 衣服配色：同一个人、同一套衣服换几种颜色（第一格是原色）
   const col = [
     ['col-0', 'preset=0', '原色'],
@@ -115,7 +133,7 @@ try {
     ['col-4', 'preset=6', '原色（黑西装）'],
     ['col-5', 'preset=6&oc=22304a', '藏青西装'],
     ['col-6', 'preset=6&oc=c8b89a&hat=fedora01&hatc=6b4a32', '米色西装 · 棕礼帽'],
-    ['col-7', 'preset=3&oc=,8c1d24', '红半裙'],
+    ['col-7', 'preset=3&outfit=female_elegantsuit01&oc=,8c1d24', '红半裙'],
   ];
   const cs = await shoot(col.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.9&anim=idle&t=0.6`]), [420, 720]);
   await grid(cs, 8, 300, 520, path.join(out, 'creator-colors.jpg'), { labels: col.map((c) => c[2]) });

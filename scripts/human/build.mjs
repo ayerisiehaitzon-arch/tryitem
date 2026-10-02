@@ -471,14 +471,15 @@ const PARTS = {
 };
 const KIND = {
   top: { tol: 0.07, qmax: 3.3 }, denim: { tol: 0.15, qmax: 7 }, bottom: { tol: 0.08, qmax: 3.3 }, suit: { tol: 0.07, qmax: 3.3 },
-  hat: { tol: 0.07, qmax: 3.3 }, bucket: { tol: 0.08, qmax: 3.3 }, helmet: { tol: 0.08, qmax: 3.3 },
+  hat: { tol: 0.07, qmax: 3.3 }, bucket: { tol: 0.08, qmax: 3.3 }, helmet: { tol: 0.08, qmax: 3.3 }, coat: { tol: 0.08, qmax: 3.3 },
   leather: { tol: 0.12, qmax: 4.5, qmin: 0.12, pick: 'coverage' }, sneaker: { tol: 0.07, qmax: 3.3, pick: 'coverage' }, sole: { tol: 0.08, qmax: 3.3, pick: 'coverage' }, sock: { tol: 0.08, qmax: 3.3, pick: 'coverage' },
 };
 // texCloth 的 onData：算部位、主色和权重图（size²，R/G/B = 部位 0/1/2，无损 WebP，文件名跟着贴图：<file>-parts.webp），结果放进 out
-const partsJob = (n, clo, out, { size = 1024, file, shoe = false }) => async (rgba, W, H, r) => {
+// remap：岛的类别 → 部位（靴子：靴筒在“袜子”的高度，归鞋面）
+const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null }) => async (rgba, W, H, r) => {
   const def = PARTS[n], isl = islands(r), pos = restProxy(typeof clo === 'string' ? parseMhclo(clo) : clo);
   const cls = shoe ? classifyShoe(r, pos, isl) : classify(r, pos, isl);
-  const triPart = Int8Array.from(isl.triIsl, (k) => Math.min(cls[k], def.length - 1));
+  const triPart = Int8Array.from(isl.triIsl, (k) => (remap ? remap[cls[k]] : Math.min(cls[k], def.length - 1)));
   size = Math.min(size, W);
   const opt = def.map(([, k, o]) => ({ ...KIND[k], ...o }));
   const { mask, dom } = partMask(rgba, W, H, r, triPart, def.length, {
@@ -530,6 +531,44 @@ for (const [n, label] of Object.entries(SHOES)) {
     hm.parts = hp.file;
     await proxy('hat', n, { label: h.label, geom, clo: hc, maps: hm, extra: { parts: hp.parts, credit: { author: lic.author, license: lic.license.replace(/^CCBY$/, 'CC BY') } } });
     log('hat', n, hp.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '), lic.author, lic.license);
+  }
+}
+// MakeHuman 社区作者的衣服（npm 包里收的 JSON，CC BY / CC0）：整套（连衣裙、大衣）、上衣、下装可以自由搭配，还有一双雪地靴。
+// 贴合数据和帽子一样从 JSON 里读，缩放参考借女装的（这些都是照着女性身体做的）；贴图都是 512²。
+// 只挑了日常的款式（内衣、泳装没收），带蕾丝透明的那条白裙（F_Dress_03）要半透明混合，也先不收
+{
+  const fscale = parseMhclo(`${DEB}/clothes/female_casualsuit01/female_casualsuit01.mhclo`).scale;
+  const C = {
+    dress_wine: ['F_Dress_01', 'outfit', '酒红连衣裙', [['连衣裙', 'top']]],
+    dress_mint: ['F_Dress_02', 'outfit', '薄荷绿背心裙', [['连衣裙', 'top']]],
+    dress_black: ['F_Dress_04', 'outfit', '黑色小礼服', [['连衣裙', 'suit']]],
+    tube_dress: ['TubeDress', 'outfit', '白色抹胸裙', [['抹胸裙', 'top']]],
+    coat: ['Coat', 'outfit', '毛领大衣', [['大衣', 'coat']]],
+    tunic: ['Asymmetric_Tunic_and_Sash', 'top', '碎花长衫', [['长衫', 'top']]],
+    tank_top: ['Tank_Top_01', 'top', '运动背心', [['背心', 'top']]],
+    sleeveless: ['Sleeveless', 'top', '无袖系带衬衫', [['衬衫', 'top']]],
+    tube_top: ['TubeTop', 'top', '抹胸', [['抹胸', 'top']]],
+    vneck_top: ['VNeckTop', 'top', 'V 领背心', [['背心', 'top']]],
+    cami: ['spaghetti-top', 'top', '吊带衫', [['吊带衫', 'top']]],
+    camo_tee: ['short_tail_camo_tee', 'top', '迷彩短 T', [['T 恤', 'top']]],
+    tight_jeans: ['Tightjeans', 'bottom', '紧身牛仔裤', [['牛仔裤', 'denim']]],
+    jean_shorts: ['ShortJeans', 'bottom', '牛仔短裤', [['短裤', 'denim']]],
+    jean_skirt: ['JeansSkirt', 'bottom', '牛仔短裙', [['短裙', 'denim']]],
+    miniskirt: ['miniskirt', 'bottom', '黑色短裙', [['短裙', 'bottom']]],
+    // 雪地靴原来的 z_depth 和裤子一样（50），叠穿时分不出里外；放到裤子外面（裤腿塞进靴筒）
+    winter_boots: ['WinterBoots', 'shoes', '雪地靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 55 }],
+  };
+  for (const [id, [src, slot, label, parts, over]] of Object.entries(C)) {
+    PARTS[id] = parts;
+    const geom = npmDir('clothes', src), dir = path.dirname(geom), j = JSON.parse(fs.readFileSync(geom, 'utf8'));
+    const m0 = j.materials[0], lic = j.metadata.license, clo = npmClo('clothes', src, fscale), pj = {};
+    const shoe = slot === 'shoes', file = `${shoe ? 'shoe' : 'cloth'}-${id}`;
+    const maps = { map: await texCloth(`${dir}/${m0.mapDiffuse}`, file, 512, { q: 86, geom, onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe ? [0, 1, 0] : null }) }) };
+    if (m0.mapNormal) maps.normal = tex(`${dir}/${m0.mapNormal}`, `${file}-n`, 512, { q: 85 });
+    maps.parts = pj.file;
+    const credit = { author: lic.author, license: lic.license.replace(/^CCBY$/, 'CC BY').replace(/\s*\(see also.*$/, '') };
+    await proxy(slot, id, { label, geom, clo, maps, extra: { sex: 'f', parts: pj.parts, credit, ...over } });
+    log(slot, id, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '), credit.author, credit.license);
   }
 }
 meta.proxies = proxies;

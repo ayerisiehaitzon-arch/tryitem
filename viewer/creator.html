@@ -332,6 +332,8 @@ const CLOTHC = {
   denim: ['#1d2a44', '#3c5a85', '#9db4cc', '#1a1a1a', '#5b5d60', '#e8e4da', '#c2a77d', '#3d4a2f'],
   bottom: ['#1c1c1e', '#5b5d60', '#1f2f52', '#5a1e2c', '#8c1d24', '#c9b38f', '#e3a7b4', '#8fb7d9', '#2f6b4f', '#f2f0eb'],
   suit: ['#1b1d22', '#22304a', '#5a5d63', '#3b2a22', '#c8b89a', '#4a1f26', '#2f3a2c', '#f2f0eb'],
+  // 大衣（呢子）：驼色、黑、炭灰、藏青、酒红、橄榄绿、奶白、灰、红、灰粉
+  coat: ['#b8895a', '#1c1c1e', '#45474b', '#22304a', '#5a1e2c', '#3d4a2f', '#e8e2d4', '#8a8c8f', '#8c1d24', '#c99a9c'],
   hat: ['#1b1d22', '#5a5d63', '#6b4a32', '#a0522d', '#c8b89a', '#22304a', '#4a1f26', '#2f3a2c', '#f2f0eb'],
   // 渔夫帽（帆布）、探险帽
   bucket: ['#4b5a32', '#c2a77d', '#d8c9a3', '#1f2f52', '#1c1c1e', '#f2f0eb', '#d9682b', '#8c1d24', '#8fb7d9', '#7d7f82', '#e3a7b4', '#e0b52a'],
@@ -353,7 +355,7 @@ const DEF = () => ({
   body: { gender: null, age: 25, height: 0.5, weight: 0.5, muscle: 0.5, proportions: 0.5, cup: 0.5 },
   bmods: {}, feat: {},
   look: { hair: 'short02', hairColor: '', brows: 'eyebrow001', browColor: '', lashes: 'eyelashes01', eye: 'brown', beard: 0, beardColor: '', aging: 0, freckles: 0, blush: 0, blushColor: BLUSH[0], lips: 0, lipColor: MAKEUP[0], shadow: 0, shadowColor: SHADOW[0], liner: 0 },
-  outfit: 'male_casualsuit06', shoes: 'shoes05', hat: '',
+  outfit: 'male_casualsuit06', top: '', bottom: '', shoes: 'shoes05', hat: '', // 整套（outfit）和上衣 + 下装（top、bottom）二选一
   colors: {}, // 衣服、鞋、帽子的配色：{ 'outfit/<名字>': ['#rrggbb' 或 ''（原色）, …每个部位一个] }
   anim: 'idle', expr: 'neutral',
 });
@@ -362,7 +364,7 @@ const PRESETS = [
   { name: '阿哲', note: '碎短发，白 T 牛仔裤', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.6, skin: 0.5 }, body: { age: 26, height: 0.6, muscle: 0.6 }, feat: { jaw_b: 0.2, brow_d: 0.2 }, look: { hair: 'short02', hairColor: '#100d0b' }, outfit: 'male_casualsuit06', shoes: 'shoes05' } },
   { name: '小满', note: '齐耳短发，粉 T 恤热裤', s: { sex: 'f', her: { mom: 4, dad: 4, shape: 0.3, skin: 0.4 }, body: { age: 22, height: 0.35, weight: 0.4 }, feat: { eye_s: 0.3, face_round: 0.3 }, look: { hair: 'bob02', hairColor: '#4a3020', blush: 0.45, lips: 0.4, lipColor: '#c9706a' }, outfit: 'female_casualsuit02', colors: { 'outfit/female_casualsuit02': ['#e3a7b4', ''], 'shoes/shoes05': ['', '', '#f2f0eb'] }, shoes: 'shoes05' } },
   { name: '老周', note: '平头，微胖，衬衫，渔夫帽', s: { sex: 'm', her: { mom: 0, dad: 0, shape: 0.7, skin: 0.6 }, body: { age: 58, height: 0.45, weight: 0.75, muscle: 0.4 }, feat: { face_fat: 0.4, cheek_v: 0.3 }, look: { hair: 'short04', hairColor: '#8f8a85', beard: 0.35, aging: 0.6 }, outfit: 'male_casualsuit01', shoes: 'shoes01', hat: 'fishing_hat', colors: { 'hat/fishing_hat': ['#c2a77d'] }, anim: 'idle_talking' } },
-  { name: '安娜', note: '长直发，衬衫半裙', s: { sex: 'f', her: { mom: 1, dad: 5, shape: 0.35, skin: 0.3 }, body: { age: 29, height: 0.6, weight: 0.4 }, feat: { cheek_b: 0.3, eye_tilt: 0.2 }, look: { hair: 'long01', hairColor: '#c08a52', eye: 'lightblue', lips: 0.6, lipColor: '#9b3b45', shadow: 0.4, liner: 0.6 }, outfit: 'female_elegantsuit01', shoes: 'shoes03', anim: 'walk_formal' } },
+  { name: '安娜', note: '长直发，酒红连衣裙', s: { sex: 'f', her: { mom: 1, dad: 5, shape: 0.35, skin: 0.3 }, body: { age: 29, height: 0.6, weight: 0.4 }, feat: { cheek_b: 0.3, eye_tilt: 0.2 }, look: { hair: 'long01', hairColor: '#c08a52', eye: 'lightblue', lips: 0.6, lipColor: '#9b3b45', shadow: 0.4, liner: 0.6 }, outfit: 'dress_wine', colors: { 'outfit/dress_wine': ['#5e1520'] }, shoes: 'shoes03', anim: 'walk_formal' } },
   { name: '大力', note: '健身教练，黑 T 恤黑牛仔裤', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: 'male_casualsuit04', colors: { 'outfit/male_casualsuit04': ['#1c1c1e', '#1a1a1a'] }, shoes: 'shoes02' } },
   { name: '阿月', note: '马尾，运动装', s: { sex: 'f', her: { mom: 3, dad: 3, shape: 0.45, skin: 0.5 }, body: { age: 24, height: 0.5, weight: 0.35, muscle: 0.65 }, look: { hair: 'ponytail01', hairColor: '#2b1d14', blush: 0.3 }, outfit: 'female_sportsuit01', colors: { 'outfit/female_sportsuit01': ['#8fb7d9', ''] }, shoes: 'shoes06', anim: 'jog_fwd' } },
   { name: '马克', note: '黑西装，短发', s: { sex: 'm', her: { mom: 5, dad: 1, shape: 0.6, skin: 0.4 }, body: { age: 38, height: 0.7, weight: 0.5 }, feat: { chin_p: 0.25, nose_hump: 0.2 }, look: { hair: 'short01', hairColor: '#6b4428', beard: 0.25, eye: 'green' }, outfit: 'male_elegantsuit01', shoes: 'shoes03' } },
@@ -740,7 +742,7 @@ async function setSlot(slot, id) {
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(p.nr * 3), 3));
   geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(p.nr * 3), 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(d.uv, 2));
-  const sk = p.skin ??= HM.proxySkin(H, p);
+  const sk = p.skin ??= GARMENT.includes(p.cat) ? garmentSkin(p) : HM.proxySkin(H, p);
   const si = new Uint16Array(p.nr * 4), sw = new Float32Array(p.nr * 4);
   for (let r = 0; r < p.nr; r++) { const v = d.map[r]; for (let k = 0; k < 4; k++) { si[r * 4 + k] = sk.skinIndex[v * 4 + k]; sw[r * 4 + k] = sk.skinWeight[v * 4 + k]; } }
   geo.setAttribute('skinIndex', new THREE.BufferAttribute(si, 4));
@@ -790,7 +792,7 @@ async function setSlot(slot, id) {
     const m = add(dyeMaterial(new THREE.MeshStandardMaterial({ map: maps[0], transparent: true, depthWrite: false, alphaTest: 0.02, roughness: 0.8, side: p.cull ? THREE.FrontSide : THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), p.mean), p.cat);
     m.castShadow = false; m.renderOrder = 3;
   } else {
-    const fabric = p.cat === 'outfit' || p.cat === 'hat';
+    const fabric = ['outfit', 'top', 'bottom', 'hat'].includes(p.cat);
     const params = { map: maps[0], normalMap: maps[1] ?? null, aoMap: maps[2] ?? null, aoMapIntensity: 0.9, roughness: p.cat === 'teeth' ? 0.3 : p.cat === 'shoes' ? 0.55 : 0.82, sheen: fabric ? 0.35 : 0, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff) };
     // 衣服、帽子、鞋都能换色（鞋不叠布纹）
     const recolor = fabric || p.cat === 'shoes';
@@ -840,19 +842,19 @@ function updateShape() {
   const macro = { gender: g, age: ageParam(S.body.age), muscle: S.body.muscle, weight: S.body.weight, height: heightParam(S.body.height, race), proportions: S.body.proportions, cup: S.sex === 'f' ? S.body.cup : 0.5, ...race };
   const w = HM.targetWeights(H, macro, modifierValues());
   HM.shape(H, w, P);
-  // 身体
-  const pos = bodyGeo.attributes.position;
-  HM.expand(P, H.body.map, pos.array);
-  HM.renderNormals(P, H.body.map, H.body.index, H.nv, bodyGeo.attributes.normal.array);
-  pos.needsUpdate = true; bodyGeo.attributes.normal.needsUpdate = true;
   // 脚底在地面上（穿鞋的话按鞋底）
   let lo = Infinity, hi = -Infinity;
-  for (let r = 0; r < NR; r++) { const y = pos.array[r * 3 + 1]; if (y < lo) lo = y; if (y > hi) hi = y; }
+  for (const v of H.body.map) { const y = P[v * 3 + 1]; if (y < lo) lo = y; if (y > hi) hi = y; }
   heightCm = Math.round((hi - lo) * 100);
   if (heightOut?.isConnected) heightOut.textContent = `${heightCm}cm`;
   let top = hi;
   for (const s of Object.values(SLOTS)) HM.fitProxy(s.p, P, s.P);
   if (SLOTS.hat && SLOTS.hair) hatHair(SLOTS.hat, SLOTS.hair);
+  // 身体：叠穿防穿插以后（皮肤可能往里压了一点）再放进网格；衣服贴合用的还是原来的 P
+  const Pb = layerFix(P) ?? P, pos = bodyGeo.attributes.position;
+  HM.expand(Pb, H.body.map, pos.array);
+  HM.renderNormals(Pb, H.body.map, H.body.index, H.nv, bodyGeo.attributes.normal.array);
+  pos.needsUpdate = true; bodyGeo.attributes.normal.needsUpdate = true;
   for (const s of Object.values(SLOTS)) {
     const p = s.p;
     const a = s.geo.attributes.position;
@@ -920,29 +922,227 @@ function hatHair(hat, hair) {
   }
 }
 // 衣服、鞋盖住的身体部分不画（不然会穿模）
+// —— 叠穿防穿插 ——
+// 从最外层往里：每件衣服在它盖住的皮肤顶点上记下“离皮肤多高”（沿皮肤法线），里层的衣服（鞋里的袜子、塞进裤腰的背心、
+// 塞进靴筒的裤腿）哪个顶点高过外层、离外层不到 4mm，就沿法线压回外层底下 4mm；最后皮肤也一样，压到最里层衣服底下 2mm
+// （肚子从短裙的裤腰顶出来时往里压一点）。
+// MakeHuman 的衣服大多不直接挂在皮肤上，而是挂在两层“壳”（紧身衣、裙子形状的辅助网格）上，比较之前都先换成离它最近的皮肤顶点
+const GARMENT = ['outfit', 'top', 'bottom', 'shoes'], layerZ = (p) => p.z + (p.cat === 'top' ? 0.5 : 0);
+const BODY_TRI = Uint32Array.from(H.body.index, (i) => H.body.map[i]);
+const BODY_NB = (() => {
+  const nb = Array.from({ length: H.nv }, () => new Set());
+  for (let t = 0; t < BODY_TRI.length; t += 3) for (let k = 0; k < 3; k++) { const a = BODY_TRI[t + k], b = BODY_TRI[t + (k + 1) % 3]; nb[a].add(b); nb[b].add(a); }
+  return nb.map((x) => Uint32Array.from(x));
+})();
+// 静止形状下离一个点最近的皮肤顶点：皮肤顶点按 3cm 的格子分好，从点所在的格子一圈圈往外找，找到的比还没搜的那圈近就停
+const nearestSkin = (() => {
+  const X = H.pos0, C = 0.03, grid = new Map(), skin = new Uint8Array(H.nv);
+  const key = (i, j, k) => ((i + 512) * 1024 + j + 512) * 1024 + k + 512;
+  for (const v of BODY_TRI) skin[v] = 1;
+  for (let v = 0; v < H.nv; v++) {
+    if (!skin[v]) continue;
+    const k = key(Math.floor(X[v * 3] / C), Math.floor(X[v * 3 + 1] / C), Math.floor(X[v * 3 + 2] / C));
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k).push(v);
+  }
+  return (x, y, z) => {
+    const i = Math.floor(x / C), j = Math.floor(y / C), k = Math.floor(z / C);
+    let best = 0, bd = Infinity;
+    for (let r = 0; r <= 8 && !(bd <= ((r - 1) * C) ** 2); r++) {
+      for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) for (let c = -r; c <= r; c++) {
+        if (Math.max(Math.abs(a), Math.abs(b), Math.abs(c)) !== r) continue;
+        for (const u of grid.get(key(i + a, j + b, k + c)) ?? []) {
+          const d = (X[u * 3] - x) ** 2 + (X[u * 3 + 1] - y) ** 2 + (X[u * 3 + 2] - z) ** 2;
+          if (d < bd) { bd = d; best = u; }
+        }
+      }
+    }
+    return best;
+  };
+})();
+// 每个基础顶点 → 最近的皮肤顶点（皮肤顶点就是它自己）
+const SKIN_OF = (() => {
+  const X = H.pos0, out = new Uint32Array(H.nv), skin = new Uint8Array(H.nv);
+  for (const v of BODY_TRI) skin[v] = 1;
+  for (let v = 0; v < H.nv; v++) out[v] = skin[v] ? v : nearestSkin(X[v * 3], X[v * 3 + 1], X[v * 3 + 2]);
+  return out;
+})();
+// 皮肤顶点集合（每个顶点一个 0/1）沿网格往外长 / 往里缩 n 圈
+const grow = (s, n) => { for (; n > 0; n--) { const o = s.slice(); for (let v = 0; v < H.nv; v++) if (s[v]) for (const u of BODY_NB[v]) o[u] = 1; s = o; } return s; };
+const shrink = (s, n) => { for (; n > 0; n--) { const o = s.slice(); for (let v = 0; v < H.nv; v++) if (s[v]) for (const u of BODY_NB[v]) if (!s[u]) { o[v] = 0; break; } s = o; } return s; };
+// 皮肤顶点的法线（三角形法线按面积累加）
+function skinNormals(P) {
+  const N = new Float32Array(H.nv * 3);
+  for (let t = 0; t < BODY_TRI.length; t += 3) {
+    const a = BODY_TRI[t] * 3, b = BODY_TRI[t + 1] * 3, c = BODY_TRI[t + 2] * 3;
+    const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[c] - P[a], vy = P[c + 1] - P[a + 1], vz = P[c + 2] - P[a + 2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    N[a] += nx; N[a + 1] += ny; N[a + 2] += nz; N[b] += nx; N[b + 1] += ny; N[b + 2] += nz; N[c] += nx; N[c + 1] += ny; N[c + 2] += nz;
+  }
+  // 法线朝外：三角形的绕向不一定，和“从身体中轴往外”的方向比一下，整体朝里就全翻过来
+  let out = 0;
+  for (let v = 0; v < H.nv; v += 7) out += N[v * 3] * P[v * 3] + N[v * 3 + 2] * P[v * 3 + 2];
+  const sg = out < 0 ? -1 : 1;
+  for (let v = 0; v < H.nv; v++) { const l = (Math.hypot(N[v * 3], N[v * 3 + 1], N[v * 3 + 2]) || 1) * sg; N[v * 3] /= l; N[v * 3 + 1] /= l; N[v * 3 + 2] /= l; }
+  return N;
+}
+// 衣服的蒙皮权重：挂在辅助网格上的衣服用的是辅助网格的权重，和下面的皮肤不完全一样（短裙腰头的骨盆权重 0.1，肚子上只有 0.02），
+// 一动起来肚子就从腰头顶出来。贴身的地方（静止时离皮肤 1cm 以内）改用下面皮肤的权重，离开 2.5cm 以上保持原样，中间渐变
+let REST_N = null;
+// 静止形状下每个代理顶点“脚下”的皮肤顶点（离它最近的那个）和离皮肤多高（沿那里的皮肤法线）。宽的衣服（靴筒、裙摆）
+// 离它挂的那几个顶点横着能偏一两厘米，按挂的顶点量高度不准（靴子按挂的顶点量是 2cm，正对着的地方其实才 1.4cm），按脚下的量
+function restFit(p) {
+  if (p.foot) return p;
+  const X0 = H.pos0, X = HM.fitProxy(p, X0), foot = new Uint32Array(p.nv), rest = new Float32Array(p.nv);
+  REST_N ??= skinNormals(X0);
+  for (let i = 0; i < p.nv; i++) {
+    const v = (foot[i] = nearestSkin(X[i * 3], X[i * 3 + 1], X[i * 3 + 2]));
+    for (let a = 0; a < 3; a++) rest[i] += (X[i * 3 + a] - X0[v * 3 + a]) * REST_N[v * 3 + a];
+  }
+  p.foot = foot; p.rest = rest;
+  return p;
+}
+// 宽松的顶点再沿衣服自己的网格把权重平滑三遍（越贴身动得越少，贴身的完全跟皮肤）：同一件衣服上相邻的顶点有的挂紧身衣的壳、
+// 有的挂裙子的壳（V 领背心的下摆两种交替），权重差得多（一个几乎全跟脊柱，一个大腿占四成），一迈腿下摆就错成锯齿
+function garmentSkin(p) {
+  const h = restFit(p).rest, d = p.data, nb = p.nv, NB = H.rig.bones.length;
+  const tight = h.map((x) => Math.min(1, Math.max(0, (0.025 - x) / 0.015)));
+  const sk = HM.proxySkin(H, p, { to: SKIN_OF, k: tight });
+  const adj = Array.from({ length: nb }, () => new Set());
+  for (let t = 0; t < d.index.length; t += 3) for (let k = 0; k < 3; k++) { const a = d.map[d.index[t + k]], b = d.map[d.index[t + (k + 1) % 3]]; if (a !== b) { adj[a].add(b); adj[b].add(a); } }
+  let W = new Float32Array(nb * NB);
+  for (let i = 0; i < nb; i++) for (let j = 0; j < 4; j++) W[i * NB + sk.skinIndex[i * 4 + j]] += sk.skinWeight[i * 4 + j];
+  for (let it = 0; it < 3; it++) {
+    const W2 = new Float32Array(nb * NB);
+    for (let i = 0; i < nb; i++) {
+      const n = adj[i].size, o = i * NB, a = n ? 0.6 * (1 - tight[i]) : 0;
+      for (let b = 0; b < NB; b++) W2[o + b] = W[o + b] * (1 - a);
+      if (!a) continue;
+      for (const u of adj[i]) for (let b = 0; b < NB; b++) W2[o + b] += (W[u * NB + b] * a) / n;
+    }
+    W = W2;
+  }
+  for (let i = 0; i < nb; i++) {
+    const o = i * NB, top = [];
+    for (let b = 0; b < NB; b++) if (W[o + b] > 1e-4) top.push([b, W[o + b]]);
+    top.sort((a, b) => b[1] - a[1]).splice(4);
+    const sum = top.reduce((s, e) => s + e[1], 0) || 1;
+    for (let j = 0; j < 4; j++) { sk.skinIndex[i * 4 + j] = top[j]?.[0] ?? 0; sk.skinWeight[i * 4 + j] = top[j] ? top[j][1] / sum : j === 0 ? 1 : 0; }
+  }
+  return sk;
+}
+function layerFix(P) {
+  const gs = Object.values(SLOTS).filter((s) => GARMENT.includes(s.p.cat)).sort((a, b) => layerZ(b.p) - layerZ(a.p));
+  if (!gs.length) return null;
+  const GAP = 0.002, N = skinNormals(P), lim = new Float32Array(H.nv).fill(Infinity), g = new Float32Array(H.nv).fill(Infinity), tmp = g.slice();
+  const height = (X, i, v) => (X[i * 3] - P[v * 3]) * N[v * 3] + (X[i * 3 + 1] - P[v * 3 + 1]) * N[v * 3 + 1] + (X[i * 3 + 2] - P[v * 3 + 2]) * N[v * 3 + 2];
+  for (const s of gs) {
+    const X = s.P, foot = restFit(s.p).foot;
+    // 先把这一件压到外面几层底下
+    for (let i = 0; i < s.p.nv; i++) {
+      const v = foot[i];
+      if (lim[v] === Infinity) continue;
+      const h = height(X, i, v), target = Math.max(lim[v] - 2 * GAP, 0.0005);
+      if (h > target) for (let a = 0; a < 3; a++) X[i * 3 + a] += (target - h) * N[v * 3 + a];
+    }
+    // 再在脚下的皮肤顶点上记下它的高度，给更里面的几层（和皮肤）当上限。衣服的顶点比皮肤稀，记到的皮肤顶点往外补（只从记到的顶点往外走）
+    // 脚下那个和它周围一圈都记（各按各的切平面量），记得密一点，不全靠后面补
+    const seen = [];
+    const put = (i, v) => { const h = height(X, i, v); if (g[v] === Infinity) seen.push(v); if (h < g[v]) g[v] = h; };
+    for (let i = 0; i < s.p.nv; i++) { const v = foot[i]; put(i, v); for (const u of BODY_NB[v]) put(i, u); }
+    // 前两圈往哪儿都补（衣服边外面一点也压）；再往后只在这件衣服盖住的范围里补，把稀疏的衣服（靴筒）留下的洞补满
+    const cov = coverOf(s.p);
+    let front = seen.slice();
+    for (let pass = 0; pass < 10 && front.length; pass++) {
+      const next = [];
+      for (const v of front) for (const u of BODY_NB[v]) {
+        if (g[u] !== Infinity || (pass >= 2 && !cov[u])) continue;
+        if (tmp[u] === Infinity) next.push(u);
+        if (g[v] < tmp[u]) tmp[u] = g[v];
+      }
+      for (const u of next) { g[u] = tmp[u]; tmp[u] = Infinity; seen.push(u); }
+      front = next;
+    }
+    for (const v of seen) { if (g[v] < lim[v]) lim[v] = g[v]; g[v] = Infinity; }
+  }
+  // 皮肤：外面的衣服离皮肤不到 2mm（或者已经陷进皮肤）的地方，皮肤往里压，最多 2cm
+  let Pb = null;
+  for (let v = 0; v < H.nv; v++) {
+    if (!(lim[v] < GAP)) continue;
+    Pb ??= P.slice();
+    const k = Math.min(GAP - lim[v], 0.02);
+    for (let a = 0; a < 3; a++) Pb[v * 3 + a] -= N[v * 3 + a] * k;
+  }
+  return Pb;
+}
+
+// 一件衣服盖住哪些皮肤顶点（藏里层衣服、补高度上限用；每个顶点一个 0/1）：按它的顶点脚下的皮肤顶点和挂的顶点算，衣服边上
+// （只属于一个三角形的边）的顶点、离皮肤 2.5cm 以上的宽松部分（裙摆、下摆）不算；
+// 挂在辅助网格上的衣服（还有本来就稀的靴筒）换过来是稀疏的，往外长三圈再缩三圈把洞补上，最后再往里缩一圈，不贴着衣服边。
+// 边上顶点挂的那些只是不算、不去掉：靴子这种几块拼成的，每块的边都是“边”，去掉会在拼缝下面留一道缝。
+// 不用 delete_verts：那是给身体用的，往往比衣服本身大一圈（短上衣的会一直删到裤腰），拿来藏里层会把下装的裤腰也藏掉
+function coverOf(p) {
+  // 鞋是硬壳，靴筒再宽，里面从外面也看不见，不按宽松排除
+  return (p.cover ??= skinUnder(p, (i) => p.cat === 'shoes' || p.rest[i] < 0.025, 4));
+}
+// 没带 delete_verts 的衣服（社区的短裙、短裤）底下要藏的身体：宽松的部分也算（裙子里面的大腿，腿一迈会从前片穿出来），
+// 离衣服边再远一圈
+const underOf = (p) => (p.under ??= skinUnder(p, () => true, 5));
+// 衣服 p 底下的皮肤顶点：use(i) 的那些、不在边上的代理顶点，脚下的和挂的（权重大于 0.2，换成皮肤顶点）都算，
+// 往外长三圈补洞，再往里缩 shrinkBy 圈
+function skinUnder(p, use, shrinkBy) {
+  const d = p.data, set = new Uint8Array(H.nv), { foot } = restFit(p);
+  if (!p.border) {
+    const n = new Map();
+    p.border = new Uint8Array(p.nv);
+    for (let t = 0; t < d.index.length; t += 3) for (let k = 0; k < 3; k++) {
+      const a = d.map[d.index[t + k]], b = d.map[d.index[t + (k + 1) % 3]], key = a < b ? a * 65536 + b : b * 65536 + a;
+      n.set(key, (n.get(key) ?? 0) + 1);
+    }
+    for (const [key, c] of n) if (c === 1) { p.border[Math.floor(key / 65536)] = 1; p.border[key % 65536] = 1; }
+  }
+  for (let i = 0; i < p.nv; i++) {
+    if (p.border[i] || !use(i)) continue;
+    set[foot[i]] = 1;
+    for (let k = 0; k < 3; k++) if (d.w[i * 3 + k] > 0.2) set[SKIN_OF[d.ref[i * 3 + k]]] = 1;
+  }
+  return shrink(grow(set, 3), shrinkBy);
+}
 function updateHidden() {
   hiddenDirty = false;
   const del = new Uint8Array(H.nv);
   let any = false;
-  for (const s of Object.values(SLOTS)) if (s.p.data.del) { any = true; for (const v of s.p.data.del) del[v] = 1; }
+  for (const s of Object.values(SLOTS)) {
+    if (s.p.data.del) { any = true; for (const v of s.p.data.del) del[v] = 1; }
+    // 没带 delete_verts 的（社区的短裙、短裤）：按衣服实际盖住的地方藏，离边再留一圈
+    else if (GARMENT.includes(s.p.cat)) { any = true; const u = underOf(s.p); for (let v = 0; v < H.nv; v++) if (u[v]) del[v] = 1; }
+  }
   if (!any) bodyGeo.setIndex(new THREE.BufferAttribute(H.body.index, 1));
   else {
+    // 和 MakeHuman 一样：三个顶点都删了的面才不画（只删一个顶点就藏整个面，领口、袖窿边上会多出一圈透空的洞）；
+    // 边上留下的那圈皮肤由叠穿防穿插压到衣服底下
     const src = H.body.index, map = H.body.map, out = [];
-    for (let t = 0; t < src.length; t += 3) if (!del[map[src[t]]] && !del[map[src[t + 1]]] && !del[map[src[t + 2]]]) out.push(src[t], src[t + 1], src[t + 2]);
+    for (let t = 0; t < src.length; t += 3) if (!del[map[src[t]]] || !del[map[src[t + 1]]] || !del[map[src[t + 2]]]) out.push(src[t], src[t + 1], src[t + 2]);
     bodyGeo.setIndex(new THREE.BufferAttribute(Uint16Array.from(out), 1));
   }
-  // 叠穿：外层衣服（z 更大）盖住的那些身体顶点上，里层的鞋也不画——运动鞋里的袜子一直到小腿，穿长裤时会从裤腿里透出来。
-  // 鞋的顶点挂在身体的三个顶点上，三个都被外层盖住才算盖住；一个面的三个顶点都盖住了才不画
+  // 叠穿：外层（z 更大；一样大时上衣在下装外面）盖住的那些皮肤顶点上，里层的衣服、鞋也不画——运动鞋里的袜子一直到小腿，
+  // 穿长裤时会从裤腿里透出来；塞在裤腰里的背心会从裤腰上透出来。
+  // 里层的顶点挂的三个顶点（换成皮肤顶点）都被外层盖住才算盖住；一个面的三个顶点都盖住了才不画
   for (const s of Object.values(SLOTS)) {
-    if (s.p.cat !== 'shoes') continue;
+    if (!GARMENT.includes(s.p.cat)) continue;
     const d = s.p.data, cover = new Uint8Array(H.nv);
     let covered = false;
-    for (const o of Object.values(SLOTS)) if (o !== s && o.p.data.del && o.p.z > s.p.z) { covered = true; for (const v of o.p.data.del) cover[v] = 1; }
+    for (const o of Object.values(SLOTS)) {
+      if (o === s || !GARMENT.includes(o.p.cat) || !(layerZ(o.p) > layerZ(s.p))) continue;
+      covered = true;
+      const c = coverOf(o.p);
+      for (let v = 0; v < H.nv; v++) if (c[v]) cover[v] = 1;
+    }
     if (!covered) { s.geo.setIndex(new THREE.BufferAttribute(d.index, 1)); continue; }
     const hid = new Uint8Array(s.p.nv);
     for (let i = 0; i < s.p.nv; i++) {
       hid[i] = 1;
-      for (let k = 0; k < 3; k++) if (d.w[i * 3 + k] > 1e-4 && !cover[d.ref[i * 3 + k]]) { hid[i] = 0; break; }
+      for (let k = 0; k < 3; k++) if (d.w[i * 3 + k] > 1e-4 && !cover[SKIN_OF[d.ref[i * 3 + k]]]) { hid[i] = 0; break; }
     }
     const src = d.index, out = [];
     for (let t = 0; t < src.length; t += 3) if (!(hid[d.map[src[t]]] && hid[d.map[src[t + 1]]] && hid[d.map[src[t + 2]]])) out.push(src[t], src[t + 1], src[t + 2]);
@@ -1148,7 +1348,7 @@ async function updateSkin() {
 
 // 衣服、鞋、帽子的配色 → 着色器
 function applyColors() {
-  for (const slot of ['outfit', 'shoes', 'hat']) {
+  for (const slot of ['outfit', 'top', 'bottom', 'shoes', 'hat']) {
     const s = SLOTS[slot];
     if (!s) continue;
     const cols = S.colors[s.id] ?? [];
@@ -1182,6 +1382,8 @@ async function syncSlots() {
     setSlot('tongue', 'tongue/tongue01'),
     setSlot('hair', S.look.hair ? `hair/${S.look.hair}` : ''),
     setSlot('outfit', S.outfit ? `outfit/${S.outfit}` : ''),
+    setSlot('top', S.top ? `top/${S.top}` : ''),
+    setSlot('bottom', S.bottom ? `bottom/${S.bottom}` : ''),
     setSlot('shoes', S.shoes ? `shoes/${S.shoes}` : ''),
     setSlot('hat', S.hat ? `hat/${S.hat}` : ''),
   ]);
@@ -1356,9 +1558,14 @@ function renderPane() {
     g.push(group('预设角色', '点一下换上',
       el('div', { class: 'cards' }, PRESETS.map((pr) => el('button', { class: 'card', 'aria-pressed': String(S.name === pr.name), on: { click: () => { applyPreset(pr); afterLoad(); } } }, el('b', {}, pr.name), el('span', {}, pr.note))))));
     g.push(group('我的角色', '只保存在这台设备上', savedList()));
-    g.push(el('p', { class: 'hint' }, '人体、皮肤、头发、衣服来自 MakeHuman（CC0），渔夫帽、探险帽是 MakeHuman 社区作者 Mindfront、DredNicolson 的作品（CC BY），动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
+    g.push(el('p', { class: 'hint' }, '人体、皮肤、头发、套装来自 MakeHuman（CC0）；连衣裙、大衣、上衣、下装、雪地靴、渔夫帽、探险帽是 MakeHuman 社区作者 punkduck、Mindfront、DredNicolson 的作品（CC BY，每件的作者写在服装页里）；动作来自 Quaternius 的 Universal Animation Library（CC0）。'));
   } else if (tab === 'heritage') {
-    g.push(group('性别', null, chips([['f', '女'], ['m', '男']], S.sex, (v) => { S.sex = v; S.body.gender = null; if (!S.outfit || PROXY_SEX(S.outfit) !== v) S.outfit = v === 'f' ? 'female_casualsuit01' : 'male_casualsuit06'; syncSlots(); reshape(); reskin(); renderPane(); })));
+    g.push(group('性别', null, chips([['f', '女'], ['m', '男']], S.sex, (v) => {
+      S.sex = v; S.body.gender = null;
+      // 换性别：穿着另一性别的整套（或者男性穿着上衣下装——都是女装）就换成这个性别的默认一套
+      if (S.top || S.bottom ? v === 'm' : !S.outfit || PROXY_SEX(S.outfit) !== v) { S.outfit = v === 'f' ? 'female_casualsuit01' : 'male_casualsuit06'; S.top = ''; S.bottom = ''; }
+      syncSlots(); reshape(); reskin(); renderPane();
+    })));
     g.push(group('母亲', PARENTS.mom[S.her.mom].name, parentPicker('mom')));
     g.push(group('父亲', PARENTS.dad[S.her.dad].name, parentPicker('dad')));
     g.push(group('相像', null,
@@ -1408,7 +1615,8 @@ function renderPane() {
     const colorGroups = (id) => (H.proxies[id]?.parts ?? []).map((part, i) => group(`${part.label.replace(/ /g, '')}颜色`, i === 0 ? '第一格是原色' : null,
       swatches(CLOTHC[part.kind] ?? CLOTHC.top, S.colors[id]?.[i] ?? '', (c) => setColor(id, i, c), { none: '原色', noneColor: domCss(part.dom) })));
     if (wearSub === 'shoes') {
-      g.push(group('鞋', null, chips([['', '光脚'], ...proxyList('shoes').map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots(); renderPane(); })));
+      const shoeCredit = H.proxies[`shoes/${S.shoes}`]?.credit;
+      g.push(group('鞋', shoeCredit ? `${shoeCredit.author} · ${shoeCredit.license}` : null, chips([['', '光脚'], ...proxyList('shoes').map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots(); renderPane(); })));
       if (S.shoes) g.push(...colorGroups(`shoes/${S.shoes}`));
     } else if (wearSub === 'hat') {
       // 社区作者的帽子（CC BY）在标题右边署名
@@ -1416,8 +1624,21 @@ function renderPane() {
       g.push(group('帽子', hatCredit ? `${hatCredit.author} · ${hatCredit.license}` : null, chips([['', '不戴'], ...proxyList('hat').map((p) => [p.name, p.label])], S.hat, (id) => { S.hat = id; syncSlots().then(() => { dirty.shape = false; updateShape(); focus(tabFocus()); }); renderPane(); })));
       if (S.hat) g.push(...colorGroups(`hat/${S.hat}`));
     } else {
-      g.push(group('衣服', '整套', chips([['', '内衣'], ...outfits.filter((p) => p.sex === S.sex).map((p) => [p.name, p.label]), ...outfits.filter((p) => p.sex !== S.sex).map((p) => [p.name, p.label])], S.outfit, (id) => { S.outfit = id; syncSlots(); renderPane(); })));
+      // 整套（套装、连衣裙、大衣）和上衣 + 下装二选一：选了整套就脱掉上衣、下装；选了上衣或下装就脱掉整套，另一半还没穿的话先给一件
+      const bySex = (list) => [...list.filter((p) => p.sex === S.sex), ...list.filter((p) => p.sex !== S.sex)];
+      const note = (id, def) => { const c = H.proxies[id]?.credit; return c ? `${c.author} · ${c.license}` : def; };
+      const wear = (k, id) => {
+        S[k] = id;
+        if (id && k === 'outfit') { S.top = ''; S.bottom = ''; }
+        if (id && k !== 'outfit') { S.outfit = ''; if (!S.top) S.top = 'vneck_top'; if (!S.bottom) S.bottom = 'tight_jeans'; }
+        syncSlots(); renderPane();
+      };
+      g.push(group('整套', note(`outfit/${S.outfit}`, '套装、连衣裙、大衣'), chips([['', S.top || S.bottom ? '不穿整套' : '内衣'], ...bySex(outfits).map((p) => [p.name, p.label])], S.outfit, (id) => wear('outfit', id))));
       if (S.outfit) g.push(...colorGroups(`outfit/${S.outfit}`));
+      g.push(group('上衣', note(`top/${S.top}`, '和下装随便搭'), chips([['', '不穿'], ...bySex(proxyList('top')).map((p) => [p.name, p.label])], S.top, (id) => wear('top', id))));
+      if (S.top) g.push(...colorGroups(`top/${S.top}`));
+      g.push(group('下装', note(`bottom/${S.bottom}`, null), chips([['', '不穿'], ...bySex(proxyList('bottom')).map((p) => [p.name, p.label])], S.bottom, (id) => wear('bottom', id))));
+      if (S.bottom) g.push(...colorGroups(`bottom/${S.bottom}`));
     }
   } else if (tab === 'motion') {
     g.push(group('动作', 'Quaternius（CC0）', chips([['', '站着不动'], ...ANIM.clips.map((c) => [c.id, c.label])], S.anim, (id) => { S.anim = id; startAnim(id); })));
@@ -1457,7 +1678,7 @@ async function renderParent(kind, i) {
   S.feat = {}; S.bmods = {};
   S.expr = 'neutral';
   const vis = [];
-  for (const [slot, s] of Object.entries(SLOTS)) if (['hair', 'outfit', 'hat', 'shoes'].includes(slot)) for (const m of s.meshes) { vis.push([m, m.visible]); m.visible = false; }
+  for (const [slot, s] of Object.entries(SLOTS)) if (['hair', 'outfit', 'top', 'bottom', 'hat', 'shoes'].includes(slot)) for (const m of s.meshes) { vis.push([m, m.visible]); m.visible = false; }
   updateShape(); await updateSkin();
   bones.forEach((b) => b.quaternion.identity()); bones[BI.pelvis].position.copy(pelvisRest);
   rig.updateMatrixWorld(true);
@@ -1518,9 +1739,11 @@ function sanitize(o) {
     her: { mom: num(o?.her?.mom, 0, PARENTS.mom.length - 1, 0) | 0, dad: num(o?.her?.dad, 0, PARENTS.dad.length - 1, 0) | 0, shape: num(o?.her?.shape, 0, 1, 0.5), skin: num(o?.her?.skin, 0, 1, 0.5) },
     body: { ...d.body }, bmods: {}, feat: {},
     look: { ...d.look },
-    outfit: str(o?.outfit, has('outfit'), d.outfit), shoes: str(o?.shoes, has('shoes'), d.shoes), hat: str(o?.hat, has('hat'), ''), colors: {},
+    outfit: str(o?.outfit, has('outfit'), d.outfit), top: str(o?.top, has('top'), ''), bottom: str(o?.bottom, has('bottom'), ''),
+    shoes: str(o?.shoes, has('shoes'), d.shoes), hat: str(o?.hat, has('hat'), ''), colors: {},
     anim: typeof o?.anim === 'string' && (o.anim === '' || CLIPS[o.anim]) ? o.anim : 'idle', expr: EXPR[o?.expr] ? o.expr : 'neutral',
   };
+  if (S2.top || S2.bottom) S2.outfit = '';
   for (const [id, , min, max] of BODY) S2.body[id] = id === 'gender' ? (o?.body?.gender === null || o?.body?.gender === undefined ? null : num(o.body.gender, 0, 1, null)) : num(o?.body?.[id], min, max, d.body[id]);
   for (const k of Object.keys(BODY_MOD_DEF)) if (typeof o?.bmods?.[k] === 'number') S2.bmods[k] = num(o.bmods[k], -1, 1, 0);
   for (const [k, f] of Object.entries(FEATURE_DEF)) if (typeof o?.feat?.[k] === 'number') S2.feat[k] = num(o.feat[k], f.min, f.max, 0);
@@ -1543,7 +1766,7 @@ function sanitize(o) {
 
 // —— 捏脸码 ——
 function encode() {
-  const worn = [`outfit/${S.outfit}`, `shoes/${S.shoes}`, `hat/${S.hat}`];
+  const worn = [`outfit/${S.outfit}`, `top/${S.top}`, `bottom/${S.bottom}`, `shoes/${S.shoes}`, `hat/${S.hat}`];
   const colors = Object.fromEntries(Object.entries(S.colors ?? {}).filter(([k]) => worn.includes(k)));
   const bytes = new TextEncoder().encode(JSON.stringify({ v: 2, ...S, colors }));
   let bin = '';
@@ -1589,6 +1812,7 @@ function randomize() {
   for (const [id, f] of Object.entries(FEATURE_DEF)) if (r() < 0.45) feat[id] = f.min < 0 ? gauss() * 0.45 : r() * 0.4;
   const hairs = proxyList('hair').filter((p) => (sex === 'f' ? !['short04', 'short02'].includes(p.name) : ['short01', 'short02', 'short04', 'afro01', 'short03'].includes(p.name)));
   const outfits = proxyList('outfit').filter((p) => p.sex === sex);
+  const sep = sex === 'f' && r() < 0.4; // 女性有四成机会上衣、下装分开搭
   S = {
     ...d, name: '随机角色', sex,
     her: { mom: Math.floor(r() * PARENTS.mom.length), dad: Math.floor(r() * PARENTS.dad.length), shape: r(), skin: r() },
@@ -1598,11 +1822,12 @@ function randomize() {
       ...d.look, hair: pick(hairs).name, hairColor: r() < 0.3 ? '' : pick(HAIRC.slice(0, 11)), brows: pick(proxyList('eyebrows')).name, lashes: pick(proxyList('eyelashes')).name, eye: pick(EYEC),
       beard: sex === 'm' && r() < 0.5 ? 0.2 + r() * 0.7 : 0, lips: sex === 'f' && r() < 0.6 ? 0.2 + r() * 0.5 : 0, lipColor: pick(MAKEUP), blush: sex === 'f' ? r() * 0.5 : 0, freckles: r() < 0.2 ? r() : 0,
     },
-    outfit: pick(outfits).name, shoes: pick(proxyList('shoes')).name, hat: r() < 0.25 ? pick(proxyList('hat')).name : '', colors: {},
+    outfit: sep ? '' : pick(outfits).name, top: sep ? pick(proxyList('top')).name : '', bottom: sep ? pick(proxyList('bottom')).name : '',
+    shoes: pick(proxyList('shoes')).name, hat: r() < 0.25 ? pick(proxyList('hat')).name : '', colors: {},
     anim: pick(['idle', 'idle', 'idle_talking', 'dance', 'walk']), expr: pick(['neutral', 'neutral', 'smile']),
   };
   // 一半左右的部位换个颜色（鞋底少换一点，太花）
-  for (const id of [`outfit/${S.outfit}`, `shoes/${S.shoes}`, `hat/${S.hat}`]) {
+  for (const id of [`outfit/${S.outfit}`, `top/${S.top}`, `bottom/${S.bottom}`, `shoes/${S.shoes}`, `hat/${S.hat}`]) {
     const parts = H.proxies[id]?.parts;
     if (!parts) continue;
     const a = parts.map((p) => (r() < (p.kind === 'sole' ? 0.2 : 0.45) ? pick(CLOTHC[p.kind] ?? CLOTHC.top) : ''));
@@ -1846,9 +2071,10 @@ if (params.has('anim')) S.anim = CLIPS[params.get('anim')] ? params.get('anim') 
 else if (SHOT) S.anim = '';
 for (const k of ['hair', 'eye']) if (params.has(k)) S.look[k] = params.get(k);
 if (params.has('hc')) S.look.hairColor = /^[0-9a-f]{6}$/i.test(params.get('hc')) ? '#' + params.get('hc') : '';
-for (const k of ['outfit', 'shoes', 'hat']) if (params.has(k)) S[k] = params.get(k);
-// 配色：oc=上衣,下装（十六进制，不带 #；空着 = 原色），sc=鞋面,鞋底,袜子，hatc=帽子
-for (const [k, id] of [['oc', `outfit/${S.outfit}`], ['sc', `shoes/${S.shoes}`], ['hatc', `hat/${S.hat}`]]) if (params.has(k)) S.colors[id] = params.get(k).split(',').map((x) => (/^[0-9a-f]{6}$/i.test(x) ? '#' + x : ''));
+for (const k of ['outfit', 'top', 'bottom', 'shoes', 'hat']) if (params.has(k)) S[k] = params.get(k);
+if (params.has('top') || params.has('bottom')) S.outfit = '';
+// 配色：oc=整套的上衣,下装（十六进制，不带 #；空着 = 原色），tc=上衣，bc=下装，sc=鞋面,鞋底,袜子，hatc=帽子
+for (const [k, id] of [['oc', `outfit/${S.outfit}`], ['tc', `top/${S.top}`], ['bc', `bottom/${S.bottom}`], ['sc', `shoes/${S.shoes}`], ['hatc', `hat/${S.hat}`]]) if (params.has(k)) S.colors[id] = params.get(k).split(',').map((x) => (/^[0-9a-f]{6}$/i.test(x) ? '#' + x : ''));
 if (params.has('sex')) S.sex = params.get('sex') === 'f' ? 'f' : 'm';
 for (const k of ['mom', 'dad', 'shape', 'skin']) if (params.has(k)) S.her[k] = Number(params.get(k));
 for (const k of Object.keys(FEATURE_DEF)) if (params.has(k)) S.feat[k] = Number(params.get(k));
