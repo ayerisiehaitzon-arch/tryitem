@@ -7,16 +7,22 @@ export async function fetchBin(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${url}: ${res.status}`);
   let buf = new Uint8Array(await res.arrayBuffer());
-  if (buf[0] === 0x48 && buf[1] === 0x34 && buf[2] === 0x73 && buf[3] === 0x49) {
-    const text = new TextDecoder().decode(buf).trim();
-    if (Uint8Array.fromBase64) buf = Uint8Array.fromBase64(text);
-    else { const s = atob(text); buf = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) buf[i] = s.charCodeAt(i); }
-  }
+  if (buf[0] === 0x48 && buf[1] === 0x34 && buf[2] === 0x73 && buf[3] === 0x49) buf = fromBase64(new TextDecoder().decode(buf).trim());
+  return unzipBin(buf);
+}
+export function fromBase64(text) {
+  if (Uint8Array.fromBase64) return Uint8Array.fromBase64(text);
+  const s = atob(text), buf = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) buf[i] = s.charCodeAt(i);
+  return buf;
+}
+// 字节（可以是一个大缓冲区里的一段）→ ArrayBuffer：gzip 的先解压
+export async function unzipBin(buf) {
   if (buf[0] === 0x1f && buf[1] === 0x8b) {
     const ds = new DecompressionStream('gzip');
     return new Response(new Blob([buf]).stream().pipeThrough(ds)).arrayBuffer();
   }
-  return buf.buffer;
+  return buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength ? buf.buffer : buf.slice().buffer;
 }
 const TYPES = { Float32: Float32Array, Uint16: Uint16Array, Uint32: Uint32Array, Int16: Int16Array, Uint8: Uint8Array };
 const view = (buf, ref) => (ref ? new TYPES[ref.t](buf, ref.off, ref.n) : null);
@@ -118,7 +124,8 @@ export async function loadProxy(H, id) {
   const p = H.proxies[id];
   if (!p) throw new Error('没有这个代理：' + id);
   if (p.data) return p;
-  const buf = await fetchBin(H.base + p.file + H.suffix);
+  // H.loadBin：调用的人可以换一种读法（比如从打好的包里切出来），默认按文件读
+  const buf = H.loadBin ? await H.loadBin(p.file) : await fetchBin(H.base + p.file + H.suffix);
   const V = (r) => view(buf, r);
   p.data = { map: V(p.map), uv: V(p.uv), index: V(p.index), ref: V(p.ref), w: V(p.w), off: V(p.off), del: V(p.del), ao: V(p.ao) };
   return p;

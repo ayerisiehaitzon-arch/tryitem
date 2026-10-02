@@ -222,6 +222,18 @@ const ASSETS = params.get('assets') ?? new URL('./human/', location.href).href;
 // 数据文件的后缀：仓库里是 gzip 的 .bin；只认常见文件类型的托管上换成 base64 的 .bin.txt（bin=.txt）
 const BIN = params.get('bin') ?? '';
 const H = await HM.loadHuman(ASSETS, { suffix: BIN });
+// 文件数有上限的托管上，每个代理（一款头发、一件衣服……）的网格和贴图打成一个包（scripts/human/pack.mjs），
+// 清单（packs=packs.json）记着每个文件在哪个包的哪一段；没有清单就照常一个文件一个文件地读
+const PACK_INDEX = params.get('packs') ?? '';
+const PACKS = PACK_INDEX ? await (await fetch(ASSETS + PACK_INDEX)).json() : null;
+const packCache = new Map();
+function packed(path) {
+  const e = PACKS?.files[path];
+  if (!e) return null;
+  if (!packCache.has(e[0])) packCache.set(e[0], fetch(ASSETS + e[0]).then((r) => { if (!r.ok) throw new Error(`${e[0]}: ${r.status}`); return r.text(); }).then((t) => HM.fromBase64(t.trim())));
+  return packCache.get(e[0]).then((buf) => buf.subarray(e[1], e[1] + e[2]));
+}
+if (PACKS) H.loadBin = async (path) => { const b = packed(path); return b ? HM.unzipBin(await b) : HM.fetchBin(ASSETS + path + BIN); };
 const ANIM = await (async () => {
   const meta = await (await fetch(`${ASSETS}anims.json`)).json();
   const buf = await HM.fetchBin(`${ASSETS}anims.bin${BIN}`);
@@ -429,12 +441,18 @@ const texCache = new Map();
 function tex(path, srgb = true) {
   const k = path + srgb;
   if (texCache.has(k)) return texCache.get(k);
-  const p = new Promise((res, rej) => loader.load(ASSETS + path, (t) => {
-    t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    res(t);
-  }, undefined, rej));
+  const p = (async () => {
+    // 打了包的贴图：从包里切出那一段，当成本地文件（blob:）读
+    const bytes = await packed(path);
+    const url = bytes ? URL.createObjectURL(new Blob([bytes], { type: 'image/webp' })) : ASSETS + path;
+    return new Promise((res, rej) => loader.load(url, (t) => {
+      if (bytes) URL.revokeObjectURL(url);
+      t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+      t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      res(t);
+    }, undefined, rej));
+  })();
   texCache.set(k, p);
   return p;
 }
