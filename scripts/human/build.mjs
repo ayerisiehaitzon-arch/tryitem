@@ -310,14 +310,36 @@ const npmDir = (cat, name) => {
 };
 const proxies = [];
 // clo：.mhclo 的路径，或者已经读好的贴合数据（npmClo）
-async function proxy(cat, name, { label, geom, clo, maps, alpha = false, cull = true, extra = {}, split = null, bake = null }) {
+// keep(三角形序号)：只要其中一部分三角形（把整套拆成上衣、下装），用到的渲染顶点、代理顶点重新编号，贴合数据跟着取；
+// del：这一件自己的 delete_verts（拆开的两件各藏各的）
+async function proxy(cat, name, { label, geom, clo, maps, alpha = false, cull = true, extra = {}, split = null, bake = null, keep = null, del = null }) {
   const g = geom.endsWith('.obj') ? parseObj(geom) : parseThreeJson(geom);
-  const c = typeof clo === 'string' ? parseMhclo(clo) : clo;
+  let c = typeof clo === 'string' ? parseMhclo(clo) : clo;
   const uuidOf = (f) => (typeof f === 'string' ? fs.readFileSync(f, 'utf8').match(/^uuid\s+(\S+)/m)?.[1] : f.uuid);
   if (g.meta?.uuid && uuidOf(clo) && g.meta.uuid !== uuidOf(clo)) throw new Error(`${name}: 网格和贴合数据不是同一版（uuid ${g.meta.uuid} ≠ ${uuidOf(clo)}）`);
-  const nv = c.ref.length / 3;
+  let nv = c.ref.length / 3;
   if (g.v.length / 3 !== nv) throw new Error(`${name}: 顶点数对不上 ${g.v.length / 3} vs ${nv}`);
-  const r = renderMesh(g);
+  let r = renderMesh(g);
+  if (keep) {
+    const rid = new Map(), pid = new Map(), map = [], uv = [], idx = [], pv = [];
+    for (let t = 0; t < r.idx.length; t += 3) {
+      if (!keep(t / 3)) continue;
+      for (let j = 0; j < 3; j++) {
+        const o = r.idx[t + j];
+        if (!rid.has(o)) {
+          const v = r.map[o];
+          if (!pid.has(v)) { pid.set(v, pv.length); pv.push(v); }
+          rid.set(o, map.length); map.push(pid.get(v)); uv.push(r.uv[o * 2], r.uv[o * 2 + 1]);
+        }
+        idx.push(rid.get(o));
+      }
+    }
+    const pick = (a) => pv.flatMap((v) => [a[v * 3], a[v * 3 + 1], a[v * 3 + 2]]);
+    r = { map, uv, idx };
+    c = { ...c, ref: pick(c.ref), w: pick(c.w), off: pick(c.off) };
+    nv = pv.length;
+  }
+  if (del) c = { ...c, del };
   const b = new Blob();
   const m = { id: `${cat}/${name}`, cat, name, label, nv, nr: r.map.length, tris: r.idx.length / 3, alpha, cull, z: c.zDepth, maps, ...extra };
   // 贴合数据：偏移从分米换成米；三个方向的缩放参考（两个基础顶点 + 原始距离）
@@ -476,9 +498,20 @@ const KIND = {
 };
 // texCloth 的 onData：算部位、主色和权重图（size²，R/G/B = 部位 0/1/2，无损 WebP，文件名跟着贴图：<file>-parts.webp），结果放进 out
 // remap：岛的类别 → 部位（靴子：靴筒在“袜子”的高度，归鞋面）
-const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null }) => async (rgba, W, H, r) => {
+// byColor(rgb)：按岛在贴图上的平均颜色分上下（背带裤的背带在肩上，按高度会分到 T 恤那边）
+const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, byColor = null }) => async (rgba, W, H, r) => {
   const def = PARTS[n], isl = islands(r), pos = restProxy(typeof clo === 'string' ? parseMhclo(clo) : clo);
   const cls = shoe ? classifyShoe(r, pos, isl) : classify(r, pos, isl);
+  if (byColor) {
+    const sum = Array.from({ length: isl.count }, () => [0, 0, 0, 0]);
+    for (let t = 0; t < r.idx.length; t += 3) {
+      const u = (r.uv[r.idx[t] * 2] + r.uv[r.idx[t + 1] * 2] + r.uv[r.idx[t + 2] * 2]) / 3, v = (r.uv[r.idx[t] * 2 + 1] + r.uv[r.idx[t + 1] * 2 + 1] + r.uv[r.idx[t + 2] * 2 + 1]) / 3;
+      const x = Math.min(W - 1, Math.max(0, Math.floor(u * W))), y = Math.min(H - 1, Math.max(0, Math.floor((1 - v) * H))), o = (y * W + x) * 4, k = isl.triIsl[t / 3];
+      for (let a = 0; a < 3; a++) sum[k][a] += rgba[o + a];
+      sum[k][3]++;
+    }
+    for (let k = 0; k < isl.count; k++) if (sum[k][3]) cls[k] = byColor(sum[k].slice(0, 3).map((x) => x / sum[k][3]));
+  }
   const triPart = Int8Array.from(isl.triIsl, (k) => (remap ? remap[cls[k]] : Math.min(cls[k], def.length - 1)));
   size = Math.min(size, W);
   const opt = def.map(([, k, o]) => ({ ...KIND[k], ...o }));
@@ -488,6 +521,20 @@ const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null }
   out.file = `tex/${file}-parts.webp`;
   await sharp(Buffer.from(mask), { raw: { width: size, height: size, channels: 3 } }).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${out.file}`);
   out.parts = def.map(([label, kind], p) => ({ label, kind, dom: dom[p] }));
+  // 拆成上衣、下装时用：每个三角形按岛分的类别（0 上 1 下），权重图原始数据
+  out.triCls = Int8Array.from(isl.triIsl, (k) => cls[k]);
+  out.mask = mask; out.size = size;
+};
+// 男装再拆成单件的上衣、下装，男生也能像社区女装那样随便搭：按裁片分（和配色分上衣 / 下装是同一个分法），贴图共用整套的。
+// 几套 T 恤牛仔裤里的牛仔裤是同一条（网格一样），只拆一次；西装拆成外套（连衬衫、领带）和西裤
+const SPLIT = {
+  male_casualsuit06: [['m_tee_white', '白 T 恤'], ['m_jeans', '牛仔裤']],
+  male_casualsuit04: [['m_tee_blue', '蓝 T 恤']],
+  male_casualsuit02: [['m_longsleeve', '长袖 T 恤']],
+  male_casualsuit01: [['m_shirt', '衬衫'], ['m_jeans_grey', '灰牛仔裤']],
+  male_casualsuit03: [['m_shirt_stripe', '条纹衬衫']],
+  male_casualsuit05: [['m_jacket', '夹克']],
+  male_elegantsuit01: [['m_suit_jacket', '西装外套'], ['m_suit_trousers', '西裤']],
 };
 for (const [n, [label, sex]] of Object.entries(OUTFIT)) {
   const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
@@ -497,6 +544,42 @@ for (const [n, [label, sex]] of Object.entries(OUTFIT)) {
   maps.parts = pj.file;
   await proxy('outfit', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { sex, parts: pj.parts } });
   log('outfit', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
+  if (SPLIT[n]) await splitOutfit(n, npmDir('clothes', n), parseMhclo(clo), pj, maps, sex, SPLIT[n]);
+}
+// 把一套拆成上衣、下装两件（pieces[0] 上衣、pieces[1] 下装，可以只要一件；第三项是这一件额外的属性，比如 z）：
+// 每个代理顶点属于哪一件按三角形的岛分；整套的 delete_verts 按“离哪一件的顶点近”分给两件（静止形状）
+async function splitOutfit(n, geom, c, pj, maps, sex, pieces) {
+  const pos = restProxy(c), r = renderMesh(parseThreeJson(geom));
+  const vc = new Int8Array(c.ref.length / 3).fill(-1);
+  for (let t = 0; t < r.idx.length; t += 3) for (let j = 0; j < 3; j++) vc[r.map[r.idx[t + j]]] = pj.triCls[t / 3];
+  const dels = [[], []];
+  for (const v of c.del) {
+    let best = Infinity, k = 0;
+    for (let i = 0; i < vc.length; i++) {
+      if (vc[i] < 0) continue;
+      const d = (pos[i * 3] - P0[v * 3]) ** 2 + (pos[i * 3 + 1] - P0[v * 3 + 1]) ** 2 + (pos[i * 3 + 2] - P0[v * 3 + 2]) ** 2;
+      if (d < best) { best = d; k = vc[i]; }
+    }
+    dels[k].push(v);
+  }
+  for (const [part, piece] of pieces.entries()) {
+    if (!piece) continue;
+    const [id, plabel, over = {}] = piece;
+    // 配色：两个部位的整套，下装的权重在 G 通道，单拆出来的下装要一张自己的（放到 R）；西装整件一个部位，两件共用
+    const two = pj.parts.length > 1;
+    let partsFile = pj.file;
+    if (two && part === 1) {
+      const m1 = Buffer.alloc(pj.size * pj.size * 3);
+      for (let i = 0; i < pj.size * pj.size; i++) m1[i * 3] = pj.mask[i * 3 + 1];
+      partsFile = pj.file.replace(/-parts\.webp$/, '-p1-parts.webp');
+      await sharp(m1, { raw: { width: pj.size, height: pj.size, channels: 3 } }).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${partsFile}`);
+    }
+    const pm = await proxy(part === 0 ? 'top' : 'bottom', id, {
+      label: plabel, geom, clo: c, maps: { ...maps, parts: partsFile }, keep: (t) => pj.triCls[t] === part, del: dels[part],
+      extra: { sex, parts: [pj.parts[two ? part : 0]], ...over },
+    });
+    log(part === 0 ? 'top' : 'bottom', id, 'from', n, 'verts', pm.nv, 'tris', pm.tris, 'del', dels[part].length);
+  }
 }
 const SHOES = { shoes05: '白色运动鞋', shoes06: '蓝色运动鞋', shoes02: '旧运动鞋', shoes01: '棕色皮鞋', shoes04: '黑色休闲皮鞋', shoes03: '黑色皮鞋' };
 for (const [n, label] of Object.entries(SHOES)) {
@@ -545,7 +628,7 @@ for (const [n, label] of Object.entries(SHOES)) {
     tube_dress: ['TubeDress', 'outfit', '白色抹胸裙', [['抹胸裙', 'top']]],
     coat: ['Coat', 'outfit', '毛领大衣', [['大衣', 'coat']]],
     tunic: ['Asymmetric_Tunic_and_Sash', 'top', '碎花长衫', [['长衫', 'top']]],
-    tank_top: ['Tank_Top_01', 'top', '运动背心', [['背心', 'top']]],
+    tank_top: ['Tank_Top_01', 'top', '运动背心', [['背心', 'top']], { sex: 'u' }],
     sleeveless: ['Sleeveless', 'top', '无袖系带衬衫', [['衬衫', 'top']]],
     tube_top: ['TubeTop', 'top', '抹胸', [['抹胸', 'top']]],
     vneck_top: ['VNeckTop', 'top', 'V 领背心', [['背心', 'top']]],
@@ -556,7 +639,7 @@ for (const [n, label] of Object.entries(SHOES)) {
     jean_skirt: ['JeansSkirt', 'bottom', '牛仔短裙', [['短裙', 'denim']]],
     miniskirt: ['miniskirt', 'bottom', '黑色短裙', [['短裙', 'bottom']]],
     // 雪地靴原来的 z_depth 和裤子一样（50），叠穿时分不出里外；放到裤子外面（裤腿塞进靴筒）
-    winter_boots: ['WinterBoots', 'shoes', '雪地靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 55 }],
+    winter_boots: ['WinterBoots', 'shoes', '雪地靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 55, sex: 'u' }],
   };
   for (const [id, [src, slot, label, parts, over]] of Object.entries(C)) {
     PARTS[id] = parts;
@@ -570,6 +653,22 @@ for (const [n, label] of Object.entries(SHOES)) {
     await proxy(slot, id, { label, geom, clo, maps, extra: { sex: 'f', parts: pj.parts, credit, ...over } });
     log(slot, id, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '), credit.author, credit.license);
   }
+}
+// 白 T 恤工装背带裤：MakeHuman 自带（CC0）。Ubuntu 包里 1.1.1 的 .mhclo 和 npm 里的网格不是同一版，贴合数据、贴图（512²）都用 npm JSON 里的，
+// 缩放参考借男款 T 恤牛仔裤的。整套收一份，再单拆出背带裤（T 恤和白 T 恤那件差不多，不另拆）；背带裤穿在上衣外面，z 放到 52（单件上衣是 50 再加 0.5）
+{
+  const n = 'male_worksuit01', geom = npmDir('clothes', n), dir = path.dirname(geom), m0 = JSON.parse(fs.readFileSync(geom, 'utf8')).materials[0];
+  const clo = npmClo('clothes', n, parseMhclo(`${DEB}/clothes/male_casualsuit06/male_casualsuit06.mhclo`).scale), pj = {};
+  PARTS[n] = [['T 恤', 'top'], ['背带裤', 'denim']];
+  // 白的是 T 恤，其余（蓝布、背带、黑扣子、金属夹子）都是背带裤
+  const byColor = (c) => (Math.min(...c) > 200 ? 0 : 1);
+  const maps = { map: await texCloth(`${dir}/${m0.mapDiffuse}`, `cloth-${n}`, 512, { q: 86, geom, onData: partsJob(n, clo, pj, { size: 512, file: `cloth-${n}`, byColor }) }) };
+  maps.normal = tex(`${dir}/${m0.mapNormal}`, `cloth-${n}-n`, 512, { q: 85 });
+  maps.ao = tex(`${dir}/${m0.mapAO}`, `cloth-${n}-ao`, 512, { q: 80 });
+  maps.parts = pj.file;
+  await proxy('outfit', n, { label: '白 T 恤工装背带裤', geom, clo, maps, extra: { sex: 'm', parts: pj.parts } });
+  log('outfit', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
+  await splitOutfit(n, geom, clo, pj, maps, 'm', [null, ['m_overalls', '工装背带裤', { z: 52 }]]);
 }
 meta.proxies = proxies;
 log('proxies', proxies.length, 'raw', (proxies.reduce((s2, p) => s2 + p.bytes, 0) / 1e6).toFixed(2), 'MB');

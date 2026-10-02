@@ -6,6 +6,7 @@
 //   docs/previews/creator-expressions.jpg  表情
 //   docs/previews/creator-hair.jpg         头发（沿发丝的高光、自遮挡、染色）和帽子
 //   docs/previews/creator-clothes.jpg      衣服款式：连衣裙、大衣，上衣和下装随意搭，雪地靴
+//   docs/previews/creator-clothes-men.jpg  男装：几套男装拆成单件上衣、下装重新搭，工装背带裤
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
 //   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
@@ -124,6 +125,19 @@ try {
   ];
   const ws = await shoot(wear.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.9&anim=idle&t=0.6`]), [420, 720]);
   await grid(ws, 6, 300, 520, path.join(out, 'creator-clothes.jpg'), { labels: wear.map((c) => c[2]) });
+  // 男装：几套男装拆成单件的上衣、下装，再加工装背带裤
+  const men = [
+    ['men-0', 'preset=2', '衬衫 · 工装背带裤'],
+    ['men-1', 'preset=0&outfit=male_worksuit01', '白 T 恤工装背带裤'],
+    ['men-2', 'preset=6&top=m_suit_jacket&bottom=m_jeans', '西装外套 · 牛仔裤'],
+    ['men-3', 'preset=4&top=m_jacket&bottom=m_suit_trousers', '夹克 · 西裤'],
+    ['men-4', 'preset=0&top=m_shirt_stripe&bottom=m_jeans_grey', '条纹衬衫 · 灰牛仔裤'],
+    ['men-5', 'preset=4&top=tank_top&bottom=m_jeans&shoes=winter_boots', '运动背心 · 雪地靴'],
+    ['men-6', 'preset=6&top=m_longsleeve&bottom=m_suit_trousers', '长袖 T 恤 · 西裤'],
+    ['men-7', 'preset=0&top=m_tee_blue&bottom=m_overalls&bc=1d2a44', '蓝 T 恤 · 深蓝背带裤'],
+  ];
+  const mw = await shoot(men.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.95&anim=idle&t=0.6`]), [420, 720]);
+  await grid(mw, 8, 300, 520, path.join(out, 'creator-clothes-men.jpg'), { labels: men.map((c) => c[2]) });
   // 衣服配色：同一个人、同一套衣服换几种颜色（第一格是原色）
   const col = [
     ['col-0', 'preset=0', '原色'],
