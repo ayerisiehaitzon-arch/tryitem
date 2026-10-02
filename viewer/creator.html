@@ -368,7 +368,7 @@ const PRESETS = [
   { name: '大力', note: '健身教练，连帽卫衣配短裤、跑鞋', s: { sex: 'm', her: { mom: 2, dad: 7, shape: 0.6, skin: 0.6 }, body: { age: 32, height: 0.75, weight: 0.6, muscle: 1, proportions: 0.8 }, bmods: { shoulder: 0.4, vshape: 0.5 }, feat: { jaw_b: 0.4 }, look: { hair: 'short04', hairColor: '#100d0b', beard: 0.5 }, outfit: '', top: 'hoodie', bottom: 'shorts', shoes: 'runners' } },
   { name: '阿月', note: '马尾，运动装', s: { sex: 'f', her: { mom: 3, dad: 3, shape: 0.45, skin: 0.5 }, body: { age: 24, height: 0.5, weight: 0.35, muscle: 0.65 }, look: { hair: 'ponytail01', hairColor: '#2b1d14', blush: 0.3 }, outfit: 'female_sportsuit01', colors: { 'outfit/female_sportsuit01': ['#8fb7d9', ''] }, shoes: 'shoes06', anim: 'jog_fwd' } },
   { name: '马克', note: '黑西装，短发', s: { sex: 'm', her: { mom: 5, dad: 1, shape: 0.6, skin: 0.4 }, body: { age: 38, height: 0.7, weight: 0.5 }, feat: { chin_p: 0.25, nose_hump: 0.2 }, look: { hair: 'short01', hairColor: '#6b4428', beard: 0.25, eye: 'green' }, outfit: 'male_elegantsuit01', shoes: 'shoes03' } },
-  { name: '晴子', note: '麻花辫，黄 T 恤浅色牛仔裤', s: { sex: 'f', her: { mom: 4, dad: 0, shape: 0.4, skin: 0.5 }, body: { age: 21, height: 0.4, weight: 0.45 }, feat: { eye_s: 0.2, nose_tip: 0.2 }, look: { hair: 'braid01', hairColor: '#8a5a33', blush: 0.5, lips: 0.35, lipColor: '#d98a7c' }, outfit: 'female_casualsuit01', colors: { 'outfit/female_casualsuit01': ['#d9a326', '#9db4cc'] }, shoes: 'shoes05', anim: 'dance' } },
+  { name: '晴子', note: '麻花辫，红色旗袍', s: { sex: 'f', her: { mom: 4, dad: 0, shape: 0.4, skin: 0.5 }, body: { age: 21, height: 0.4, weight: 0.45 }, feat: { eye_s: 0.2, nose_tip: 0.2 }, look: { hair: 'braid01', hairColor: '#8a5a33', blush: 0.5, lips: 0.35, lipColor: '#d98a7c' }, outfit: 'qipao', shoes: 'ballet_flats', anim: 'dance' } },
 ];
 function applyPreset(pr) {
   const d = DEF(), s = pr.s;
@@ -1035,6 +1035,8 @@ function layerFix(P) {
   const gs = Object.values(SLOTS).filter((s) => GARMENT.includes(s.p.cat)).sort((a, b) => layerZ(b.p) - layerZ(a.p));
   if (!gs.length) return null;
   const GAP = 0.002, N = skinNormals(P), lim = new Float32Array(H.nv).fill(Infinity), g = new Float32Array(H.nv).fill(Infinity), tmp = g.slice();
+  // under[v]：皮肤顶点 v 在某件外层衣服正下方（衣服顶点的脚下和周围一圈，衣服边上的顶点不算）。只有这些地方里层可以压进皮肤以内
+  const under = new Uint8Array(H.nv);
   const height = (X, i, v) => (X[i * 3] - P[v * 3]) * N[v * 3] + (X[i * 3 + 1] - P[v * 3 + 1]) * N[v * 3 + 1] + (X[i * 3 + 2] - P[v * 3 + 2]) * N[v * 3 + 2];
   for (const s of gs) {
     const X = s.P, foot = restFit(s.p).foot;
@@ -1042,7 +1044,9 @@ function layerFix(P) {
     for (let i = 0; i < s.p.nv; i++) {
       const v = foot[i];
       if (lim[v] === Infinity) continue;
-      const h = height(X, i, v), target = Math.max(lim[v] - 2 * GAP, 0.0005);
+      // 外层贴着皮肤的地方（紧身 T 恤的腰）里层也要压得进去：外层正下方可以压到皮肤以内（皮肤最后会压到最里层底下 2mm，最多 2cm，
+      // 压进去的看不见）；外层边外面那两圈还是最多压到贴着皮肤，不然裙腰露在外面的那截也陷进身体，一动就露出皮肤
+      const h = height(X, i, v), target = Math.max(lim[v] - 2 * GAP, under[v] ? -0.015 : 0.0005);
       if (h > target) for (let a = 0; a < 3; a++) X[i * 3 + a] += (target - h) * N[v * 3 + a];
     }
     // 再在脚下的皮肤顶点上记下它的高度，给更里面的几层（和皮肤）当上限。衣服的顶点比皮肤稀，记到的皮肤顶点往外补（只从记到的顶点往外走）
@@ -1050,6 +1054,8 @@ function layerFix(P) {
     const seen = [];
     const put = (i, v) => { const h = height(X, i, v); if (g[v] === Infinity) seen.push(v); if (h < g[v]) g[v] = h; };
     for (let i = 0; i < s.p.nv; i++) { const v = foot[i]; put(i, v); for (const u of BODY_NB[v]) put(i, u); }
+    const border = coverBorder(s.p);
+    for (let i = 0; i < s.p.nv; i++) if (!border[i]) { under[foot[i]] = 1; for (const u of BODY_NB[foot[i]]) under[u] = 1; }
     // 前两圈往哪儿都补（衣服边外面一点也压）；再往后只在这件衣服盖住的范围里补，把稀疏的衣服（靴筒）留下的洞补满
     const cov = coverOf(s.p);
     let front = seen.slice();
@@ -1090,10 +1096,10 @@ function coverOf(p) {
 const underOf = (p) => (p.under ??= skinUnder(p, () => true, 5));
 // 衣服 p 底下的皮肤顶点：use(i) 的那些、不在边上的代理顶点，脚下的和挂的（权重大于 0.2，换成皮肤顶点）都算，
 // 往外长三圈补洞，再往里缩 shrinkBy 圈
-function skinUnder(p, use, shrinkBy) {
-  const d = p.data, set = new Uint8Array(H.nv), { foot } = restFit(p);
+// 衣服边上的代理顶点（只属于一个三角形的边）
+function coverBorder(p) {
   if (!p.border) {
-    const n = new Map();
+    const d = p.data, n = new Map();
     p.border = new Uint8Array(p.nv);
     for (let t = 0; t < d.index.length; t += 3) for (let k = 0; k < 3; k++) {
       const a = d.map[d.index[t + k]], b = d.map[d.index[t + (k + 1) % 3]], key = a < b ? a * 65536 + b : b * 65536 + a;
@@ -1101,6 +1107,11 @@ function skinUnder(p, use, shrinkBy) {
     }
     for (const [key, c] of n) if (c === 1) { p.border[Math.floor(key / 65536)] = 1; p.border[key % 65536] = 1; }
   }
+  return p.border;
+}
+function skinUnder(p, use, shrinkBy) {
+  const d = p.data, set = new Uint8Array(H.nv), { foot } = restFit(p);
+  coverBorder(p);
   for (let i = 0; i < p.nv; i++) {
     if (p.border[i] || !use(i)) continue;
     set[foot[i]] = 1;

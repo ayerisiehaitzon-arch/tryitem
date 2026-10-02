@@ -8,6 +8,7 @@
 //   docs/previews/creator-clothes.jpg      衣服款式：连衣裙、大衣，上衣和下装随意搭，雪地靴
 //   docs/previews/creator-clothes-men.jpg  男装：几套男装拆成单件上衣、下装重新搭，工装背带裤
 //   docs/previews/creator-clothes-men2.jpg 男装（二）：社区资源包里的卫衣、毛衣、Polo 衫、短裤、礼服、西装、鞋、帽子
+//   docs/previews/creator-clothes-women2.jpg 女装（二）：旗袍、连衣裙、西装套装，上衣、半身裙、裤子随意搭，平底鞋、马靴、帽子
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
 //   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
@@ -114,9 +115,9 @@ try {
     ['wear-0', 'preset=3&outfit=dress_wine', '酒红连衣裙'],
     ['wear-1', 'preset=1&outfit=dress_mint', '薄荷绿背心裙'],
     ['wear-2', 'preset=5&outfit=dress_black&shoes=shoes03', '黑色小礼服'],
-    ['wear-3', 'preset=7&outfit=tube_dress', '白色抹胸裙'],
+    ['wear-3', 'preset=7&outfit=tube_dress&shoes=shoes05', '白色抹胸裙'],
     ['wear-4', 'preset=3&outfit=coat&shoes=winter_boots', '毛领大衣 · 雪地靴'],
-    ['wear-5', 'preset=7&top=tunic&bottom=tight_jeans', '碎花长衫 · 紧身牛仔裤'],
+    ['wear-5', 'preset=7&top=tunic&bottom=tight_jeans&shoes=shoes05', '碎花长衫 · 紧身牛仔裤'],
     ['wear-6', 'preset=5&top=tank_top&bottom=jean_shorts', '运动背心 · 牛仔短裤'],
     ['wear-7', 'preset=1&top=sleeveless&bottom=jean_skirt', '无袖系带衬衫 · 牛仔短裙'],
     ['wear-8', 'preset=3&top=tube_top&bottom=miniskirt', '抹胸 · 黑色短裙'],
@@ -156,6 +157,23 @@ try {
   ];
   const mw2 = await shoot(men2.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.95&anim=idle&t=0.6`]), [420, 720]);
   await grid(mw2, 6, 300, 520, path.join(out, 'creator-clothes-men2.jpg'), { labels: men2.map((c) => c[2]) });
+  // 女装（二）：MakeHuman 社区资源包里的连衣裙、旗袍、套装，女装拆出来的单件和新的上衣、半身裙、裤子随意搭
+  const women2 = [
+    ['women2-0', 'preset=7', '旗袍 · 芭蕾平底鞋'],
+    ['women2-1', 'preset=3&outfit=camisole_dress&shoes=mary_janes&hat=cloche', '碎花吊带裙 · 钟形帽'],
+    ['women2-2', 'preset=1&outfit=tiered_dress&shoes=ballet_flats', '挂脖蛋糕裙'],
+    ['women2-3', 'preset=5&outfit=red_halter&shoes=mary_janes', '红色挂脖裙'],
+    ['women2-4', 'preset=3&outfit=evening_gown&shoes=ballet_flats', '晚礼服长裙'],
+    ['women2-5', 'preset=1&outfit=f_suit_skirt&shoes=mary_janes', '黑色西装套裙'],
+    ['women2-6', 'preset=5&outfit=f_suit_db&shoes=chelsea', '灰色双排扣套装'],
+    ['women2-7', 'preset=7&outfit=tweed_dress&shoes=riding_boots', '格纹连衣裙 · 马靴'],
+    ['women2-8', 'preset=1&top=off_shoulder&bottom=pleated_plaid&shoes=mary_janes', '露肩上衣 · 蓝格子百褶裙'],
+    ['women2-9', 'preset=3&top=retro_top&bottom=polka_skirt&shoes=ballet_flats', '复古上衣 · 波点裙'],
+    ['women2-10', 'preset=5&top=breton&bottom=bootcut&shoes=ankle_boots_f', '条纹短上衣 · 喇叭牛仔裤'],
+    ['women2-11', 'preset=7&top=lace_blouse&bottom=long_skirt&shoes=ballet_flats&hat=bowler', '系带衬衫 · 碎花长裙'],
+  ];
+  const ww2 = await shoot(women2.map(([n, q]) => [n, `${q}&bare=1&az=18&frameH=1.85&anim=idle&t=0.6`]), [420, 720]);
+  await grid(ww2, 6, 300, 520, path.join(out, 'creator-clothes-women2.jpg'), { labels: women2.map((c) => c[2]) });
   // 衣服配色：同一个人、同一套衣服换几种颜色（第一格是原色）
   const col = [
     ['col-0', 'preset=0', '原色'],

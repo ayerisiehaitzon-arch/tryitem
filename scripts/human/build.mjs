@@ -537,6 +537,11 @@ const SPLIT = {
   male_casualsuit03: [['m_shirt_stripe', '条纹衬衫']],
   male_casualsuit05: [['m_jacket', '夹克']],
   male_elegantsuit01: [['m_suit_jacket', '西装外套'], ['m_suit_trousers', '西裤']],
+  // 女装也拆：两套 T 恤的 T 恤是同一件，只拆一次；牛仔裤和运动紧身裤是同一个裤型，面料不一样，都拆
+  female_casualsuit01: [['f_tee', 'T 恤'], ['f_jeans', '修身牛仔裤']],
+  female_casualsuit02: [null, ['f_hotpants', '热裤']],
+  female_elegantsuit01: [['f_shirt_stripe', '修身条纹衬衫'], ['f_skirt', '开衩半裙']],
+  female_sportsuit01: [['f_sport_top', '运动短上衣'], ['f_leggings', '运动紧身裤']],
 };
 for (const [n, [label, sex]] of Object.entries(OUTFIT)) {
   const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
@@ -711,6 +716,41 @@ for (const [n, label] of Object.entries(SHOES)) {
     biker_boots: ['mindfront_shoes_biker_boots_male', 'shoes', '机车靴', [['靴面', 'leather'], ['鞋底', 'sole']]],
     newsboy: ['jujube_newsboy_cap', 'hat', '报童帽', [['帽子', 'hat']]],
     beanie: ['mindfront_knitted_hat_01', 'hat', '毛线帽', [['毛线帽', 'hat']]],
+    // 女款：连衣裙、旗袍、西装套装、网球裙（整套），上衣、半身裙、裤子，平底鞋、马靴，帽子。高跟鞋要配 MakeHuman 专门的脚部形变才穿得上，没收；
+    // 罗马凉鞋、镂空的玛丽珍靠贴图透明做出镂空，这里衣服不做透明，也没收；男款的牛津鞋、机车靴女生穿也合脚，不再收女式的那一双
+    qipao: ['punkduck_middle_length_qipao', 'outfit', '旗袍', [['旗袍', 'top']], { sex: 'f' }],
+    camisole_dress: ['toigo_camisole_dress_with_full_skirt', 'outfit', '碎花吊带裙', [['连衣裙', 'top']], { sex: 'f' }],
+    tiered_dress: ['toigo_dress_with_tiered_skirt', 'outfit', '挂脖蛋糕裙', [['连衣裙', 'top']], { sex: 'f' }],
+    red_halter: ['elvs_halter_dress_knee_length', 'outfit', '红色挂脖裙', [['连衣裙', 'top']], { sex: 'f' }],
+    evening_gown: ['punkduck_evening_gown', 'outfit', '晚礼服长裙', [['长裙', 'top']], { sex: 'f' }],
+    teal_dress: ['mindfront_f_dress_06', 'outfit', '湖蓝连衣裙', [['连衣裙', 'top']], { sex: 'f' }],
+    coral_dress: ['mindfront_f_dress_08', 'outfit', '珊瑚红连衣裙', [['连衣裙', 'top']], { sex: 'f' }],
+    tweed_dress: ['mindfront_f_dress_11', 'outfit', '格纹连衣裙', [['连衣裙', 'top']], { sex: 'f' }],
+    f_suit_skirt: ['toigo_female_suit', 'outfit', '黑色西装套裙', [['套裙', 'suit']], { sex: 'f' }],
+    f_suit_pink: ['toigo_female_suit_2', 'outfit', '粉色西装套装', [['西装', 'suit']], { sex: 'f' }],
+    f_suit_db: ['toigo_female_double-breasted_suit', 'outfit', '灰色双排扣套装', [['西装', 'suit']], { sex: 'f' }],
+    tennis_dress: ['punkduck_tennis_dress', 'outfit', '网球裙', [['网球裙', 'top']], { sex: 'f' }],
+    off_shoulder: ['punkduck_off-shoulder_long-sleeve_top', 'top', '露肩上衣', [['上衣', 'top']], { sex: 'f' }],
+    lace_blouse: ['punkduck_lace_up_blouse', 'top', '系带衬衫', [['衬衫', 'top']], { sex: 'f' }],
+    retro_top: ['punkduck_retro_top', 'top', '红色复古上衣', [['上衣', 'top']], { sex: 'f' }],
+    crop_top: ['punkduck_high_neck_crop_top', 'top', '蕾丝高领背心', [['背心', 'top']], { sex: 'f' }],
+    breton: ['ews_striped_shirt', 'top', '条纹短上衣', [['上衣', 'top']], { sex: 'f' }],
+    long_skirt: ['toigo_long_full_skirt', 'bottom', '碎花长裙', [['长裙', 'bottom']], { sex: 'f' }],
+    pleated_plaid: ['elvs_pleated_plaid_mini_skirt', 'bottom', '蓝格子百褶裙', [['百褶裙', 'bottom']], { sex: 'f' }],
+    pleated_red: ['mtknife_pleated_mini_skirt', 'bottom', '红格子百褶裙', [['百褶裙', 'bottom']], { sex: 'f' }],
+    pencil_skirt: ['elvs_pencil_skirt', 'bottom', '铅笔裙', [['半裙', 'bottom']], { sex: 'f' }],
+    polka_skirt: ['punkduck_retro_polka_dot_skirt', 'bottom', '波点裙', [['半裙', 'bottom']], { sex: 'f' }],
+    bootcut: ['elvs_jeans_bootcut', 'bottom', '喇叭牛仔裤', [['牛仔裤', 'denim']], { sex: 'f' }],
+    f_jeans_patch: ['mindfront_female_trousers_1', 'bottom', '刺绣牛仔裤', [['牛仔裤', 'denim']], { sex: 'f' }],
+    skinny_pants: ['elvs_disco_pants_skinny', 'bottom', '黑色紧身裤', [['长裤', 'bottom']], { sex: 'f' }],
+    // 芭蕾鞋整只都很矮，按高度分会全算成鞋底：整只一个部位，主色从深灰的鞋面找（不然浅色鞋垫的面积大，会被当成主色）
+    ballet_flats: ['toigo_ballet_flats', 'shoes', '芭蕾平底鞋', [['鞋面', 'leather', { pick: '#303030' }]], { z: 5 }],
+    mary_janes: ['toigo_mj_cloth_shoes', 'shoes', '玛丽珍鞋', [['鞋面', 'leather'], ['鞋底', 'sole']], { z: 5 }],
+    ankle_boots_f: ['toigo_ankle_boots_female', 'shoes', '白色短靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 5 }],
+    riding_boots: ['punkduck_riding_boots', 'shoes', '马靴', [['靴面', 'leather'], ['鞋底', 'sole']], { z: 55 }],
+    cloche: ['aethelraed_unraed_cloche_hat', 'hat', '钟形帽', [['帽子', 'hat']]],
+    bowler: ['culturalibre_cl_bowler_hat', 'hat', '圆顶礼帽', [['帽子', 'hat']]],
+    visor: ['punkduck_sun_visor_sports_visor', 'hat', '遮阳帽', [['帽子', 'hat']]],
   };
   for (const [id, [src, slot, label, parts, over]] of Object.entries(C)) {
     PARTS[id] = parts;

@@ -2077,6 +2077,8 @@ README 里全屋的近景用预览器的 `d` 参数（绝对取景距离）：�
 
 ![男装（二）：社区资源包里的卫衣、毛衣、Polo 衫、短裤、礼服、西装、鞋和帽子](docs/previews/creator-clothes-men2.jpg)
 
+![女装（二）：旗袍、连衣裙、西装套装，上衣、半身裙、裤子随意搭，平底鞋、马靴、帽子](docs/previews/creator-clothes-women2.jpg)
+
 ![衣服配色](docs/previews/creator-colors.jpg)
 
 ![鞋的配色](docs/previews/creator-shoes.jpg)
@@ -2103,7 +2105,7 @@ GTA5 线上模式的创建器分几步，底层都是 3A 游戏里通行的做�
 | 二十个五官参数 | 53 根，分六组：脸型 9、眼睛和眉毛 11、鼻子 9、嘴巴 9、颧骨下巴和脖子 10、耳朵 5，每根对应 MakeHuman 的一个（或两个）形变目标 |
 | 外观贴图层 | 胡子、老化、雀斑、口红、腮红、眼影、眼线，在皮肤着色器里按遮罩叠加，各有浓淡和颜色；发型 10 种、发色 14 种，眉形 12 种、睫毛 4 种、瞳色 9 种 |
 | 体型（GTA 里没有） | MakeHuman 的宏参数：性别倾向、年龄 20 ~ 80 岁、身高（换算成厘米显示）、胖瘦、肌肉、身材比例、胸围，外加肩宽、腰围、臀围、肚子、臀部、腿长、手臂、大腿、倒三角 9 个局部 |
-| 服装 | 分衣服、鞋、帽子三页（镜头分别对着全身、脚、胸像）。衣服：20 套整套（男 11 套，含白 T 恤工装背带裤、白色礼服、藏青西装、双排扣西装；女 9 套，其中连衣裙 4 条、毛领大衣 1 件），也可以不穿整套，上衣和下装随意搭：男款上衣 9 件（白 T 恤、蓝 T 恤、长袖 T 恤、衬衫、条纹衬衫、夹克、西装外套、Polo 衫、休闲衬衫）、下装 9 条（牛仔裤、灰牛仔裤、做旧牛仔裤、西裤、羊毛西裤、工装裤、工装背带裤、休闲短裤、沙滩短裤），女款上衣 6 件（碎花长衫、无袖系带衬衫、抹胸、V 领背心、吊带衫、迷彩短 T）、下装 4 条（紧身牛仔裤、牛仔短裤、牛仔短裙、黑色短裙），男女都能穿的上衣 5 件（运动背心、连帽卫衣、粗针毛衣、罗纹毛衣、挪威毛衣开衫；男女款也可以混着穿，列表里自己性别的排在前面）；13 双鞋（白色、蓝色运动鞋，旧运动鞋，高帮球鞋，跑鞋，一脚蹬，三双皮鞋，牛津鞋，切尔西靴，机车靴，雪地靴）、6 顶帽子（礼帽、歪戴礼帽、渔夫帽、探险帽、报童帽、毛线帽）。都能按部位换颜色：套装分上衣、下装（西装、连衣裙、大衣、单件的上衣下装和帽子整件换；白色礼服分外套和西裤），鞋分鞋面、鞋底、袜子；每种材料一套色板（上衣 12 色、牛仔布 8 色、裙子和紧身裤 10 色、西装 8 色、大衣 10 色、礼帽 9 色、渔夫帽 12 色、探险帽 8 色、皮鞋和靴子 9 色、球鞋 12 色、鞋底 8 色、袜子 9 色），也可以自选颜色 |
+| 服装 | 分衣服、鞋、帽子三页（镜头分别对着全身、脚、胸像）。衣服：32 套整套（男 11 套，含白 T 恤工装背带裤、白色礼服、藏青西装、双排扣西装；女 21 套：MakeHuman 自带的 4 套，连衣裙 13 条——含旗袍、晚礼服长裙、网球裙，西装套装 3 套，毛领大衣 1 件），也可以不穿整套，上衣和下装随意搭：男款上衣 9 件（白 T 恤、蓝 T 恤、长袖 T 恤、衬衫、条纹衬衫、夹克、西装外套、Polo 衫、休闲衬衫）、下装 9 条（牛仔裤、灰牛仔裤、做旧牛仔裤、西裤、羊毛西裤、工装裤、工装背带裤、休闲短裤、沙滩短裤），女款上衣 14 件（T 恤、修身条纹衬衫、运动短上衣、碎花长衫、无袖系带衬衫、系带衬衫、露肩上衣、红色复古上衣、蕾丝高领背心、条纹短上衣、抹胸、V 领背心、吊带衫、迷彩短 T）、下装 16 条（修身牛仔裤、紧身牛仔裤、喇叭牛仔裤、刺绣牛仔裤、黑色紧身裤、运动紧身裤、热裤、牛仔短裤、开衩半裙、铅笔裙、波点裙、碎花长裙、蓝格子百褶裙、红格子百褶裙、牛仔短裙、黑色短裙），男女都能穿的上衣 5 件（运动背心、连帽卫衣、粗针毛衣、罗纹毛衣、挪威毛衣开衫；男女款也可以混着穿，列表里自己性别的排在前面）；17 双鞋（白色、蓝色运动鞋，旧运动鞋，高帮球鞋，跑鞋，一脚蹬，三双皮鞋，牛津鞋，芭蕾平底鞋，玛丽珍鞋，白色短靴，切尔西靴，机车靴，马靴，雪地靴）、9 顶帽子（礼帽、歪戴礼帽、圆顶礼帽、渔夫帽、探险帽、报童帽、毛线帽、钟形帽、遮阳帽）。都能按部位换颜色：套装分上衣、下装（西装、连衣裙、大衣、单件的上衣下装和帽子整件换；白色礼服分外套和西裤），鞋分鞋面、鞋底、袜子；每种材料一套色板（上衣 12 色、牛仔布 8 色、裙子和紧身裤 10 色、西装 8 色、大衣 10 色、礼帽 9 色、渔夫帽 12 色、探险帽 8 色、皮鞋和靴子 9 色、球鞋 12 色、鞋底 8 色、袜子 9 色），也可以自选颜色 |
 | 动作 | Quaternius 的 20 段：待机、说话、走路、正式步态、慢跑、冲刺、跳舞、蹲下、蹲着走、刺拳、直拳、翻滚、跳跃、互动、拿东西、推、蹲下修理、坐着、被打、倒地；10 个表情；会眨眼，安静的动作里会转头看着镜头，“说话”时嘴会动 |
 
 GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做的只是它的流程和交互（遗传 → 五官 → 外观 → 服装）。
@@ -2127,6 +2129,10 @@ GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做
   有几件的 `.mhclo` 用的是新一点的写法，缩放参考写成 `l_shear_x` 这样的“两个顶点在这个轴上的坐标”（MakeHuman 用它们围成的盒子算仿射矩阵，
   盒子和坐标轴对齐，算出来就是三个轴各自的缩放），解析器补上了。挑的时候每件都在胖瘦、男女几种身材上试穿过、做过几段动作：
   塞进裤腰的那件衬衫领带下摆太高，配别的裤子腰上都露一截皮肤，没收；资源包里没有皮夹克。
+  女装也照男装的办法把 MakeHuman 自带的 4 套拆成单件（两套 T 恤的 T 恤是同一件，只拆一次；牛仔裤和运动紧身裤裤型相同、面料不同，都留着），
+  再从资源包补了连衣裙、旗袍、西装套装、上衣、半身裙、裤子、平底鞋和帽子。高跟鞋要配 MakeHuman 专门的脚部形变（脚背抬起来）才穿得上，没收；
+  罗马凉鞋、镂空的玛丽珍靠贴图透明做出镂空，这里衣服不做透明，也没收；两件多层荷叶边的裙子坐下、跑起来裙摆会撕成一条条，也没收；
+  男款的牛津鞋、机车靴女生穿也合脚，就不再收女式的那一双。
   解析器都是自己写的（`scripts/human/mhparse.mjs`），构建只读这些文本和图片，不加载任何二进制归档（`.npz`），也没有用 MakeHuman 的程序代码。
 - **形变**：一个人 = 基础网格 + Σ 权重 × 形变目标。宏参数（性别、年龄、肌肉、体重、身高、比例、胸围、人种）照 MakeHuman 的做法：
   每个宏目标对应一种组合（比如“女性 · 年轻 · 肌肉一般 · 体重一般”），权重是几个因子的乘积（女性 = 1 − 性别倾向，年轻、年老按年龄分段插值……），
@@ -2139,6 +2145,8 @@ GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做
   MakeHuman 的衣服大多不直接挂在皮肤上，而是挂在两层辅助网格（紧身衣形、裙子形的“壳”）上，所以先给每个衣服顶点找静止时脚下最近的皮肤顶点，
   都换到皮肤上比：外层盖住的范围里，里层的面不画（紧身牛仔裤里的袜子、塞进靴筒的裤腿）；外层每个顶点在脚下那一圈皮肤上记下“离皮肤多高”，
   里层哪里高过外层、离外层不到 4mm，就沿皮肤法线压回外层底下 4mm，皮肤压到最里层衣服底下 2mm（短裙腰头顶出来的肚子）。拖滑杆时每次重算。
+  外层贴着皮肤的地方（紧身 T 恤的腰离皮肤只有一两毫米），外层正下方的里层可以压到皮肤以内（皮肤再跟着往里收，最多 2cm），不然裙腰、裤腰会从 T 恤外面露出来；
+  外层边外面那两圈还是最多压到贴着皮肤，不然露在外面的那截裙腰也陷进身体，一动就露出皮肤。
   挂在壳上的衣服用的是壳的蒙皮权重，和下面的皮肤不完全一样（短裙腰头的骨盆权重 0.1，肚子上只有 0.02），一动起来肚子就从腰头顶出来：
   贴身的地方（静止时离皮肤 1cm 以内）改用下面皮肤的权重，离开 2.5cm 以上的保持原样，中间渐变；宽松的地方再沿衣服自己的网格把权重平滑几遍
   （V 领背心的下摆两种壳的顶点交替，不平滑的话一迈腿下摆就错成锯齿）。社区的短裙、短裤没带 `delete_verts`，按衣服实际盖住的范围藏身体（离衣服边留两圈）。
@@ -2186,7 +2194,7 @@ GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做
 
 - 身体 26,756 个三角形；八个预设角色穿戴齐全是 42,072 ~ 64,724 个三角形（被衣服盖住的身体面不画；界面左下角实时显示；最多的是穿连帽卫衣的大力，卫衣一件就近两万）。
 - 拖一下滑杆（加形变、算法线、重新贴衣服和头发、叠穿防穿插、重算关节、重新绑定）约 30 ~ 60ms。
-- 数据一共 34MB（`viewer/human/`）：人体和形变 4.3MB、动作 0.4MB、101 个代理网格 9.1MB、245 张 WebP 贴图 20MB
+- 数据一共 43MB（`viewer/human/`）：人体和形变 4.3MB、动作 0.4MB、140 个代理网格 13.8MB、336 张 WebP 贴图 25MB
   （皮肤、头发 2048²，衣服 512² ~ 2048²，虹膜 1024²，头发的流向图 512²，衣服和鞋配色的权重图 512² ~ 1024²）。第一次打开只下载当前这个人用到的，约 6.7MB，换发型、换衣服时再按需下载。
 - 导出一个穿戴齐全的人，`.glb` 约 15MB：9 个蒙皮网格、54 根骨头、20 段动画、34 个表情形变，混合好的皮肤、染过色的头发、换过颜色的衣服烘焙成贴图。
 
@@ -2208,7 +2216,7 @@ GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做
 `viewer/human/` 已经在仓库里，只有改了构建脚本才需要重新生成：
 
 ```bash
-npm run fetch-human   # 下载素材到 .cache/human-src/（约 1.2GB：MakeHuman 仓库、Ubuntu 包、npm 包、动作库、11 个社区资源包；固定版本，核对校验和；资源包只解出用到的那几件，需要 unzip）
+npm run fetch-human   # 下载素材到 .cache/human-src/（约 2.2GB：MakeHuman 仓库、Ubuntu 包、npm 包、动作库、18 个社区资源包；固定版本，核对校验和；资源包只解出用到的那几件，需要 unzip）
 npm run build-human   # 生成 viewer/human/（约 2.5 分钟，大半是头发的流向图、自遮挡和衣服配色的权重图；同样的素材、同一版本的 sharp，生成的文件逐字节相同）
 ```
 
@@ -2224,19 +2232,25 @@ npm run build-human   # 生成 viewer/human/（约 2.5 分钟，大半是头发�
   转存的 glTF 版（原版在 itch.io）；
 - **MakeHuman 社区用户上传的资源**（[user contributed assets](http://www.makehumancommunity.org/content/user_contributed_assets.html)，CC0 或 CC BY，CC BY 的要署名）：
   - Mindfront (Sweden)，CC BY 4.0：渔夫帽（Fishing_Hat_01）、酒红连衣裙（F_Dress_01）、薄荷绿背心裙（F_Dress_02）、黑色小礼服（F_Dress_04）、运动背心（Tank_Top_01）、
-    粗针毛衣（knitted_sweater_01）、挪威毛衣开衫（lusekofta）、沙滩短裤（male_swimming_trunks_01）、做旧牛仔裤（male_trousers_1）、牛津鞋（shoes_oxford_male）、
+    湖蓝连衣裙（f_dress_06）、珊瑚红连衣裙（f_dress_08）、格纹连衣裙（f_dress_11）、粗针毛衣（knitted_sweater_01）、挪威毛衣开衫（lusekofta）、
+    沙滩短裤（male_swimming_trunks_01）、做旧牛仔裤（male_trousers_1）、刺绣牛仔裤（female_trousers_1）、牛津鞋（shoes_oxford_male）、
     机车靴（shoes_biker_boots_male）、毛线帽（knitted_hat_01）；
-  - punkduck，CC BY 3.0：白色抹胸裙（TubeDress）、毛领大衣（Coat）、无袖系带衬衫（Sleeveless）、抹胸（TubeTop）、V 领背心（VNeckTop）、吊带衫（spaghetti-top）、
-    紧身牛仔裤（Tightjeans）、牛仔短裤（ShortJeans）、牛仔短裙（JeansSkirt）、黑色短裙（miniskirt）、雪地靴（WinterBoots）、跑鞋（running_shoes_01）、一脚蹬（comfortable_sneakers）；
+  - punkduck，CC BY 3.0：白色抹胸裙（TubeDress）、毛领大衣（Coat）、旗袍（middle_length_qipao）、晚礼服长裙（evening_gown）、网球裙（tennis_dress）、
+    无袖系带衬衫（Sleeveless）、露肩上衣（off-shoulder_long-sleeve_top）、红色复古上衣（retro_top）、抹胸（TubeTop）、V 领背心（VNeckTop）、吊带衫（spaghetti-top）、
+    紧身牛仔裤（Tightjeans）、牛仔短裤（ShortJeans）、牛仔短裙（JeansSkirt）、黑色短裙（miniskirt）、波点裙（retro_polka_dot_skirt）、雪地靴（WinterBoots）、
+    跑鞋（running_shoes_01）、一脚蹬（comfortable_sneakers）、遮阳帽（sun_visor_sports_visor）；CC BY 4.0：系带衬衫（lace_up_blouse）、蕾丝高领背心（high_neck_crop_top）、马靴（riding_boots）；
   - DredNicolson，CC BY（没写版本）：探险帽（pith_helmet）、碎花长衫（Asymmetric_Tunic_and_Sash）、迷彩短 T（short_tail_camo_tee）；
-  - Elvaerwyn，CC BY（没写版本）：连帽卫衣（hooded_sweat_jacket1）、休闲衬衫（male_shirt_untucked_bd1）、休闲短裤（male_trouser_short_1）；
-  - culturalibre，CC BY（没写版本）：高帮球鞋（sneakers）；
+  - Elvaerwyn，CC BY（没写版本）：连帽卫衣（hooded_sweat_jacket1）、休闲衬衫（male_shirt_untucked_bd1）、休闲短裤（male_trouser_short_1）、
+    红色挂脖裙（halter_dress_knee_length）、蓝格子百褶裙（pleated_plaid_mini_skirt）、铅笔裙（pencil_skirt）、喇叭牛仔裤（jeans_bootcut）、黑色紧身裤（disco_pants_skinny）；
+  - culturalibre，CC BY（没写版本）：高帮球鞋（sneakers）、圆顶礼帽（cl_bowler_hat）；EWS，CC BY：条纹短上衣（striped_shirt）；MTKnife，CC BY：红格子百褶裙（pleated_mini_skirt）；
   - MargaretToigo，CC0：罗纹毛衣（fisherman_sweater）、羊毛西裤（wool_pants）、白色礼服（suit_with_dinner_jacket）、藏青西装（male_suit_3）、
-    双排扣西装（male_double-breasted_suit）、切尔西靴（ankle_boots_male）；
-  - Cortu，CC0：工装裤（cargo_pants）；namuhekam，CC0：Polo 衫（male_polo_shirt）；jujube，CC0：报童帽（newsboy_cap）。
+    双排扣西装（male_double-breasted_suit）、碎花吊带裙（camisole_dress_with_full_skirt）、挂脖蛋糕裙（dress_with_tiered_skirt）、黑色西装套裙（female_suit）、
+    粉色西装套装（female_suit_2）、灰色双排扣套装（female_double-breasted_suit）、碎花长裙（long_full_skirt）、切尔西靴（ankle_boots_male）、
+    芭蕾平底鞋（ballet_flats）、玛丽珍鞋（mj_cloth_shoes）、白色短靴（ankle_boots_female）；
+  - Cortu，CC0：工装裤（cargo_pants）；namuhekam，CC0：Polo 衫（male_polo_shirt）；jujube，CC0：报童帽（newsboy_cap）；Aethelraed_Unraed，CC0：钟形帽（cloche_hat）。
 
   前三位作者最早的那些在 npm 包里，其余的来自社区的资源包（[asset packs](https://static.makehumancommunity.org/assets/assetpacks/index.html)：
-  shirts01、shirts02、pants01 ~ 03、suits01、shoes01 ~ 03、hats01、hats03），每件的来源页（www.makehumancommunity.org/node/…）记在数据里。
+  shirts01 ~ 03、pants01 ~ 03、suits01、suits03、dress01 ~ 03、skirts01 ~ 02、shoes01 ~ 03、hats01、hats03），每件的来源页（www.makehumancommunity.org/node/…）记在数据里。
   网页里服装页各组标题的右边、导出的 `素材来源.txt` 里都写着作者和许可（资源包里的那些还附上来源页）；
 - CC0 不要求署名，导出的 zip 里还是附了一份 `素材来源.txt`（穿戴了社区作者的衣服、鞋、帽子，会把作者和许可写进去）。
 
@@ -2307,7 +2321,7 @@ npm run serve                 # 打开 http://localhost:8080/viewer/（陈列室
 npm run inspect models/sofa.glb   # 查看节点、面数、材质、贴图
 npm run previews              # 重新生成 README 里的预览图（需要 Playwright 的 Chromium，2 倍超采样）
 npm run creator-previews      # 重新生成角色创建器的预览图
-npm run fetch-human           # 下载捏人用的原始素材（MakeHuman、社区资源包、动作库，约 1.2GB）到 .cache/human-src/
+npm run fetch-human           # 下载捏人用的原始素材（MakeHuman、社区资源包、动作库，约 2.2GB）到 .cache/human-src/
 npm run build-human           # 用这些素材重新生成 viewer/human/（仓库里已经有了，改了构建脚本才需要）
 node scripts/export-gltf-json.js out/   # 转成 JSON glTF（二进制内嵌），给只能托管文本的地方用
 ```
@@ -2475,6 +2489,8 @@ export default {
 - 男装一部分是从 MakeHuman 自带的几套里拆出来的，一部分来自社区资源包；资源包里没有皮夹克，外套只有自带的夹克和西装外套；
   社区作者的衣服精细程度差得多（工装裤只有两百多个顶点，卫衣、机车靴将近一万个），贴图也有素有花，混着穿时质感会有落差；
   男款、女款分开做，男款穿到女性身上（或者反过来）能穿，但不太合身（卫衣、毛衣、开衫在男女身上都试过，标成了男女通用）；
+  没有高跟鞋和镂空的凉鞋（原因见上面“素材从哪来”）；长裙、窄裙坐下、蹲下时裙摆会绷在两腿之间（没有布料模拟，裙子只跟着骨骼走）；
+  “开衩半裙”的开衩在正前方，站着时像一个方形的缺口；
   工装背带裤的贴图只有 512²，近看比别的男装糊；
   叠穿防穿插是按“离皮肤多高”比的，宽松的衣服在大幅度的动作里（宽下摆和下装之间、靴筒和宽裤腿之间）偶尔还会互相穿插一点；
   毛领大衣换颜色时，毛边跟着换成同色系浅一档的颜色，不是保持白色；
