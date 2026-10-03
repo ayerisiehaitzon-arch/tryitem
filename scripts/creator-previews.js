@@ -16,7 +16,7 @@
 //   docs/previews/creator-shoes2.jpg       鞋（二）：社区资源包里的 12 双鞋（孟克鞋、凉拖、训练鞋、网球鞋、骑行鞋、短靴，女款平底鞋、长靴）
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
 //   docs/previews/creator-hats2.jpg        帽子（二）：社区资源包里的 12 顶帽子（棒球帽、平顶帽、圣诞帽、宽松毛线帽、高礼帽、厨师帽、迷彩帽、护耳帽、马术头盔、泳帽、皮飞行帽、女巫帽）
-//   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上）
+//   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上；坐着、蹲下修理带着琴凳和工具箱）
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -229,7 +229,7 @@ try {
     ['col-0', 'preset=0', '原色'],
     ['col-1', 'preset=0&oc=8c1d24,1a1a1a', '红 T 恤 · 黑牛仔裤'],
     ['col-2', 'preset=0&oc=1f2f52,c2a77d', '藏青 T 恤 · 卡其'],
-    ['col-3', 'preset=0&oc=4b5a32,e8e4da', '橄榄绿 · 白牛仔裤'],
+    ['col-3', 'preset=3&outfit=coat&oc=8a2030', '红大衣（毛边不换色）'],
     ['col-4', 'preset=6', '原色（黑西装）'],
     ['col-5', 'preset=6&oc=22304a', '藏青西装'],
     ['col-6', 'preset=6&oc=c8b89a&hat=fedora01&hatc=6b4a32', '米色西装 · 棕礼帽'],
@@ -301,10 +301,11 @@ try {
   ];
   const hs3 = await shoot(hat2.map(([n, q]) => [n, `${q}&bare=1&cam=bust${q.includes('az=') ? '' : '&az=30'}&anim=idle&t=0.5`]), [420, 460]);
   await grid(hs3, 4, 300, 330, path.join(out, 'creator-hats2.jpg'), { labels: hat2.map((h) => h[2]) });
-  // 动作
-  const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话']];
-  const ms = await shoot(mo.map(([a, t]) => [`mo-${a}`, `preset=5&bare=1&az=30&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);
-  await grid(ms, 6, 300, 520, path.join(out, 'creator-motion.jpg'), { labels: mo.map((m) => m[2]) });
+  // 动作（坐着、蹲下修理带着道具：琴凳、工具箱）
+  // 第四项是这一格的视角（工具箱在人面前：正侧面看过去箱子和人一样远，不会比人的脚还低、被画面底边切掉）
+  const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话'], ['sitting_idle', 0.6, '坐着（琴凳）'], ['fixing_kneeling', 0.6, '蹲下修理（工具箱）', 90]];
+  const ms = await shoot(mo.map(([a, t, , az = 30]) => [`mo-${a}`, `preset=5&bare=1&az=${az}&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);
+  await grid(ms, 8, 300, 520, path.join(out, 'creator-motion.jpg'), { labels: mo.map((m) => m[2]) });
 } finally {
   await browser.close();
   server.close();

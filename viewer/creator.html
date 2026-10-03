@@ -492,17 +492,35 @@ function poreNormal(size = 256) {
   return t;
 }
 
-// —— 布料的细节：一张平铺的“平纹”法线——经线、纬线一上一下地交织（圆的线截面），再加一点纤维的起伏。
-//    衣服贴图的分辨率只够看出褶皱和图案，看不出布纹；把这张图按大约 3mm 一根线铺在所有衣服上，近看才像布 ——
-function weaveNormal(size = 256, threads = 16) {
+// —— 布料的细节：平铺的布纹法线，按布料分三种（构建时每个部位记着自己是哪种，没记的是平纹）——
+//    平纹：经线、纬线一上一下地交织（圆的线截面）；斜纹（牛仔布、工装布）：经线浮在三根纬线上、压在一根下面，
+//    每往上一根错开一格，压下去的那一格连成斜的沟；针织（T 恤、卫衣、毛衣）：一列列的 V 形线圈，上下两行叠一点。
+//    再加一点纤维的起伏。衣服贴图的分辨率只够看出褶皱和图案，看不出布纹；平纹按大约 3mm 一根线铺在衣服上，
+//    斜纹、针织的线细一点（一格里 24 根），近看才像布 ——
+const WEAVE_KINDS = ['plain', 'twill', 'knit'];
+function weaveNormal(kind, size = 256) {
   const h = new Float32Array(size * size);
   const rnd = (i) => { let x = Math.imul(i ^ 0x2545f491, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); return ((x ^ (x >>> 16)) >>> 0) / 4294967296; };
-  const prof = (f) => Math.cos(Math.PI * (f - 0.5)) ** 0.7;
+  const prof = (f) => Math.cos(Math.PI * (f - 0.5)) ** 0.7, fr = (x) => x - Math.floor(x);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const u = ((x + 0.5) / size) * threads, v = ((y + 0.5) / size) * threads;
-    const s2 = Math.sin(Math.PI * u) * Math.sin(Math.PI * v); // 一上一下：相邻的线交替
-    const warp = prof(u - Math.floor(u)) * (0.55 + 0.45 * s2), weft = prof(v - Math.floor(v)) * (0.55 - 0.45 * s2);
-    h[y * size + x] = Math.max(warp, weft) + (rnd(y * size + x) - 0.5) * 0.12;
+    let v = 0;
+    if (kind === 'plain') {
+      const u = ((x + 0.5) / size) * 16, w = ((y + 0.5) / size) * 16;
+      const s2 = Math.sin(Math.PI * u) * Math.sin(Math.PI * w); // 一上一下：相邻的线交替
+      v = Math.max(prof(fr(u)) * (0.55 + 0.45 * s2), prof(fr(w)) * (0.55 - 0.45 * s2));
+    } else if (kind === 'twill') {
+      const u = ((x + 0.5) / size) * 24, w = ((y + 0.5) / size) * 24, m = (((Math.floor(w) - Math.floor(u)) % 4) + 4) % 4;
+      v = m < 3 ? Math.cos(Math.PI * (fr(u) - 0.5)) ** 0.35 * (0.5 + 0.5 * Math.sin((Math.PI * (m + fr(w))) / 3) ** 0.5) : 0.12 + 0.18 * prof(fr(w));
+    } else {
+      const u = ((x + 0.5) / size) * 24, w = ((y + 0.5) / size) * 32, cu = fr(u);
+      for (const dj of [-1, 0, 1]) for (const side of [-1, 1]) {
+        // 线圈的一条腿：从上一行外侧斜着下到这一行中间，截面是圆的
+        const cw = fr(w) - dj, ax = 0.5 + side * 0.42, ay = -0.25, dx = -side * 0.36, dy = 1.45;
+        const t = Math.max(0, Math.min(1, ((cu - ax) * dx + (cw - ay) * dy) / (dx * dx + dy * dy))), d = Math.hypot(cu - ax - dx * t, cw - ay - dy * t);
+        if (d < 0.2) v = Math.max(v, prof(0.5 + d / 0.4) * (0.75 + 0.25 * Math.sin(Math.PI * t)));
+      }
+    }
+    h[y * size + x] = v + (rnd(y * size + x) - 0.5) * 0.12;
   }
   const d = new Uint8Array(size * size * 4);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
@@ -516,19 +534,22 @@ function weaveNormal(size = 256, threads = 16) {
   t.needsUpdate = true;
   return t;
 }
-const WEAVE = weaveNormal();
+const WEAVES = WEAVE_KINDS.map((k) => weaveNormal(k));
 const FLAT_NORMAL = (() => { const t = new THREE.DataTexture(new Uint8Array([128, 128, 255, 255]), 1, 1); t.needsUpdate = true; return t; })();
 const NO_PARTS = (() => { const t = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); t.needsUpdate = true; return t; })();
 // 换色的公式（着色器和导出烘焙共用）：新颜色 × 亮度比（像素亮度 / 这块布主色的亮度），褶皱、洗白、布纹的明暗都留着；
 // 往亮了换很多（黑布换白、牛仔裤换卡其）时把亮度比压一压（指数 < 1），不然深色布里洗色、褶皱的深浅会被放大成脏斑
 const recolorGamma = (Ld, Lt) => 1 / (1 + 0.5 * Math.max(0, Math.log2(Math.max(1e-4, Lt) / Math.max(1e-4, Ld))));
 // 衣服的材质：自己的法线贴图（没有就用平的）上再叠布纹（UDN 混合：两张法线的 xy 相加）；
-// 有配色权重图的话（R/G/B = 部位 0/1/2），每个部位可以换颜色，也可以单独定粗糙度（鞋上的袜子是布，不能跟皮鞋一样亮）。
+// 有配色权重图的话（R/G/B = 部位 0/1/2），每个部位可以换颜色，也可以单独定粗糙度（鞋上的袜子是布，不能跟皮鞋一样亮），
+// 布纹也按部位挑（T 恤配牛仔裤：上面针织、下面斜纹；权重图上不换色的地方——明线、商标——用第一个部位的）。
 // 配色的 uniform 不放 userData（导出 glTF 时 userData 会被写进 extras，里面有贴图就会整张转成 data URL）
 const PART_U = new WeakMap();
-function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = [], rough = [] } = {}) {
+function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = [], rough = [], weave = [] } = {}) {
+  const wk = [0, 1, 2].map((p) => Math.max(0, WEAVE_KINDS.indexOf(weave[p] ?? weave[0] ?? 'plain')));
   const u = {
-    uWeave: { value: WEAVE }, uWeaveScale: { value: scale }, uWeaveAmt: { value: amount },
+    uWeave: { value: WEAVES[0] }, uWeave1: { value: WEAVES[1] }, uWeave2: { value: WEAVES[2] }, uWeaveScale: { value: scale }, uWeaveAmt: { value: amount },
+    uPartWeave: { value: new THREE.Vector3(...wk) },
     uPartMask: { value: parts ?? NO_PARTS }, uPartDom: { value: [0, 1, 2].map((p) => new THREE.Vector3(...(dom[p] ?? [0.2, 0.2, 0.2]))) },
     uPartCol: { value: [0, 1, 2].map(() => new THREE.Vector4(0, 0, 0, 0)) },
     uPartRough: { value: new THREE.Vector3(rough[0] ?? 0, rough[1] ?? 0, rough[2] ?? 0) }, // 0 = 不改
@@ -539,7 +560,7 @@ function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = 
     Object.assign(sh.uniforms, u);
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
-uniform sampler2D uWeave; uniform float uWeaveScale; uniform float uWeaveAmt;
+uniform sampler2D uWeave; uniform sampler2D uWeave1; uniform sampler2D uWeave2; uniform float uWeaveScale; uniform float uWeaveAmt; uniform vec3 uPartWeave;
 uniform sampler2D uPartMask; uniform vec3 uPartDom[ 3 ]; uniform vec4 uPartCol[ 3 ]; uniform vec3 uPartRough;
 vec3 recolorPart( vec3 c, float L, vec3 dom, vec4 col, float w ) {
   if ( col.a < 0.5 || w <= 0.0 ) return c;
@@ -564,7 +585,12 @@ roughnessFactor = mix( roughnessFactor, uPartRough.z, partW.b * step( 0.001, uPa
       .replace('#include <normal_fragment_maps>', `
 vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;
 mapN.xy *= normalScale;
-vec3 weaveN = texture2D( uWeave, vNormalMapUv * uWeaveScale ).xyz * 2.0 - 1.0;
+vec2 weaveUv = vNormalMapUv * uWeaveScale;
+vec3 wv0 = texture2D( uWeave, weaveUv ).xyz, wv1 = texture2D( uWeave1, weaveUv ).xyz, wv2 = texture2D( uWeave2, weaveUv ).xyz;
+vec3 wp0 = uPartWeave.x < 0.5 ? wv0 : uPartWeave.x < 1.5 ? wv1 : wv2;
+vec3 wp1 = uPartWeave.y < 0.5 ? wv0 : uPartWeave.y < 1.5 ? wv1 : wv2;
+vec3 wp2 = uPartWeave.z < 0.5 ? wv0 : uPartWeave.z < 1.5 ? wv1 : wv2;
+vec3 weaveN = mix( mix( mix( wp0, wp1, partW.g ), wp2, partW.b ), wp0, partW.r ) * 2.0 - 1.0;
 mapN = normalize( vec3( mapN.xy + weaveN.xy * uWeaveAmt, mapN.z ) );
 normal = normalize( tbn * mapN );`);
   };
@@ -650,20 +676,33 @@ diffuseColor *= hairT;`);
 //         暗的发丝更深、更饱和，亮的发丝更浅、更淡，和真头发一样有层次（直接相乘的话浅色会染成一片橙色）
 //   高光：Kajiya–Kay，两道，沿发丝方向（构建时从贴图算出的流向图）：主高光白而窄，次高光带发色、宽一些
 //   漫反射：发片的法线不可靠，一半按法线、一半按发丝（sin(T, L)）；烘焙的自遮挡让里层的头发暗下去
-function hairMaterial(params, mean, flow) {
+// 戴帽子时，头发在帽子外面的那一点点（压过以后还剩的发梢、发片之间的斜边）逐像素扔掉：
+// hatHair 记下每个方向上帽子最里面那层朝外的面离头的中心多远（DataTexture，静止姿势里），
+// 片元按自己在静止姿势里的位置（顶点的 position 插值）查这张图，比它远就不画
+const clipTex = () => { const t = new THREE.DataTexture(new Float32Array(120 * 120).fill(1e3), 120, 120, THREE.RedFormat, THREE.FloatType); t.magFilter = t.minFilter = THREE.NearestFilter; t.needsUpdate = true; return t; };
+const HAT_CLIP = { uHatMap: { value: clipTex() }, uHatMap2: { value: clipTex() }, uHatC: { value: new THREE.Vector3() }, uHatC2: { value: new THREE.Vector3() }, uHatOn: { value: 0 } };
+function hairMaterial(params, mean, flow, clip = false) {
   const u = { uDye: { value: new THREE.Color(1, 1, 1) }, uDyeAmt: { value: 0 }, uMeanLum: { value: Math.max(0.01, mean?.lum ?? 0.2) }, uFlow: { value: flow } };
   const mat = new THREE.MeshPhysicalMaterial({ ...params, roughness: 0.7, specularIntensity: 0.3, sheen: 0 });
   mat.userData.dye = u;
   mat.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, u);
+    Object.assign(sh.uniforms, u, clip ? HAT_CLIP : {});
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float hairAO;\nvarying float vHairAO;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvHairAO = hairAO;');
+      .replace('#include <common>', '#include <common>\nattribute float hairAO;\nvarying float vHairAO;\nvarying vec3 vRestPos;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvHairAO = hairAO;\nvRestPos = position;');
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
 uniform vec3 uDye; uniform float uDyeAmt; uniform float uMeanLum; uniform sampler2D uFlow;
-varying float vHairAO;
+varying float vHairAO; varying vec3 vRestPos;
+${clip ? `uniform sampler2D uHatMap; uniform sampler2D uHatMap2; uniform vec3 uHatC; uniform vec3 uHatC2; uniform float uHatOn;
+bool outsideHat( sampler2D m, vec3 c ) {
+  vec3 hd = vRestPos - c; float hr = length( hd ), hs = 1.0 + hd.y / hr;
+  vec2 huv = ( hd.xz / ( hr * hs ) + 2.5 ) / 5.0;
+  return hs >= 0.4 && huv.x >= 0.0 && huv.y >= 0.0 && huv.x < 1.0 && huv.y < 1.0 && hr > texture2D( m, huv ).r - 0.0005;
+}` : ''}
 vec3 hairT; vec3 hairBase; float hairCoh; float hairDetail;`)
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+${clip ? 'if ( uHatOn > 0.5 && ( outsideHat( uHatMap, uHatC ) || outsideHat( uHatMap2, uHatC2 ) ) ) discard;' : ''}`)
       .replace('#include <map_fragment>', `
 vec4 hairTex = texture2D( map, vMapUv );
 hairDetail = clamp( dot( hairTex.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) / uMeanLum, 0.15, 3.0 );
@@ -707,7 +746,7 @@ reflectedLight.indirectDiffuse *= mix( 1.0, vHairAO, 0.8 );
 // 环境反射只留一点（发片的法线乱，整片反射环境光会像湿了的塑料），光泽交给上面沿发丝的高光
 reflectedLight.indirectSpecular *= 0.25 * vHairAO * vHairAO;`);
   };
-  mat.customProgramCacheKey = () => 'hair2';
+  mat.customProgramCacheKey = () => (clip ? 'hair2-clip' : 'hair2');
   return mat;
 }
 
@@ -795,7 +834,7 @@ async function setSlot(slot, id) {
     meshes.push(m);
     return m;
   };
-  const maps = await Promise.all(['map', 'normal', 'ao'].map((k) => (p.maps[k] ? tex(p.maps[k], k === 'map') : null)));
+  const maps = await Promise.all(['map', 'normal', 'ao', 'rough'].map((k) => (p.maps[k] ? tex(p.maps[k], k === 'map') : null)));
   if (p.cat === 'eyes') {
     // 眼球：眼白和虹膜不透明；外面一层角膜透明、很亮
     geo.clearGroups();
@@ -813,8 +852,9 @@ async function setSlot(slot, id) {
     const ao = new Float32Array(p.nr);
     for (let r = 0; r < p.nr; r++) ao[r] = d.ao ? d.ao[d.map[r]] / 255 : 1;
     geo.setAttribute('hairAO', new THREE.BufferAttribute(ao, 1));
-    const solid = hairMaterial({ ...base, alphaTest: 0.5, alphaToCoverage: true }, p.mean, flow);
-    const soft = hairMaterial({ ...base, transparent: true, depthWrite: false, alphaTest: 0.02 }, p.mean, flow);
+    const clip = p.cat === 'hair';
+    const solid = hairMaterial({ ...base, alphaTest: 0.5, alphaToCoverage: true }, p.mean, flow, clip);
+    const soft = hairMaterial({ ...base, transparent: true, depthWrite: false, alphaTest: 0.02 }, p.mean, flow, clip);
     add(solid, p.cat); const b = add(soft, `${p.cat}_soft`);
     b.castShadow = false; b.renderOrder = 2;
   } else if (p.cat === 'eyebrows' || p.cat === 'eyelashes') {
@@ -822,14 +862,18 @@ async function setSlot(slot, id) {
     m.castShadow = false; m.renderOrder = 3;
   } else {
     const fabric = ['outfit', 'top', 'bottom', 'hat'].includes(p.cat);
-    const params = { map: maps[0], normalMap: maps[1] ?? null, aoMap: maps[2] ?? null, aoMapIntensity: 0.9, roughness: p.cat === 'teeth' ? 0.3 : p.cat === 'shoes' ? 0.55 : 0.82, sheen: fabric ? 0.35 : 0, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff) };
     // 衣服、帽子、鞋都能换色（鞋不叠布纹）
     const recolor = fabric || p.cat === 'shoes';
+    // 有粗糙度贴图的（中筒靴，从它的高光贴图换算的）粗糙度全听贴图的
+    const params = { map: maps[0], normalMap: maps[1] ?? null, aoMap: maps[2] ?? null, aoMapIntensity: 0.9, roughnessMap: maps[3] ?? null, roughness: maps[3] ? 1 : p.cat === 'teeth' ? 0.3 : p.cat === 'shoes' ? 0.55 : 0.82, sheen: fabric ? 0.35 : 0, sheenRoughness: 0.6, sheenColor: new THREE.Color(0xffffff) };
+    // 衣服、鞋、帽子都画两面：大多是一层面片（没有厚度），只画正面的话，从下面、后面看过去背面被剔掉，就是一个洞——
+    // 女巫帽往后垂的帽檐从正面平视只剩一条细线，卫衣领口、裙摆里面透出背景
+    if (recolor) params.side = THREE.DoubleSide;
     const parts = recolor && p.maps.parts ? await tex(p.maps.parts, false) : null;
     if (SLOTS[slot]) return;
     const mat = recolor ? fabricMaterial(params, {
       ...(p.cat === 'hat' ? { scale: 24, amount: 0.2 } : p.cat === 'shoes' ? { amount: 0 } : {}),
-      parts, dom: (p.parts ?? []).map((x) => x.dom), rough: (p.parts ?? []).map((x) => (x.kind === 'sock' ? 0.95 : 0)),
+      parts, dom: (p.parts ?? []).map((x) => x.dom), rough: (p.parts ?? []).map((x) => (x.kind === 'sock' ? 0.95 : 0)), weave: (p.parts ?? []).map((x) => x.weave),
     }) : new THREE.MeshPhysicalMaterial(params);
     const m = add(mat, p.cat);
     if (p.cat === 'teeth' || p.cat === 'tongue') m.castShadow = false;
@@ -878,6 +922,7 @@ function updateShape() {
   if (heightOut?.isConnected) heightOut.textContent = `${heightCm}cm`;
   let top = hi;
   for (const s of Object.values(SLOTS)) HM.fitProxy(s.p, P, s.P);
+  HAT_CLIP.uHatOn.value = 0;
   if (SLOTS.hat && SLOTS.hair) hatHair(SLOTS.hat, SLOTS.hair);
   // 身体：叠穿防穿插以后（皮肤可能往里压了一点）再放进网格；衣服贴合用的还是原来的 P
   const Pb = layerFix(P) ?? P, pos = bodyGeo.attributes.position;
@@ -902,53 +947,125 @@ function updateShape() {
 // 戴帽子时把帽子里的头发压进去（不然头发从帽顶穿出来）：以头的中心为原点，把帽子和头皮的三角形都投到方向图上
 // （方向用从脚底那一极做的球极投影铺成一张 120×120 的图），每个格子记下帽子离中心最近的距离、头皮离中心最远的距离；
 // 头发顶点比帽子远的，沿着这个方向拉回到帽子里面 8mm
-let HEAD_TRI = null;
+const HAT_N = 120, HAT_R = 2.5;
+// 以 cc 为中心的方向图：从脚底那一极做的球极投影，图上的坐标（连续的，格子 i 的中心在 i + 0.5）和离中心的距离；脚底那一半不要
+const hatProj = (cc, N = HAT_N) => (x, y, z) => {
+  const dx = x - cc[0], dy = y - cc[1], dz = z - cc[2], r = Math.hypot(dx, dy, dz), s2 = 1 + dy / r;
+  return s2 < 0.4 ? null : [((dx / r / s2 + HAT_R) / (2 * HAT_R)) * N, ((dz / r / s2 + HAT_R) / (2 * HAT_R)) * N, r];
+};
+let HEAD_TRI = null, HEAD_V = null;
+// 一批顶点（X 里 list 列出的，不给就是全部 n 个）投到以 cc 为中心的方向图上：每个顶点 [图上 x, 图上 y, 距离]，脚底那一半记 NaN
+function hatProjAll(cc, X, n, list = null, N = HAT_N, out = new Float32Array(n * 3)) {
+  const k = HAT_R * 2;
+  const one = (v) => {
+    const dx = X[v * 3] - cc[0], dy = X[v * 3 + 1] - cc[1], dz = X[v * 3 + 2] - cc[2], r = Math.hypot(dx, dy, dz), s2 = 1 + dy / r;
+    if (s2 < 0.4) { out[v * 3] = NaN; return; }
+    out[v * 3] = ((dx / r / s2 + HAT_R) / k) * N; out[v * 3 + 1] = ((dz / r / s2 + HAT_R) / k) * N; out[v * 3 + 2] = r;
+  };
+  if (list) for (const v of list) one(v); else for (let v = 0; v < n; v++) one(v);
+  return out;
+}
+// 每个三角形铺满它盖住的格子（中心落在三角形里的，按重心坐标插值距离；center = true），顶点也各记一下（太细的三角形一个格子中心都盖不住）。
+// 在三角形上撒点的话，图上帽顶那块被放大，点撒不满，漏掉的格子里头发会从帽子上冒出来。pv：hatProjAll 投好的顶点
+function hatRaster(pv, idx, map, near, fn, N = HAT_N) {
+  const vtx = (x, y, r, t) => { const i = Math.floor(x), j = Math.floor(y); if (i >= 0 && j >= 0 && i < N && j < N) fn(j * N + i, r, false, t); };
+  for (let t = 0; t < idx.length; t += 3) {
+    const ia = (map ? map[idx[t]] : idx[t]) * 3, ib = (map ? map[idx[t + 1]] : idx[t + 1]) * 3, ie = (map ? map[idx[t + 2]] : idx[t + 2]) * 3;
+    const ax = pv[ia], ay = pv[ia + 1], ar = pv[ia + 2], bx = pv[ib], by = pv[ib + 1], br = pv[ib + 2], ex = pv[ie], ey = pv[ie + 1], er = pv[ie + 2];
+    if (!(ax === ax && bx === bx && ex === ex) || ar > near || br > near || er > near) continue;
+    vtx(ax, ay, ar, t); vtx(bx, by, br, t); vtx(ex, ey, er, t);
+    const den = (by - ey) * (ax - ex) + (ex - bx) * (ay - ey);
+    if (Math.abs(den) < 1e-12) continue;
+    const i0 = Math.max(0, Math.floor(Math.min(ax, bx, ex))), i1 = Math.min(N - 1, Math.ceil(Math.max(ax, bx, ex)));
+    const j0 = Math.max(0, Math.floor(Math.min(ay, by, ey))), j1 = Math.min(N - 1, Math.ceil(Math.max(ay, by, ey)));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const u = i + 0.5, w = j + 0.5;
+      const l1 = ((by - ey) * (u - ex) + (ex - bx) * (w - ey)) / den, l2 = ((ey - ay) * (u - ex) + (ax - ex) * (w - ey)) / den, l3 = 1 - l1 - l2;
+      if (l1 < 0 || l2 < 0 || l3 < 0) continue;
+      fn(j * N + i, l1 * ar + l2 * br + l3 * er, true, t);
+    }
+  }
+}
+// 帽子的三角形朝不朝外（法线和从 cc 出来的方向同向）
+function hatOutward(hat, cc) {
+  const d = hat.p.data, X = hat.P, f = new Uint8Array(d.index.length / 3);
+  for (let t = 0; t < d.index.length; t += 3) {
+    const a = d.map[d.index[t]] * 3, b = d.map[d.index[t + 1]] * 3, e = d.map[d.index[t + 2]] * 3;
+    const ux = X[b] - X[a], uy = X[b + 1] - X[a + 1], uz = X[b + 2] - X[a + 2], vx = X[e] - X[a], vy = X[e + 1] - X[a + 1], vz = X[e + 2] - X[a + 2];
+    const mx = (X[a] + X[b] + X[e]) / 3 - cc[0], my = (X[a + 1] + X[b + 1] + X[e + 1]) / 3 - cc[1], mz = (X[a + 2] + X[b + 2] + X[e + 2]) / 3 - cc[2];
+    f[t / 3] = (uy * vz - uz * vy) * mx + (uz * vx - ux * vz) * my + (ux * vy - uy * vx) * mz > 0 ? 1 : 0;
+  }
+  return f;
+}
+// 头发逐像素裁剪用的图：每个格子里帽子最里面那层“朝外、没埋在头皮里”的面（use[t]）离中心多远。朝里的面（帽里、平顶帽的帽底）
+// 挡不住外面看的人，不算。hit：格子中心被帽子盖住；out：先按格子中心记好的距离（和压头发的那遍光栅化一起算）。
+// 再沿这些面的三条边每半格记一个点——帽墙顶上那圈又细又长的三角形一个格子中心都盖不住，只按中心记的话，那一圈会漏出几点头发；
+// 边上的点只记在中心被帽子盖住的格子里，帽口边上半盖半露的格子不裁（不然帽口下面露出来的头发被切掉一条）
+// 细的三角形（图上的高不到 1.5 格）三条边都走；粗的只走“朝外的面”这一片的边界（隔壁是朝里的面或者没有隔壁）——
+// 两个粗的朝外三角形中间的边，边上的格子中心总落在其中一个里面，已经记过了
+function hatClipEdges(hat, pv, use, hit, out) {
+  const N = HAT_N, d = hat.p.data;
+  const nb = hat.p.edgeNb ??= (() => {
+    const e = new Map(), r = new Int32Array(d.index.length).fill(-1);
+    for (let t = 0; t < d.index.length; t += 3) for (let k = 0; k < 3; k++) {
+      const a = d.map[d.index[t + k]], b = d.map[d.index[t + (k + 1) % 3]], key = Math.min(a, b) * 1048576 + Math.max(a, b);
+      if (e.has(key)) { const u = e.get(key); r[u] = t / 3; r[t + k] = u / 3 | 0; } else e.set(key, t + k);
+    }
+    return r;
+  })();
+  for (let t = 0; t < d.index.length; t += 3) {
+    if (!use[t / 3]) continue;
+    const a = d.map[d.index[t]] * 3, b = d.map[d.index[t + 1]] * 3, e = d.map[d.index[t + 2]] * 3;
+    const L = Math.max(Math.hypot(pv[b] - pv[a], pv[b + 1] - pv[a + 1]), Math.hypot(pv[e] - pv[b], pv[e + 1] - pv[b + 1]), Math.hypot(pv[a] - pv[e], pv[a + 1] - pv[e + 1]));
+    const thin = !(Math.abs((pv[b + 1] - pv[e + 1]) * (pv[a] - pv[e]) + (pv[e] - pv[b]) * (pv[a + 1] - pv[e + 1])) >= 1.5 * L);
+    for (let k = 0; k < 3; k++) {
+      if (!thin && nb[t + k] >= 0 && use[nb[t + k]]) continue;
+      const p0 = d.map[d.index[t + k]] * 3, p1 = d.map[d.index[t + (k + 1) % 3]] * 3;
+      if (!(pv[p0] === pv[p0] && pv[p1] === pv[p1])) continue;
+      const n = Math.max(1, Math.ceil(Math.hypot(pv[p1] - pv[p0], pv[p1 + 1] - pv[p0 + 1]) * 2));
+      for (let m = 0; m <= n; m++) {
+        const f = m / n, i = Math.floor(pv[p0] + (pv[p1] - pv[p0]) * f), j = Math.floor(pv[p0 + 1] + (pv[p1 + 1] - pv[p0 + 1]) * f), o = j * N + i;
+        if (i >= 0 && j >= 0 && i < N && j < N && hit[o]) { const r = pv[p0 + 2] + (pv[p1 + 2] - pv[p0 + 2]) * f; if (r < out[o]) out[o] = r; }
+      }
+    }
+  }
+}
 function hatHair(hat, hair) {
   const J = HM.joints(H, P), hb = H.rig.bones[BI.head];
   const c = [0, 1, 2].map((a) => (J[hb.head * 3 + a] + J[hb.tail * 3 + a]) / 2);
-  const N = 120, R = 2.5;
-  // 投影：图上的坐标（连续的，格子 i 的中心在 i + 0.5）和离中心的距离；脚底那一半不要
-  const proj = (x, y, z) => {
-    const dx = x - c[0], dy = y - c[1], dz = z - c[2], r = Math.hypot(dx, dy, dz), s2 = 1 + dy / r;
-    return s2 < 0.4 ? null : [((dx / r / s2 + R) / (2 * R)) * N, ((dz / r / s2 + R) / (2 * R)) * N, r];
-  };
+  const N = HAT_N, proj = hatProj(c);
   const bin = (x, y, z) => {
     const q = proj(x, y, z);
     if (!q) return [-1, Math.hypot(x - c[0], y - c[1], z - c[2])];
     const i = Math.floor(q[0]), j = Math.floor(q[1]);
     return i < 0 || j < 0 || i >= N || j >= N ? [-1, q[2]] : [j * N + i, q[2]];
   };
-  // 每个三角形铺满它盖住的格子（中心落在三角形里的，按重心坐标插值距离），顶点也各记一下（太细的三角形一个格子中心都盖不住）。
-  // 在三角形上撒点的话，图上帽顶那块被放大，点撒不满，漏掉的格子里头发会从帽子上冒出来
-  const raster = (X, idx, map, near, fn) => {
-    for (let t = 0; t < idx.length; t += 3) {
-      const q = [0, 1, 2].map((k) => { const v = (map ? map[idx[t + k]] : idx[t + k]) * 3; return proj(X[v], X[v + 1], X[v + 2]); });
-      if (q.some((x) => !x || x[2] > near)) continue;
-      for (const [u, w, r] of q) { const i = Math.floor(u), j = Math.floor(w); if (i >= 0 && j >= 0 && i < N && j < N) fn(j * N + i, r); }
-      const [a, b, e] = q, den = (b[1] - e[1]) * (a[0] - e[0]) + (e[0] - b[0]) * (a[1] - e[1]);
-      if (Math.abs(den) < 1e-12) continue;
-      const i0 = Math.max(0, Math.floor(Math.min(a[0], b[0], e[0]))), i1 = Math.min(N - 1, Math.ceil(Math.max(a[0], b[0], e[0])));
-      const j0 = Math.max(0, Math.floor(Math.min(a[1], b[1], e[1]))), j1 = Math.min(N - 1, Math.ceil(Math.max(a[1], b[1], e[1])));
-      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
-        const u = i + 0.5, w = j + 0.5;
-        const l1 = ((b[1] - e[1]) * (u - e[0]) + (e[0] - b[0]) * (w - e[1])) / den, l2 = ((e[1] - a[1]) * (u - e[0]) + (a[0] - e[0]) * (w - e[1])) / den, l3 = 1 - l1 - l2;
-        if (l1 < 0 || l2 < 0 || l3 < 0) continue;
-        fn(j * N + i, l1 * a[2] + l2 * b[2] + l3 * e[2]);
-      }
-    }
-  };
   // 头皮：每个方向上皮肤最外面那层离中心多远（只看离中心 20cm 以内的三角形；头附近的三角形第一次挑出来记住）
-  HEAD_TRI ??= BODY_TRI.filter((_, k, a) => { const t = k - (k % 3); for (let m = t; m < t + 3; m++) if (Math.hypot(P[a[m] * 3] - c[0], P[a[m] * 3 + 1] - c[1], P[a[m] * 3 + 2] - c[2]) > 0.3) return false; return true; });
+  HEAD_TRI ??= BODY_TRI.filter((_, k, a) => { const t = k - (k % 3); for (let m = t; m < t + 3; m++) if (Math.hypot(P[a[m] * 3] - c[0], P[a[m] * 3 + 1] - c[1], P[a[m] * 3 + 2] - c[2]) > 0.25) return false; return true; });
+  HEAD_V ??= Uint32Array.from(new Set(HEAD_TRI));
   const rskin = new Float32Array(N * N);
-  raster(P, HEAD_TRI, null, 0.2, (o, r) => { if (r > rskin[o]) rskin[o] = r; });
+  hatRaster(hatProjAll(c, P, H.nv, HEAD_V), HEAD_TRI, null, 0.2, (o, r) => { if (r > rskin[o]) rskin[o] = r; });
   // 帽子：埋在头皮底下 3mm 以上的面不算（平顶帽这种做成封闭的帽子，帽口封着一张平平的底，穿过脑袋；按它压的话头发压进头骨里，
-  // 帽檐下面露出秃的一圈）。某个方向上帽子整个埋在皮肤下面的，按埋得最浅的那层算
+  // 帽檐下面露出秃的一圈）。某个方向上帽子整个埋在皮肤下面的，按埋得最浅的那层算。
+  // 同一遍里把裁剪用的图（见 hatClipEdges）也按格子中心记上：从头的中心、从中心往下 12cm（脖子里）各做一张——从头的中心看过去，
+  // 两侧的帽檐差不多是侧着的，一个格子里帽檐的远近差得很多，帽檐上面的几点发梢裁不掉；从低一点的地方看，帽檐是斜着迎上来的
   const rmin = new Float32Array(N * N).fill(Infinity), rin = new Float32Array(N * N), rmax = new Float32Array(N * N);
-  const d = hat.p.data;
-  raster(hat.P, d.index, d.map, Infinity, (o, r) => {
+  const d = hat.p.data, nt = d.index.length / 3, pvHat = hatProjAll(c, hat.P, hat.p.nv);
+  const c2 = [c[0], c[1] - 0.12, c[2]], use = hatOutward(hat, c), use2 = hatOutward(hat, c2), buried = new Uint8Array(nt);
+  const hit = new Uint8Array(N * N), clip = HAT_CLIP.uHatMap.value.image.data.fill(1e3);
+  hatRaster(pvHat, d.index, d.map, Infinity, (o, r, center, t) => {
     if (r > rmax[o]) rmax[o] = r;
-    if (r >= rskin[o] - 0.003) { if (r < rmin[o]) rmin[o] = r; } else if (r > rin[o]) rin[o] = r;
+    if (r >= rskin[o] - 0.003) { if (r < rmin[o]) rmin[o] = r; } else { if (r > rin[o]) rin[o] = r; buried[t / 3] = 1; }
+    if (center) { hit[o] = 1; if (use[t / 3] && r >= rskin[o] - 0.003 && r < clip[o]) clip[o] = r; }
   });
+  for (let t = 0; t < nt; t++) if (buried[t]) use[t] = use2[t] = 0;
+  hatClipEdges(hat, pvHat, use, hit, clip);
+  const pvHat2 = hatProjAll(c2, hat.P, hat.p.nv), hit2 = new Uint8Array(N * N), clip2 = HAT_CLIP.uHatMap2.value.image.data.fill(1e3);
+  hatRaster(pvHat2, d.index, d.map, Infinity, (o, r, center, t) => { if (center) { hit2[o] = 1; if (use2[t / 3] && r < clip2[o]) clip2[o] = r; } });
+  hatClipEdges(hat, pvHat2, use2, hit2, clip2);
+  HAT_CLIP.uHatMap.value.needsUpdate = HAT_CLIP.uHatMap2.value.needsUpdate = true;
+  HAT_CLIP.uHatC.value.set(c[0], c[1], c[2]); HAT_CLIP.uHatC2.value.set(c2[0], c2[1], c2[2]);
+  HAT_CLIP.uHatOn.value = 1;
   for (let o = 0; o < N * N; o++) if (rmin[o] === Infinity && rin[o] > 0) rmin[o] = rin[o];
   // 往外扩 8 圈：帽子盖住的格子 dist = 0，往外每圈 +1。帽檐下面一圈的头发也压一部分（越远越少），
   // 不然一片发片一头被压进帽子、一头留在外面，会从帽墙上斜着穿出来
@@ -960,7 +1077,10 @@ function hatHair(hat, hair) {
       const o = j * N + i;
       if (rmin[o] < Infinity) continue;
       let sum = 0, n = 0;
-      for (const q of [o - 1, o + 1, o - N, o + N]) if (rmin[q] < Infinity) { sum += rmin[q]; n++; }
+      if (rmin[o - 1] < Infinity) { sum += rmin[o - 1]; n++; }
+      if (rmin[o + 1] < Infinity) { sum += rmin[o + 1]; n++; }
+      if (rmin[o - N] < Infinity) { sum += rmin[o - N]; n++; }
+      if (rmin[o + N] < Infinity) { sum += rmin[o + N]; n++; }
       if (n > 0) { nxt[o] = sum / n; dist[o] = pass; }
     }
     rmin.set(nxt);
@@ -1245,6 +1365,7 @@ function bindRest() {
     return new THREE.Quaternion().setFromUnitVectors(d, s);
   });
   pelvisRest = bones[BI.pelvis].position.clone();
+  if (prop) prop.want.place(prop.obj, (pelvisRest.y - groundY) / 0.92);
   // 眼球骨头的转轴挪到眼球中心（默认骨架的关节在眼球后面一点，转眼珠时眼球会滑进眼眶）
   const eyes = SLOTS.eyes;
   if (eyes) {
@@ -1294,6 +1415,68 @@ function startAnim(id) {
   bones.forEach((b, i) => prevLocal[i].copy(b.quaternion));
   hipsPrev.copy(bones[BI.pelvis].position).sub(pelvisRest);
   animState.id = id; animState.t0 = performance.now(); animState.blend0 = performance.now();
+  propReady = syncProp();
+}
+
+// —— 动作的道具：坐着时屁股底下一张琴凳（家具展厅里的模型，凳面高度按人调），蹲下修理时面前一个工具箱。
+//    动作是按胯高缩放到每个人身上的，道具的位置（和琴凳的高矮）也按胯高跟参考的阿哲（静止时胯高 0.92m）的比例缩放 ——
+const PROP_DIR = '../models/', PROP_EXT = '.glb';
+const PROPS = {
+  // 阿哲坐着时大腿根在 0.62m 高、z = -0.35，凳面放在 0.52m，凳子中心在 z = -0.30（大腿前半截悬在凳子外面）
+  sitting_idle: { model: 'piano_bench', place: (o, s) => { o.scale.set(1, (0.52 * s) / 0.51, 1); o.position.set(0, 0, -0.3 * s); } },
+  // 跪下以后两手在 0.3 ~ 0.45m 高、身前 0.43 ~ 0.61m 的地方忙活：工具箱靠人这一侧的边放在 0.42m
+  fixing_kneeling: { model: 'toolbox', place: (o, s) => o.position.set(0, 0, 0.42 * s + 0.125) },
+};
+const propCache = {};
+let prop = null, propReady = Promise.resolve();
+// 工具箱：红色烤漆铁皮，盖子和箱身之间一道缝，正面两个搭扣，顶上黑色提手（几个圆角盒子拼的）
+async function makeToolbox() {
+  const { RoundedBoxGeometry } = await import('three/addons/geometries/RoundedBoxGeometry.js');
+  const g = new THREE.Group(), red = new THREE.MeshStandardMaterial({ color: 0xa8231b, metalness: 0.35, roughness: 0.42 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x1d1d1f, roughness: 0.6 }), steel = new THREE.MeshStandardMaterial({ color: 0xc8c8c8, metalness: 0.9, roughness: 0.35 });
+  const box = (w, h, d, mat, x, y, z, r = 0.006) => { const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, r), mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; g.add(m); return m; };
+  box(0.46, 0.2, 0.25, red, 0, 0.1, 0, 0.012);
+  box(0.462, 0.006, 0.252, dark, 0, 0.203, 0, 0.002);
+  box(0.46, 0.075, 0.25, red, 0, 0.243, 0, 0.012);
+  for (const x of [-0.14, 0.14]) { box(0.035, 0.05, 0.012, steel, x, 0.2, 0.128, 0.003); box(0.022, 0.03, 0.022, dark, x * 0.62, 0.293, 0, 0.004); }
+  box(0.2, 0.022, 0.028, dark, 0, 0.312, 0, 0.009);
+  return g;
+}
+// 展厅的模型：.glb，或者“JSON + base64 二进制块”的 glTF（scripts/export-gltf-json.js 的产物，给只收文本的托管用），
+// 后者在内存里还原成 .glb 再解析，不用对 data: 地址发请求
+async function loadProp(id) {
+  if (id === 'toolbox') return makeToolbox();
+  const res = await fetch(`${PROP_DIR}${id}${PROP_EXT}`);
+  if (!res.ok) throw new Error(`${id}${PROP_EXT} 载入失败（${res.status}）`);
+  let buf = await res.arrayBuffer();
+  if (new DataView(buf).getUint32(0, true) !== 0x46546c67) {
+    const json = JSON.parse(new TextDecoder().decode(buf)), raw = atob(json.buffers[0].uri.slice(json.buffers[0].uri.indexOf(',') + 1));
+    const bin = Uint8Array.from(raw, (ch) => ch.charCodeAt(0));
+    delete json.buffers[0].uri;
+    const js = new TextEncoder().encode(JSON.stringify(json)), jl = (js.length + 3) & ~3, bl = (bin.length + 3) & ~3;
+    buf = new ArrayBuffer(28 + jl + bl);
+    const dv = new DataView(buf), u8 = new Uint8Array(buf);
+    dv.setUint32(0, 0x46546c67, true); dv.setUint32(4, 2, true); dv.setUint32(8, buf.byteLength, true);
+    dv.setUint32(12, jl, true); dv.setUint32(16, 0x4e4f534a, true); u8.set(js, 20); u8.fill(0x20, 20 + js.length, 20 + jl);
+    dv.setUint32(20 + jl, bl, true); dv.setUint32(24 + jl, 0x004e4942, true); u8.set(bin, 28 + jl);
+  }
+  const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+  const root = (await new GLTFLoader().parseAsync(buf, '')).scene;
+  // 只要最精细的那一级；贴地的接触阴影贴花留着（场景里的阴影只有方向光的，凳脚底下没有那一圈暗）
+  root.traverse((o) => { if (!o.isMesh) return; if (/_LOD[12]$/.test(o.name)) o.visible = false; else if (!/_Shadow$/.test(o.name)) o.castShadow = o.receiveShadow = true; });
+  return root;
+}
+async function syncProp() {
+  const want = PROPS[animState.id] ?? null;
+  if (prop && prop.want !== want) { scene.remove(prop.obj); prop = null; }
+  if (!want) return;
+  if (!prop) {
+    const obj = await (propCache[want.model] ??= loadProp(want.model));
+    if ((PROPS[animState.id] ?? null) !== want || prop) return; // 等的时候又换了动作
+    prop = { want, obj };
+    scene.add(obj);
+  }
+  want.place(prop.obj, (pelvisRest.y - groundY) / 0.92);
 }
 function applyAnim(now) {
   const clip = CLIPS[animState.id];
@@ -2091,10 +2274,10 @@ async function exportModel() {
       // 衣服、鞋、帽子：导出用一份同样参数的普通材质，换过颜色的贴图烘焙好。没有法线贴图时着色器里垫的那张平的不导出
       // （导出器要把法线贴图画到画布上翻转 Y，1×1 的数据贴图画不了，整个导出会失败）
       const recolored = pu.uPartCol.value.some((c) => c.w > 0.5);
-      for (const k of recolored ? ['normalMap', 'aoMap'] : ['map', 'normalMap', 'aoMap']) if (mat[k] && mat[k] !== FLAT_NORMAL) mat[k].userData.mimeType = 'image/jpeg';
+      for (const k of recolored ? ['normalMap', 'aoMap', 'roughnessMap'] : ['map', 'normalMap', 'aoMap', 'roughnessMap']) if (mat[k] && mat[k] !== FLAT_NORMAL) mat[k].userData.mimeType = 'image/jpeg';
       swap(m, new THREE.MeshPhysicalMaterial({
         name: slot, map: recolored ? bakeParts(mat.map, pu) : mat.map, normalMap: mat.normalMap === FLAT_NORMAL ? null : mat.normalMap, aoMap: mat.aoMap, aoMapIntensity: mat.aoMapIntensity,
-        roughness: mat.roughness, sheen: mat.sheen, sheenRoughness: mat.sheenRoughness, sheenColor: mat.sheenColor, side: mat.side,
+        roughnessMap: mat.roughnessMap, roughness: mat.roughness, sheen: mat.sheen, sheenRoughness: mat.sheenRoughness, sheenColor: mat.sheenColor, side: mat.side,
       }));
     } else for (const mm of [].concat(m.material)) for (const k of ['map', 'normalMap', 'aoMap']) if (mm[k] && !mm.transparent && !mm.alphaTest && slot !== 'eyes') mm[k].userData.mimeType = 'image/jpeg';
   }
@@ -2263,7 +2446,7 @@ if (SHOT) {
     if (!portraits.idle() || paused) { setTimeout(final, 50); return; }
     if (dirty.shape) { dirty.shape = false; updateShape(); }
     if (hiddenDirty) updateHidden();
-    updateSkin().then(() => {
+    Promise.all([updateSkin(), propReady]).then(() => {
       applyAnim(performance.now()); applyExpr(1); rig.updateMatrixWorld(true); eyeLook(); rig.updateMatrixWorld(true);
       focus(params.get('cam') ?? tabFocus(), true);
       if (params.has('az')) {

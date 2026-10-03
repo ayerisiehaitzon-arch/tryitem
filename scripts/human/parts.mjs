@@ -78,7 +78,7 @@ export function classifyShoe(r, pos, isl) {
   });
 }
 
-// 把每个三角形的部位号画进 W×H 的格子（-1 = 没有布）
+// 把每个三角形的部位号画进 W×H 的格子（-1 = 没有布，-2 = 有布、不换色）
 function rasterParts(r, triPart, W, H) {
   const out = new Int8Array(W * H).fill(-1);
   for (let t = 0; t < r.idx.length; t += 3) {
@@ -97,7 +97,7 @@ function rasterParts(r, triPart, W, H) {
   return out;
 }
 
-// rgba：处理过的漫反射贴图（W×H，sRGB 的 Uint8）；triPart：每个三角形的部位号；
+// rgba：处理过的漫反射贴图（W×H，sRGB 的 Uint8）；triPart：每个三角形的部位号（-2：有布，但不换色）；
 // tol / qmax / qmin：每个部位的色度容差、最亮能到主色的几倍（牛仔布洗白的地方更亮、更灰，要放宽）、最暗到几倍
 //   （默认 0.4，再暗的是黑纽扣、深色条纹；皮鞋的褶子很深，要放到 0.12，不然黑皮鞋换浅色时褶子里一道道黑）；
 // pick：主色怎么取——'median'（默认，所有像素的中位数）、'coverage'（取“能让最多像素一起换色”的那个颜色）
@@ -160,10 +160,10 @@ export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], 
       img[o * 3 + p] += w / (k * k);
     }
   }
-  // 有布的地方权重为准，外面往外填（贴图缩小时岛边不会被 0 拉低），再轻轻模糊一下
+  // 有布的地方权重为准（包括不换色的布，-2），外面往外填（贴图缩小时岛边不会被 0 拉低），再轻轻模糊一下
   for (let i = 0; i < out * out; i++) {
     const x = Math.floor((i % out) * k), y = Math.floor(Math.floor(i / out) * k);
-    wt[i] = part[y * W + x] >= 0 ? 1 : 0;
+    wt[i] = part[y * W + x] !== -1 ? 1 : 0;
   }
   pushPull(img, wt, out, out, 3);
   const ch = [0, 1, 2].map((c) => { const a = new Float32Array(out * out); for (let i = 0; i < out * out; i++) a[i] = img[i * 3 + c]; return blur(a, out, out, 0.7); });

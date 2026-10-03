@@ -14,6 +14,7 @@ import { parseObj, parseTarget, parseMhclo, parseMhmat, parseThreeJson } from '.
 import { flowMap, removeLogo, uvCoverage, edgePad } from './texfx.mjs';
 import { hairAO } from './hairao.mjs';
 import { islands, classify, classifyShoe, partMask } from './parts.mjs';
+import { decimate } from './decimate.mjs';
 const require = createRequire(import.meta.url);
 const sharp = require('sharp');
 
@@ -69,6 +70,60 @@ function renderMesh(src, faceFilter = () => true) {
   });
   return { map, uv, idx, faceOf };
 }
+
+// 把网格上的一道开口缝起来：a、b 是开口两边的顶点，从顶上的尖往下一一对着（第一个是两边共用的尖），对着的两个点连成一条窄带，
+// 不加顶点（贴合数据不用动）。窄带的 UV 用 a 边的，b 边的点取 a 边对应的点往 a 边那片布的里面挪（挪多远按两点在 3D 里隔多远、
+// 这片布的 UV 密度算），采到的是开口旁边的布；绕向和开口两边的面一致
+function stitch(g, a, b) {
+  const P = (v) => [g.v[v * 3], g.v[v * 3 + 1], g.v[v * 3 + 2]], dist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+  const uvs = (v) => [...new Set(g.faces.flatMap((f) => f.v.map((x, k) => (x === v ? f.t[k] : -1)).filter((t) => t >= 0)))];
+  const U = (t) => [g.vt[t * 2], g.vt[t * 2 + 1]];
+  // a 边每个点用哪个 UV（尖上有两个：取离 a 边下一个点近的那个）
+  const ta = a.map((v) => uvs(v));
+  for (const [i, ts] of ta.entries()) if (ts.length !== 1 && i > 0) throw new Error(`stitch: ${a[i]} 有 ${ts.length} 个 UV`);
+  const near = U(ta[1][0]);
+  ta[0] = [ta[0].sort((p, q) => Math.hypot(...U(p).map((x, k) => x - near[k])) - Math.hypot(...U(q).map((x, k) => x - near[k])))[0]];
+  const t0 = ta.map((x) => x[0]);
+  // UV 密度、往布里面挪的方向（a 边的垂线，指向 a 边两侧的面上其余顶点的 UV 中心）
+  const n = a.length - 1, s = Math.hypot(...U(t0[n]).map((x, k) => x - U(t0[1])[k])) / dist(P(a[n]), P(a[1]));
+  const da = U(t0[n]).map((x, k) => x - U(t0[1])[k]), dl = Math.hypot(...da), perp = [-da[1] / dl, da[0] / dl];
+  const c = [0, 0]; let m = 0;
+  for (const f of g.faces) if (f.v.some((v) => a.includes(v))) for (const [k, v] of f.v.entries()) if (!a.includes(v)) { c[0] += g.vt[f.t[k] * 2]; c[1] += g.vt[f.t[k] * 2 + 1]; m++; }
+  const mid = U(t0[Math.floor(n / 2)]), side = Math.sign((c[0] / m - mid[0]) * perp[0] + (c[1] / m - mid[1]) * perp[1]);
+  const vt = Array.from(g.vt), tb = b.map((v, i) => {
+    if (i === 0) return t0[0];
+    const d = dist(P(v), P(a[i])) * s, uv = U(t0[i]);
+    vt.push(uv[0] + perp[0] * side * d, uv[1] + perp[1] * side * d);
+    return vt.length / 2 - 1;
+  });
+  g.vt = Float32Array.from(vt);
+  // 绕向：开口 a 边上的边 a[i] → a[i+1] 在原来的面里是哪个方向，新面里反过来
+  const dir = g.faces.some((f) => f.v.some((v, k) => v === a[1] && f.v[(k + 1) % f.v.length] === a[2]));
+  const add = (vs, ts) => g.faces.push(dir ? { v: vs, t: ts } : { v: [...vs].reverse(), t: [...ts].reverse() });
+  add([a[1], a[0], b[1]], [t0[1], t0[0], tb[1]]);
+  for (let i = 1; i < n; i++) add([a[i + 1], a[i], b[i], b[i + 1]], [t0[i + 1], t0[i], tb[i], tb[i + 1]]);
+  return g;
+}
+// 网格要修一下的（按“目录/文件名”）：
+//   条纹衬衫半裙（拆出来的半裙也是这张网格）的半裙后面开着一道 17cm 高的衩，左右两片各跟各的腿走——
+//   站着时两腿一分开，衩口张成一个方形的缺口，像短裤；走路时一片跟着大腿甩到前面，露出一块皮肤。缝上，变成一条直筒裙；
+//   面数多的鞋减面（decimate.mjs）：凉拖 2.3 万个三角形（UV 拆成两百多片，接缝上的点折不动，减到八千多就停了），
+//   拼色、编织平底鞋 1.6 万减到 5000，机车靴、蝴蝶结芭蕾鞋、孟克鞋 1.3 ~ 1.6 万减到 6000；轮廓、接缝不动，看不出差别
+const GEOM_FIX = {
+  'female_elegantsuit01/female_elegantsuit01.json': (g) => stitch(g, [323, 131, 144, 157, 170, 183], [323, 337, 351, 365, 379, 393]),
+  'elvs_male_flip_flop_sandals1/maleflipflops1.obj': (g) => decimate(g, 6000),
+  'elvs_flatshoe_pointy1/elvs_basic_flatshoe2.obj': (g) => decimate(g, 5000),
+  'elvs_flatshoe_plain1/elvs_basic_flatshoe2a.obj': (g) => decimate(g, 5000),
+  'mindfront_shoes_biker_boots_male/shoes_biker_boots_male.obj': (g) => decimate(g, 6000),
+  'toigo_ballet_flats_with_bows/flats_ballet_bow.obj': (g) => decimate(g, 6000),
+  'mindfront_shoes_monk_strap_male/shoes_monk_strap_male.obj': (g) => decimate(g, 6000),
+};
+// 代理的网格：.obj 或 npm 包里的 three JSON，GEOM_FIX 里有的顺手修好
+const readGeom = (file) => {
+  const g = file.endsWith('.obj') ? parseObj(file) : parseThreeJson(file);
+  GEOM_FIX[`${path.basename(path.dirname(file))}/${path.basename(file)}`]?.(g);
+  return g;
+};
 
 const blob = new Blob();
 const meta = { version: 1, units: 'm', source: 'MakeHuman (CC0)', nv: NV };
@@ -288,6 +343,41 @@ function tex(src, name, size, { q = 82, alpha = false } = {}) {
   texJobs.push(sharp(src).resize(size, size, { fit: 'fill' }).webp({ quality: q, alphaQuality: 92, effort: 5, ...(alpha ? {} : {}) }).toFile(`${OUT}/${dst}`));
   return dst;
 }
+// 材质里写成 bumpTexture 的图：有的其实就是法线贴图（偏蓝紫，平均色接近 128,128,255），原样用；
+// 真的是凹凸（灰度的高度）的，算成法线贴图——先缩到 size，按相邻像素的高度差求斜率，
+// 强度定成“九成像素的斜率不超过 0.35”（每张图的灰度范围不一样，固定的系数有的太平、有的太陡）
+async function bumpTex(src, name, size, { q = 85 } = {}) {
+  const { data, info } = await sharp(src).removeAlpha().resize(size, size, { fit: 'fill' }).raw().toBuffer({ resolveWithObject: true });
+  const n = size * size, C = info.channels, mean = [0, 1, 2].map((c) => { let s = 0; for (let i = 0; i < n; i++) s += data[i * C + c]; return s / n; });
+  if (mean[2] > 180 && Math.abs(mean[0] - 128) < 40 && Math.abs(mean[1] - 128) < 40) return tex(src, name, size, { q });
+  const h = Float32Array.from({ length: n }, (_, i) => (0.2126 * data[i * C] + 0.7152 * data[i * C + 1] + 0.0722 * data[i * C + 2]) / 255);
+  const at = (x, y) => h[Math.min(size - 1, Math.max(0, y)) * size + Math.min(size - 1, Math.max(0, x))];
+  const gx = new Float32Array(n), gy = new Float32Array(n);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) { gx[y * size + x] = (at(x + 1, y) - at(x - 1, y)) / 2; gy[y * size + x] = (at(x, y + 1) - at(x, y - 1)) / 2; }
+  const mag = Float32Array.from(gx, (v, i) => Math.hypot(v, gy[i])).sort();
+  const k = Math.min(40, 0.35 / Math.max(1e-4, mag[Math.floor(n * 0.9)]));
+  const out = Buffer.alloc(n * 3);
+  for (let i = 0; i < n; i++) {
+    // 图上往下是 V 变小：法线的 y 分量（朝 V 增大的方向）取 +gy
+    const nx = -gx[i] * k, ny = gy[i] * k, l = Math.hypot(nx, ny, 1);
+    out[i * 3] = Math.round((nx / l * 0.5 + 0.5) * 255); out[i * 3 + 1] = Math.round((ny / l * 0.5 + 0.5) * 255); out[i * 3 + 2] = Math.round((1 / l * 0.5 + 0.5) * 255);
+  }
+  const dst = `tex/${name}.webp`;
+  texJobs.push(sharp(out, { raw: { width: size, height: size, channels: 3 } }).webp({ quality: q, effort: 5 }).toFile(`${OUT}/${dst}`));
+  return dst;
+}
+// 高光贴图（spec，亮 = 亮面）换成粗糙度贴图（G 通道，three.js 的 roughnessMap 读这个）：粗糙度 = 0.8 − 0.42 × 高光
+async function specRough(src, name, size, { q = 85 } = {}) {
+  const { data, info } = await sharp(src).removeAlpha().resize(size, size, { fit: 'fill' }).raw().toBuffer({ resolveWithObject: true });
+  const out = Buffer.alloc(size * size * 3);
+  for (let i = 0; i < size * size; i++) {
+    const L = (0.2126 * data[i * info.channels] + 0.7152 * data[i * info.channels + 1] + 0.0722 * data[i * info.channels + 2]) / 255;
+    out[i * 3] = out[i * 3 + 1] = out[i * 3 + 2] = Math.round((0.8 - 0.42 * L) * 255);
+  }
+  const dst = `tex/${name}.webp`;
+  texJobs.push(sharp(out, { raw: { width: size, height: size, channels: 3 } }).webp({ quality: q, effort: 5 }).toFile(`${OUT}/${dst}`));
+  return dst;
+}
 // 衣服、鞋、帽子的贴图：去标志 → UV 岛往外填色（缩小、mipmap 时接缝不会漏进黑色或白色的底）→ 缩小 → WebP
 // onData(rgba, W, H, r)：拿处理好的原尺寸贴图再做点别的（比如配色的权重图）
 async function texCloth(src, name, size, { q = 80, geom = null, logos = [], onData = null } = {}) {
@@ -295,7 +385,7 @@ async function texCloth(src, name, size, { q = 80, geom = null, logos = [], onDa
   const W = info.width, H = info.height, k = W / 2048;
   for (const L of logos) removeLogo(data, W, H, { ...L, box: L.box.map((x) => Math.round(x * k)), from: L.from.map((x) => Math.round(x * k)) });
   if (geom) {
-    const r = renderMesh(geom.endsWith('.obj') ? parseObj(geom) : parseThreeJson(geom));
+    const r = renderMesh(readGeom(geom));
     edgePad(data, W, H, uvCoverage(r.uv, r.idx, W, H, 3));
     if (onData) await onData(data, W, H, r);
   }
@@ -315,13 +405,15 @@ const proxies = [];
 // keep(三角形序号)：只要其中一部分三角形（把整套拆成上衣、下装），用到的渲染顶点、代理顶点重新编号，贴合数据跟着取；
 // del：这一件自己的 delete_verts（拆开的两件各藏各的）
 async function proxy(cat, name, { label, geom, clo, maps, alpha = false, cull = true, extra = {}, split = null, bake = null, keep = null, del = null }) {
-  const g = geom.endsWith('.obj') ? parseObj(geom) : parseThreeJson(geom);
+  const g = readGeom(geom);
   let c = typeof clo === 'string' ? parseMhclo(clo) : clo;
   const uuidOf = (f) => (typeof f === 'string' ? fs.readFileSync(f, 'utf8').match(/^uuid\s+(\S+)/m)?.[1] : f.uuid);
   if (g.meta?.uuid && uuidOf(clo) && g.meta.uuid !== uuidOf(clo)) throw new Error(`${name}: 网格和贴合数据不是同一版（uuid ${g.meta.uuid} ≠ ${uuidOf(clo)}）`);
   let nv = c.ref.length / 3;
   if (g.v.length / 3 !== nv) throw new Error(`${name}: 顶点数对不上 ${g.v.length / 3} vs ${nv}`);
   let r = renderMesh(g);
+  // 减过面的网格有用不到的顶点：和拆单件一样重新编号，贴合数据只留用到的
+  if (g.decimated) keep ??= () => true;
   if (keep) {
     const rid = new Map(), pid = new Map(), map = [], uv = [], idx = [], pv = [];
     for (let t = 0; t < r.idx.length; t += 3) {
@@ -580,13 +672,15 @@ const LOGOS = {
 // 配色：每套分几个部位（衣服按裁片在身上的高度分上衣 / 下装，西装、帽子整件一个部位；鞋分鞋面、鞋底、袜子），每个部位可以换颜色。
 // 种类决定网页里的色板和权重图的宽严：牛仔布洗白的地方更亮、更灰，皮面有磨旧的浅色、高光和很深的褶子，都要放宽才能一起换色；
 // 鞋面上颜色杂，主色按“覆盖面积”取，不用中位数。第三项是这一个部位自己的参数
+// 布纹（网页里叠在衣服上的细节法线）：牛仔布默认斜纹，针织的（T 恤、卫衣、毛衣、紧身的运动服）写 KNIT，别的是平纹
+const KNIT = { weave: 'knit' }, TWILL = { weave: 'twill' };
 const PARTS = {
-  male_casualsuit06: [['T 恤', 'top'], ['牛仔裤', 'denim']], male_casualsuit04: [['T 恤', 'top'], ['牛仔裤', 'denim']],
-  male_casualsuit02: [['长袖 T 恤', 'top'], ['牛仔裤', 'denim']], male_casualsuit01: [['衬衫', 'top'], ['牛仔裤', 'denim']],
+  male_casualsuit06: [['T 恤', 'top', KNIT], ['牛仔裤', 'denim']], male_casualsuit04: [['T 恤', 'top', KNIT], ['牛仔裤', 'denim']],
+  male_casualsuit02: [['长袖 T 恤', 'top', KNIT], ['牛仔裤', 'denim']], male_casualsuit01: [['衬衫', 'top'], ['牛仔裤', 'denim']],
   male_casualsuit03: [['条纹衬衫', 'top'], ['牛仔裤', 'denim']], male_casualsuit05: [['夹克', 'top'], ['牛仔裤', 'denim']],
   male_elegantsuit01: [['西装', 'suit']],
-  female_casualsuit01: [['T 恤', 'top'], ['牛仔裤', 'denim']], female_casualsuit02: [['T 恤', 'top'], ['热裤', 'denim']],
-  female_elegantsuit01: [['衬衫', 'top'], ['半裙', 'bottom']], female_sportsuit01: [['运动背心', 'top'], ['紧身裤', 'bottom']],
+  female_casualsuit01: [['T 恤', 'top', KNIT], ['牛仔裤', 'denim']], female_casualsuit02: [['T 恤', 'top', KNIT], ['热裤', 'denim']],
+  female_elegantsuit01: [['衬衫', 'top'], ['半裙', 'bottom']], female_sportsuit01: [['运动背心', 'top', KNIT], ['紧身裤', 'bottom', KNIT]],
   fedora01: [['礼帽', 'hat']], fishing_hat: [['渔夫帽', 'bucket']], pith_helmet: [['探险帽', 'helmet']],
   shoes01: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], shoes03: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']],
   shoes04: [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], shoes06: [['鞋面', 'sneaker'], ['鞋底', 'sole'], ['袜子', 'sock']],
@@ -596,7 +690,7 @@ const PARTS = {
   shoes05: [['鞋面', 'sneaker', { pick: '#f0f0f0' }], ['鞋底', 'sole'], ['袜子', 'sock']],
 };
 const KIND = {
-  top: { tol: 0.07, qmax: 3.3 }, denim: { tol: 0.15, qmax: 7 }, bottom: { tol: 0.08, qmax: 3.3 }, suit: { tol: 0.07, qmax: 3.3 },
+  top: { tol: 0.07, qmax: 3.3 }, denim: { tol: 0.15, qmax: 7, weave: 'twill' }, bottom: { tol: 0.08, qmax: 3.3 }, suit: { tol: 0.07, qmax: 3.3 },
   hat: { tol: 0.07, qmax: 3.3 }, bucket: { tol: 0.08, qmax: 3.3 }, helmet: { tol: 0.08, qmax: 3.3 }, coat: { tol: 0.08, qmax: 3.3 },
   leather: { tol: 0.12, qmax: 4.5, qmin: 0.12, pick: 'coverage' }, sneaker: { tol: 0.07, qmax: 3.3, pick: 'coverage' }, sole: { tol: 0.08, qmax: 3.3, pick: 'coverage' }, sock: { tol: 0.08, qmax: 3.3, pick: 'coverage' },
 };
@@ -606,7 +700,10 @@ const KIND = {
 const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, byColor = null }) => async (rgba, W, H, r) => {
   const def = PARTS[n], isl = islands(r), pos = restProxy(typeof clo === 'string' ? parseMhclo(clo) : clo);
   const cls = shoe ? classifyShoe(r, pos, isl) : classify(r, pos, isl);
-  if (byColor) {
+  const opt = def.map(([, k, o]) => ({ ...KIND[k], ...o }));
+  // 每个岛在贴图上的平均颜色（sRGB，按三角形中心取样）
+  let mean = null;
+  if (byColor || opt.some((o) => o.keep)) {
     const sum = Array.from({ length: isl.count }, () => [0, 0, 0, 0]);
     for (let t = 0; t < r.idx.length; t += 3) {
       const u = (r.uv[r.idx[t] * 2] + r.uv[r.idx[t + 1] * 2] + r.uv[r.idx[t + 2] * 2]) / 3, v = (r.uv[r.idx[t] * 2 + 1] + r.uv[r.idx[t + 1] * 2 + 1] + r.uv[r.idx[t + 2] * 2 + 1]) / 3;
@@ -614,17 +711,21 @@ const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, 
       for (let a = 0; a < 3; a++) sum[k][a] += rgba[o + a];
       sum[k][3]++;
     }
-    for (let k = 0; k < isl.count; k++) if (sum[k][3]) cls[k] = byColor(sum[k].slice(0, 3).map((x) => x / sum[k][3]));
+    mean = sum.map((s) => (s[3] ? s.slice(0, 3).map((x) => x / s[3]) : null));
   }
-  const triPart = Int8Array.from(isl.triIsl, (k) => (remap ? remap[cls[k]] : Math.min(cls[k], def.length - 1)));
+  if (byColor) for (let k = 0; k < isl.count; k++) if (mean[k]) cls[k] = byColor(mean[k]);
+  // 部位的 keep(rgb)：这种颜色的岛不跟着换色（-2：有布，权重 0），比如毛领大衣的米白滚边
+  const triPart = Int8Array.from(isl.triIsl, (k) => {
+    const p = remap ? remap[cls[k]] : Math.min(cls[k], def.length - 1);
+    return opt[p]?.keep && mean[k] && opt[p].keep(mean[k]) ? -2 : p;
+  });
   size = Math.min(size, W);
-  const opt = def.map(([, k, o]) => ({ ...KIND[k], ...o }));
   const { mask, dom } = partMask(rgba, W, H, r, triPart, def.length, {
     tol: opt.map((o) => o.tol), qmax: opt.map((o) => o.qmax), qmin: opt.map((o) => o.qmin), pick: opt.map((o) => o.pick), exclude: opt.flatMap((o, p) => (o.exclude ?? []).map((b) => [p, ...b])), out: size,
   });
   out.file = `tex/${file}-parts.webp`;
   await sharp(Buffer.from(mask), { raw: { width: size, height: size, channels: 3 } }).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${out.file}`);
-  out.parts = def.map(([label, kind], p) => ({ label, kind, dom: dom[p] }));
+  out.parts = def.map(([label, kind], p) => ({ label, kind, dom: dom[p], ...(opt[p].weave ? { weave: opt[p].weave } : {}) }));
   // 拆成上衣、下装时用：每个三角形按岛分的类别（0 上 1 下），权重图原始数据
   out.triCls = Int8Array.from(isl.triIsl, (k) => cls[k]);
   out.mask = mask; out.size = size;
@@ -642,23 +743,83 @@ const SPLIT = {
   // 女装也拆：两套 T 恤的 T 恤是同一件，只拆一次；牛仔裤和运动紧身裤是同一个裤型，面料不一样，都拆
   female_casualsuit01: [['f_tee', 'T 恤'], ['f_jeans', '修身牛仔裤']],
   female_casualsuit02: [null, ['f_hotpants', '热裤']],
-  female_elegantsuit01: [['f_shirt_stripe', '修身条纹衬衫'], ['f_skirt', '开衩半裙']],
+  // 半裙后面的衩缝上了（见 GEOM_FIX），不叫开衩半裙了；id 不改（存档、捏脸码里记的是 id）
+  female_elegantsuit01: [['f_shirt_stripe', '修身条纹衬衫'], ['f_skirt', '直筒半裙']],
   female_sportsuit01: [['f_sport_top', '运动短上衣'], ['f_leggings', '运动紧身裤']],
 };
+// delete_verts 不够的：条纹衬衫半裙的只删到大腿中间，半裙底下靠近下摆的那截大腿还在，走路时迈出去的那条腿从裙子前片穿出来。
+// 补上半裙（部位 1）底下的皮肤，见 coveredSkin
+const MORE_DEL = { female_elegantsuit01: 1 };
 for (const [n, [label, sex]] of Object.entries(OUTFIT)) {
-  const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
-  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `cloth-${n}`, 2048, { q: 80, geom: npmDir('clothes', n), logos: LOGOS[n] ?? [], onData: partsJob(n, clo, pj, { file: `cloth-${n}` }) }) };
+  const mm = mat('clothes', n), cf = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
+  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `cloth-${n}`, 2048, { q: 80, geom: npmDir('clothes', n), logos: LOGOS[n] ?? [], onData: partsJob(n, cf, pj, { file: `cloth-${n}` }) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, `cloth-${n}-n`, 1024, { q: 85 });
   if (mm.aomapTexture) maps.ao = tex(`${mm.dir}/${mm.aomapTexture}`, `cloth-${n}-ao`, 512, { q: 80 });
   maps.parts = pj.file;
+  const clo = { ...parseMhclo(cf), uuid: fs.readFileSync(cf, 'utf8').match(/^uuid\s+(\S+)/m)?.[1] };
+  if (n in MORE_DEL) {
+    const more = coveredSkin(clo, npmDir('clothes', n), (t) => pj.triCls[t] === MORE_DEL[n]), had = new Set(clo.del);
+    clo.del = [...new Set([...clo.del, ...more])].sort((a, b) => a - b);
+    log('outfit', n, 'delete_verts', had.size, '->', clo.del.length);
+  }
   await proxy('outfit', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { sex, parts: pj.parts } });
   log('outfit', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
-  if (SPLIT[n]) await splitOutfit(n, npmDir('clothes', n), parseMhclo(clo), pj, maps, sex, SPLIT[n]);
+  if (SPLIT[n]) await splitOutfit(n, npmDir('clothes', n), clo, pj, maps, sex, SPLIT[n]);
+}
+// 衣服（keep 挑出来的三角形）底下的皮肤顶点，静止姿势里量：从皮肤顶点沿法线往外打一条射线，reach 以内打到衣服的；
+// 或者往前、往后各打一条都打到衣服的（夹在裙子前片、后片中间——大腿内侧的法线朝着另一条腿，沿法线打不到裙子，
+// 站着晃一晃就从前片中间穿出来）。打到的地方都要离衣服边（下摆、腰口）margin 以上——离边留出余量：迈腿时下摆往上缩，
+// 靠近下摆的那一截皮肤还在，不会露出洞。大腿上的网格稀（一圈 4 ~ 5cm），按“往里缩几圈”留余量的话，裙子底下那截大腿整个缩没了，
+// 所以按离边的距离算
+function coveredSkin(c, geom, keep, { reach = 0.08, margin = 0.035 } = {}) {
+  const X = restProxy(c), r = renderMesh(readGeom(geom)), T = [], ec = new Map();
+  for (let t = 0; t < r.idx.length; t += 3) if (keep(t / 3)) {
+    const v = [r.map[r.idx[t]], r.map[r.idx[t + 1]], r.map[r.idx[t + 2]]];
+    T.push(...v);
+    for (let k = 0; k < 3; k++) { const a = Math.min(v[k], v[(k + 1) % 3]), b = Math.max(v[k], v[(k + 1) % 3]), key = a * 1048576 + b; ec.set(key, (ec.get(key) ?? 0) + 1); }
+  }
+  const border = [];
+  for (const [key, n] of ec) if (n === 1) border.push(Math.floor(key / 1048576), key % 1048576);
+  const lo = [0, 1, 2].map((a) => Math.min(...T.map((v) => X[v * 3 + a]))), hi = [0, 1, 2].map((a) => Math.max(...T.map((v) => X[v * 3 + a])));
+  const N = new Float32Array(NV * 3), skin = new Uint8Array(NV);
+  for (let t = 0; t < bodyTris.length; t += 3) {
+    const v = [bodyTris[t], bodyTris[t + 1], bodyTris[t + 2]], p = v.map((i) => [P0[i * 3], P0[i * 3 + 1], P0[i * 3 + 2]]);
+    const u = [0, 1, 2].map((a) => p[1][a] - p[0][a]), w = [0, 1, 2].map((a) => p[2][a] - p[0][a]);
+    const n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]];
+    for (const i of v) { skin[i] = 1; for (let a = 0; a < 3; a++) N[i * 3 + a] += n[a]; }
+  }
+  // 从 o 沿 d 打到衣服上最近的那一点（max 以内），打不到返回 null
+  const cast = (o, d, max) => {
+    let hit = Infinity;
+    for (let t = 0; t < T.length; t += 3) {
+      // Möller–Trumbore
+      const a = T[t] * 3, b = T[t + 1] * 3, e = T[t + 2] * 3;
+      const e1 = [X[b] - X[a], X[b + 1] - X[a + 1], X[b + 2] - X[a + 2]], e2 = [X[e] - X[a], X[e + 1] - X[a + 1], X[e + 2] - X[a + 2]];
+      const pv = [d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0]], det = e1[0] * pv[0] + e1[1] * pv[1] + e1[2] * pv[2];
+      if (Math.abs(det) < 1e-12) continue;
+      const tv = [o[0] - X[a], o[1] - X[a + 1], o[2] - X[a + 2]], uu = (tv[0] * pv[0] + tv[1] * pv[1] + tv[2] * pv[2]) / det;
+      if (uu < 0 || uu > 1) continue;
+      const qv = [tv[1] * e1[2] - tv[2] * e1[1], tv[2] * e1[0] - tv[0] * e1[2], tv[0] * e1[1] - tv[1] * e1[0]], vv = (d[0] * qv[0] + d[1] * qv[1] + d[2] * qv[2]) / det;
+      if (vv < 0 || uu + vv > 1) continue;
+      const tt = (e2[0] * qv[0] + e2[1] * qv[1] + e2[2] * qv[2]) / det;
+      if (tt > 0 && tt < Math.min(max, hit)) hit = tt;
+    }
+    return hit === Infinity ? null : [0, 1, 2].map((k) => o[k] + d[k] * hit);
+  };
+  const farFromEdge = (h) => h && border.every((b) => Math.hypot(X[b * 3] - h[0], X[b * 3 + 1] - h[1], X[b * 3 + 2] - h[2]) >= margin);
+  const out = [];
+  for (let v = 0; v < NV; v++) {
+    const o = [P0[v * 3], P0[v * 3 + 1], P0[v * 3 + 2]];
+    if (!skin[v] || o.some((x, a) => x < lo[a] - reach || x > hi[a] + reach)) continue;
+    const l = Math.hypot(N[v * 3], N[v * 3 + 1], N[v * 3 + 2]), d = [N[v * 3] / l, N[v * 3 + 1] / l, N[v * 3 + 2] / l];
+    if (farFromEdge(cast(o, d, reach)) || (farFromEdge(cast(o, [0, 0, 1], 1)) && farFromEdge(cast(o, [0, 0, -1], 1)))) out.push(v);
+  }
+  return out;
 }
 // 把一套拆成上衣、下装两件（pieces[0] 上衣、pieces[1] 下装，可以只要一件；第三项是这一件额外的属性，比如 z）：
 // 每个代理顶点属于哪一件按三角形的岛分；整套的 delete_verts 按“离哪一件的顶点近”分给两件（静止形状）
 async function splitOutfit(n, geom, c, pj, maps, sex, pieces) {
-  const pos = restProxy(c), r = renderMesh(parseThreeJson(geom));
+  const pos = restProxy(c), r = renderMesh(readGeom(geom));
   const vc = new Int8Array(c.ref.length / 3).fill(-1);
   for (let t = 0; t < r.idx.length; t += 3) for (let j = 0; j < 3; j++) vc[r.map[r.idx[t + j]]] = pj.triCls[t / 3];
   const dels = [[], []];
@@ -709,7 +870,7 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, 'hat-fedora01-n', 512, { q: 85 });
   maps.parts = pj.file;
   await proxy('hat', 'fedora01', { label: '礼帽', geom: npmDir('clothes', 'fedora'), clo: cf, maps, extra: { parts: pj.parts } });
-  const uvOf = (n) => { const r = renderMesh(parseThreeJson(npmDir('clothes', n))); return JSON.stringify([r.uv, r.idx]); };
+  const uvOf = (n) => { const r = renderMesh(readGeom(npmDir('clothes', n))); return JSON.stringify([r.uv, r.idx]); };
   if (uvOf('fedora') !== uvOf('fedora_cocked')) throw new Error('歪戴礼帽和礼帽的 UV 不一样，不能共用贴图');
   await proxy('hat', 'fedora01_cocked', { label: '歪戴礼帽', geom: npmDir('clothes', 'fedora_cocked'), clo: `${DEB}/clothes/fedora01/fedora_cocked.mhclo`, maps, extra: { parts: pj.parts } });
   const COMMUNITY = {
@@ -736,14 +897,15 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
     dress_mint: ['F_Dress_02', 'outfit', '薄荷绿背心裙', [['连衣裙', 'top']]],
     dress_black: ['F_Dress_04', 'outfit', '黑色小礼服', [['连衣裙', 'suit']]],
     tube_dress: ['TubeDress', 'outfit', '白色抹胸裙', [['抹胸裙', 'top']]],
-    coat: ['Coat', 'outfit', '毛领大衣', [['大衣', 'coat']]],
+    // 毛领大衣：银灰的大衣（偏冷），领子、门襟、袖口、下摆、口袋的毛边是米白的（偏暖），毛边不跟着换色
+    coat: ['Coat', 'outfit', '毛领大衣', [['大衣', 'coat', { keep: (c) => c[0] > c[2] + 6 }]]],
     tunic: ['Asymmetric_Tunic_and_Sash', 'top', '碎花长衫', [['长衫', 'top']]],
-    tank_top: ['Tank_Top_01', 'top', '运动背心', [['背心', 'top']], { sex: 'u' }],
+    tank_top: ['Tank_Top_01', 'top', '运动背心', [['背心', 'top', KNIT]], { sex: 'u' }],
     sleeveless: ['Sleeveless', 'top', '无袖系带衬衫', [['衬衫', 'top']]],
-    tube_top: ['TubeTop', 'top', '抹胸', [['抹胸', 'top']]],
-    vneck_top: ['VNeckTop', 'top', 'V 领背心', [['背心', 'top']]],
+    tube_top: ['TubeTop', 'top', '抹胸', [['抹胸', 'top', KNIT]]],
+    vneck_top: ['VNeckTop', 'top', 'V 领背心', [['背心', 'top', KNIT]]],
     cami: ['spaghetti-top', 'top', '吊带衫', [['吊带衫', 'top']]],
-    camo_tee: ['short_tail_camo_tee', 'top', '迷彩短 T', [['T 恤', 'top']]],
+    camo_tee: ['short_tail_camo_tee', 'top', '迷彩短 T', [['T 恤', 'top', KNIT]]],
     tight_jeans: ['Tightjeans', 'bottom', '紧身牛仔裤', [['牛仔裤', 'denim']]],
     jean_shorts: ['ShortJeans', 'bottom', '牛仔短裤', [['短裤', 'denim']]],
     jean_skirt: ['JeansSkirt', 'bottom', '牛仔短裙', [['短裙', 'denim']]],
@@ -769,7 +931,7 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
 {
   const n = 'male_worksuit01', geom = npmDir('clothes', n), dir = path.dirname(geom), m0 = JSON.parse(fs.readFileSync(geom, 'utf8')).materials[0];
   const clo = npmClo('clothes', n, parseMhclo(`${DEB}/clothes/male_casualsuit06/male_casualsuit06.mhclo`).scale), pj = {};
-  PARTS[n] = [['T 恤', 'top'], ['背带裤', 'denim']];
+  PARTS[n] = [['T 恤', 'top', KNIT], ['背带裤', 'denim']];
   // 白的是 T 恤，其余（蓝布、背带、黑扣子、金属夹子）都是背带裤
   const byColor = (c) => (Math.min(...c) > 200 ? 0 : 1);
   const maps = { map: await texCloth(`${dir}/${m0.mapDiffuse}`, `cloth-${n}`, 512, { q: 86, geom, onData: partsJob(n, clo, pj, { size: 512, file: `cloth-${n}`, byColor }) }) };
@@ -786,13 +948,13 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
   // z：叠穿的里外（越大越外）。系统自带的鞋是 5（裤腿盖在鞋外面），雪地靴 55（裤腿塞进靴筒）；
   // 不塞进裤子的衬衫放到牛仔裤（50）外面、背带裤（52）里面
   const C = {
-    hoodie: ['elvs_hooded_sweat_jacket1', 'top', '连帽卫衣', [['卫衣', 'top']], { sex: 'u' }],
-    sweater_grey: ['mindfront_knitted_sweater_01', 'top', '粗针毛衣', [['毛衣', 'top']], { sex: 'u' }],
-    fisherman: ['toigo_fisherman_sweater', 'top', '罗纹毛衣', [['毛衣', 'top']], { sex: 'u' }],
-    lusekofta: ['mindfront_lusekofta', 'top', '挪威毛衣开衫', [['开衫', 'top']], { sex: 'u' }],
-    polo: ['namuhekam_male_polo_shirt', 'top', 'Polo 衫', [['Polo 衫', 'top']], { sex: 'm' }],
+    hoodie: ['elvs_hooded_sweat_jacket1', 'top', '连帽卫衣', [['卫衣', 'top', KNIT]], { sex: 'u' }],
+    sweater_grey: ['mindfront_knitted_sweater_01', 'top', '粗针毛衣', [['毛衣', 'top', KNIT]], { sex: 'u' }],
+    fisherman: ['toigo_fisherman_sweater', 'top', '罗纹毛衣', [['毛衣', 'top', KNIT]], { sex: 'u' }],
+    lusekofta: ['mindfront_lusekofta', 'top', '挪威毛衣开衫', [['开衫', 'top', KNIT]], { sex: 'u' }],
+    polo: ['namuhekam_male_polo_shirt', 'top', 'Polo 衫', [['Polo 衫', 'top', KNIT]], { sex: 'm' }],
     shirt_casual: ['elvs_male_shirt_untucked_bd1', 'top', '休闲衬衫', [['衬衫', 'top']], { sex: 'm', z: 51 }],
-    cargo: ['cortu_cargo_pants', 'bottom', '工装裤', [['工装裤', 'bottom']], { sex: 'm' }],
+    cargo: ['cortu_cargo_pants', 'bottom', '工装裤', [['工装裤', 'bottom', TWILL]], { sex: 'm' }],
     shorts: ['elvs_male_trouser_short_1', 'bottom', '休闲短裤', [['短裤', 'bottom']], { sex: 'm' }],
     board_shorts: ['mindfront_male_swimming_trunks_01', 'bottom', '沙滩短裤', [['短裤', 'bottom']], { sex: 'm' }],
     worn_jeans: ['mindfront_male_trousers_1', 'bottom', '做旧牛仔裤', [['牛仔裤', 'denim']], { sex: 'm' }],
@@ -816,7 +978,7 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
     cycling: ['punkduck_cycling_shoes', 'shoes', '骑行鞋', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
     medieval: ['punkduck_medieval_boots', 'shoes', '翻边短靴', [['靴面', 'leather'], ['鞋底', 'sole']], { sex: 'u' }],
     newsboy: ['jujube_newsboy_cap', 'hat', '报童帽', [['帽子', 'hat']]],
-    beanie: ['mindfront_knitted_hat_01', 'hat', '毛线帽', [['毛线帽', 'hat']]],
+    beanie: ['mindfront_knitted_hat_01', 'hat', '毛线帽', [['毛线帽', 'hat', KNIT]]],
     // 女款：连衣裙、旗袍、西装套装、网球裙（整套），上衣、半身裙、裤子，平底鞋、马靴，帽子。高跟鞋要配 MakeHuman 专门的脚部形变才穿得上，没收；
     // 罗马凉鞋、镂空的玛丽珍靠贴图透明做出镂空，这里衣服不做透明，也没收；男款的牛津鞋、机车靴女生穿也合脚，不再收女式的那一双
     qipao: ['punkduck_middle_length_qipao', 'outfit', '旗袍', [['旗袍', 'top']], { sex: 'f' }],
@@ -831,11 +993,11 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
     f_suit_pink: ['toigo_female_suit_2', 'outfit', '粉色西装套装', [['西装', 'suit']], { sex: 'f' }],
     f_suit_db: ['toigo_female_double-breasted_suit', 'outfit', '灰色双排扣套装', [['西装', 'suit']], { sex: 'f' }],
     tennis_dress: ['punkduck_tennis_dress', 'outfit', '网球裙', [['网球裙', 'top']], { sex: 'f' }],
-    off_shoulder: ['punkduck_off-shoulder_long-sleeve_top', 'top', '露肩上衣', [['上衣', 'top']], { sex: 'f' }],
+    off_shoulder: ['punkduck_off-shoulder_long-sleeve_top', 'top', '露肩上衣', [['上衣', 'top', KNIT]], { sex: 'f' }],
     lace_blouse: ['punkduck_lace_up_blouse', 'top', '系带衬衫', [['衬衫', 'top']], { sex: 'f' }],
-    retro_top: ['punkduck_retro_top', 'top', '红色复古上衣', [['上衣', 'top']], { sex: 'f' }],
+    retro_top: ['punkduck_retro_top', 'top', '红色复古上衣', [['上衣', 'top', KNIT]], { sex: 'f' }],
     crop_top: ['punkduck_high_neck_crop_top', 'top', '蕾丝高领背心', [['背心', 'top']], { sex: 'f' }],
-    breton: ['ews_striped_shirt', 'top', '条纹短上衣', [['上衣', 'top']], { sex: 'f' }],
+    breton: ['ews_striped_shirt', 'top', '条纹短上衣', [['上衣', 'top', KNIT]], { sex: 'f' }],
     long_skirt: ['toigo_long_full_skirt', 'bottom', '碎花长裙', [['长裙', 'bottom']], { sex: 'f' }],
     pleated_plaid: ['elvs_pleated_plaid_mini_skirt', 'bottom', '蓝格子百褶裙', [['百褶裙', 'bottom']], { sex: 'f' }],
     pleated_red: ['mtknife_pleated_mini_skirt', 'bottom', '红格子百褶裙', [['百褶裙', 'bottom']], { sex: 'f' }],
@@ -868,7 +1030,7 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
     baseball_cap: ['toigo_maga_hat', 'hat', '棒球帽', [['帽子', 'hat']]],
     flat_cap: ['elvs_male_flat_cap1', 'hat', '平顶帽', [['帽子', 'hat']]],
     santa_hat: ['elvs_santa_hat', 'hat', '圣诞帽', [['帽子', 'hat']]],
-    slouchy_beanie: ['elvs_slouchy_beanie1', 'hat', '宽松毛线帽', [['毛线帽', 'hat']]],
+    slouchy_beanie: ['elvs_slouchy_beanie1', 'hat', '宽松毛线帽', [['毛线帽', 'hat', KNIT]]],
     top_hat: ['elvs_tophat1', 'hat', '高礼帽', [['帽子', 'hat']]],
     chef_hat: ['elvs_unisex_chef_hat_1', 'hat', '厨师帽', [['帽子', 'hat']]],
     patrol_cap: ['mindfront_patrol_cap', 'hat', '迷彩帽', [['帽子', 'hat']]],
@@ -884,6 +1046,11 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
     const shoe = slot === 'shoes', file = `${shoe ? 'shoe' : slot === 'hat' ? 'hat' : 'cloth'}-${id}`, pj = {};
     const maps = { map: await texCloth(packFile(dir, mm.diffuseTexture), file, 1024, { q: 84, geom, logos: LOGOS[id] ?? [], onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe && parts.length === 2 ? [0, 1, 0] : null }) }) };
     if (mm.normalmapTexture) maps.normal = tex(packFile(dir, mm.normalmapTexture), `${file}-n`, 512, { q: 85 });
+    // 只给了 bumpTexture 的（中筒靴的皮纹、黑色西装套裙；泳裤、罗纹毛衣写在 bumpTexture 里的其实是法线贴图）：
+    // 以前没用上，中筒靴光溜溜的像胶靴。鞋的皮纹细，法线留 1024²
+    else if (mm.bumpTexture) maps.normal = await bumpTex(packFile(dir, mm.bumpTexture), `${file}-n`, shoe ? 1024 : 512);
+    // 中筒靴还用上它的高光贴图：磨旧的地方亮、褶子里哑，皮面的光泽不再是一整片一样的
+    if (id === 'calf_boots') maps.rough = await specRough(packFile(dir, mm.specularTexture), `${file}-r`, 512);
     maps.parts = pj.file;
     const pm = await proxy(slot, id, { label, geom, clo, maps, extra: { parts: pj.parts, credit, ...over } });
     log(slot, id, 'verts', pm.nv, 'tris', pm.tris, 'z', pm.z, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '), credit.author, credit.license);
