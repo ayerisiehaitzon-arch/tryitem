@@ -559,7 +559,9 @@ const recolorGamma = (Ld, Lt) => 1 / (1 + 0.5 * Math.max(0, Math.log2(Math.max(1
 // 布纹也按部位挑（T 恤配牛仔裤：上面针织、下面斜纹；权重图上不换色的地方——明线、商标——用第一个部位的）。
 // 配色的 uniform 不放 userData（导出 glTF 时 userData 会被写进 extras，里面有贴图就会整张转成 data URL）
 const PART_U = new WeakMap();
-function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = [], rough = [], weave = [] } = {}) {
+// link：跟随的一块（{ mask, dom, to }）：单独一张权重图、自己的主色，颜色跟着第 to 个部位换（白色运动鞋鞋面后半截的深灰
+// 跟着鞋面，几双 MakeHuman 鞋的鞋底侧边跟着鞋底）
+function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = [], rough = [], weave = [], link = null } = {}) {
   const wk = [0, 1, 2].map((p) => Math.max(0, WEAVE_KINDS.indexOf(weave[p] ?? weave[0] ?? 'plain')));
   const u = {
     uWeave: { value: WEAVES[0] }, uWeave1: { value: WEAVES[1] }, uWeave2: { value: WEAVES[2] }, uWeaveScale: { value: scale }, uWeaveAmt: { value: amount },
@@ -567,6 +569,8 @@ function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = 
     uPartMask: { value: parts ?? NO_PARTS }, uPartDom: { value: [0, 1, 2].map((p) => new THREE.Vector3(...(dom[p] ?? [0.2, 0.2, 0.2]))) },
     uPartCol: { value: [0, 1, 2].map(() => new THREE.Vector4(0, 0, 0, 0)) },
     uPartRough: { value: new THREE.Vector3(rough[0] ?? 0, rough[1] ?? 0, rough[2] ?? 0) }, // 0 = 不改
+    uLinkMask: { value: link?.mask ?? NO_PARTS }, uLinkDom: { value: new THREE.Vector3(...(link?.dom ?? [0.2, 0.2, 0.2])) }, uLinkCol: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uLinkTo: { value: link ? link.to : -1 }, // 着色器里不用，换色时看
   };
   const mat = new THREE.MeshPhysicalMaterial({ ...params, normalMap: params.normalMap ?? FLAT_NORMAL });
   PART_U.set(mat, u);
@@ -576,6 +580,7 @@ function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = 
       .replace('#include <common>', `#include <common>
 uniform sampler2D uWeave; uniform sampler2D uWeave1; uniform sampler2D uWeave2; uniform float uWeaveScale; uniform float uWeaveAmt; uniform vec3 uPartWeave;
 uniform sampler2D uPartMask; uniform vec3 uPartDom[ 3 ]; uniform vec4 uPartCol[ 3 ]; uniform vec3 uPartRough;
+uniform sampler2D uLinkMask; uniform vec3 uLinkDom; uniform vec4 uLinkCol;
 vec3 recolorPart( vec3 c, float L, vec3 dom, vec4 col, float w ) {
   if ( col.a < 0.5 || w <= 0.0 ) return c;
   const vec3 LUM = vec3( 0.2126, 0.7152, 0.0722 );
@@ -591,6 +596,7 @@ vec3 partW = texture2D( uPartMask, vMapUv ).rgb;
   diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uPartDom[ 0 ], uPartCol[ 0 ], partW.r );
   diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uPartDom[ 1 ], uPartCol[ 1 ], partW.g );
   diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uPartDom[ 2 ], uPartCol[ 2 ], partW.b );
+  diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uLinkDom, uLinkCol, texture2D( uLinkMask, vMapUv ).r );
 }`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
 roughnessFactor = mix( roughnessFactor, uPartRough.x, partW.r * step( 0.001, uPartRough.x ) );
@@ -884,10 +890,11 @@ async function setSlot(slot, id) {
     // 女巫帽往后垂的帽檐从正面平视只剩一条细线，卫衣领口、裙摆里面透出背景
     if (recolor) params.side = THREE.DoubleSide;
     const parts = recolor && p.maps.parts ? await tex(p.maps.parts, false) : null;
+    const link = recolor && p.maps.link && p.link ? { mask: await tex(p.maps.link, false), dom: p.link.dom, to: p.link.to } : null;
     if (SLOTS[slot]) return;
     const mat = recolor ? fabricMaterial(params, {
       ...(p.cat === 'hat' ? { scale: 24, amount: 0.2 } : p.cat === 'shoes' ? { amount: 0 } : {}),
-      parts, dom: (p.parts ?? []).map((x) => x.dom), rough: (p.parts ?? []).map((x) => (x.kind === 'sock' ? 0.95 : 0)), weave: (p.parts ?? []).map((x) => x.weave),
+      parts, dom: (p.parts ?? []).map((x) => x.dom), rough: (p.parts ?? []).map((x) => (x.kind === 'sock' ? 0.95 : 0)), weave: (p.parts ?? []).map((x) => x.weave), link,
     }) : new THREE.MeshPhysicalMaterial(params);
     const m = add(mat, p.cat);
     if (p.cat === 'teeth' || p.cat === 'tongue') m.castShadow = false;
@@ -1223,6 +1230,89 @@ function garmentSkin(p) {
   }
   return sk;
 }
+// 鞋穿在裤腿里（裤子在外层）：下面按“离皮肤多高”往里压，在脚背上不管用——那里的皮肤法线差不多朝上，沿法线压只是把
+// 高帮球鞋的鞋舌往下挪，横着还在裤腿外面，鞋舌顶从直筒牛仔裤的裤脚上面两三厘米处穿出来。改按裤腿的截面收：
+// 腿的中轴取裤脚最高处往上 1 ~ 5cm 那一整圈裤子的中心（裤脚常常是斜的，前高后低，再往下就只剩半圈）；
+// 裤脚是裤子网格最下面的那圈边，按角度在相邻两个边上顶点之间插值出这个方向裤脚的高度；裤脚往上 30cm 以内，
+// 每 10° 一个方向（取 ±15° 内的裤子顶点）按高度排好，查某个高度的裤腿半径时在上下两圈之间插值（裤子网格稀，
+// 两圈之间常常差 4cm，只看最近那圈不准）。腿中间（|x| < 2cm）也有布的是长裙、大衣，不算裤腿
+function legRings(Y, m, side, border) {
+  const NA = 36, TAU = 2 * Math.PI, SPAN = 0.3;
+  let lo = Infinity;
+  for (let j = 0; j < m; j++) if (Math.sign(Y[j * 3]) === side) lo = Math.min(lo, Y[j * 3 + 1]);
+  if (lo === Infinity) return null;
+  for (let j = 0; j < m; j++) if (Y[j * 3 + 1] < lo + SPAN && Math.abs(Y[j * 3]) < 0.02) return null;
+  // 裤脚那圈边：最低 12cm 以内的边上顶点
+  const hemV = [];
+  for (let j = 0; j < m; j++) if (Math.sign(Y[j * 3]) === side && border[j] && Y[j * 3 + 1] < lo + 0.12) hemV.push(j);
+  if (hemV.length < 6) return null;
+  let hi = -Infinity;
+  for (const j of hemV) hi = Math.max(hi, Y[j * 3 + 1]);
+  // 中轴：裤脚最高处往上 1 ~ 5cm 的一整圈；不够就用裤脚那圈
+  let cx = 0, cz = 0, cn = 0;
+  for (let j = 0; j < m; j++) if (Math.sign(Y[j * 3]) === side && Y[j * 3 + 1] > hi + 0.01 && Y[j * 3 + 1] < hi + 0.05) { cx += Y[j * 3]; cz += Y[j * 3 + 2]; cn++; }
+  if (cn < 6) { cx = cz = cn = 0; for (const j of hemV) { cx += Y[j * 3]; cz += Y[j * 3 + 2]; cn++; } }
+  cx /= cn; cz /= cn;
+  const ang = (x, z) => { let t = Math.atan2(z - cz, x - cx); if (t < 0) t += TAU; return t; };
+  // 裤脚：按角度排好的 [角度, 高度, 半径]，查的时候在两边最近的两个之间插值
+  const hem = hemV.map((j) => [ang(Y[j * 3], Y[j * 3 + 2]), Y[j * 3 + 1], Math.hypot(Y[j * 3] - cx, Y[j * 3 + 2] - cz)]).sort((a, b) => a[0] - b[0]);
+  const hemAt = (t) => {
+    let k = hem.findIndex((e) => e[0] >= t);
+    if (k < 0) k = 0;
+    const p = hem[(k - 1 + hem.length) % hem.length], q = hem[k];
+    let span = q[0] - p[0], d = t - p[0];
+    if (span <= 0) span += TAU;
+    if (d < 0) d += TAU;
+    const w = span > 1e-9 ? Math.min(1, d / span) : 0;
+    return [p[1] + (q[1] - p[1]) * w, p[2] + (q[2] - p[2]) * w];
+  };
+  // 每个方向：±15° 以内、裤脚往上 30cm 以内的裤子顶点，[高度, 半径] 按高度排好，同一圈（高度差 5mm 以内）的取最远的
+  const cols = Array.from({ length: NA }, () => []);
+  for (let j = 0; j < m; j++) {
+    const x = Y[j * 3], y = Y[j * 3 + 1], z = Y[j * 3 + 2];
+    if (Math.sign(x) !== side || y > lo + SPAN) continue;
+    const t = ang(x, z), r = Math.hypot(x - cx, z - cz);
+    for (let k = 0; k < NA; k++) {
+      let d = Math.abs(t - ((k + 0.5) / NA) * TAU);
+      if (d > Math.PI) d = TAU - d;
+      if (d < 0.262) cols[k].push([y, r]);
+    }
+  }
+  for (const c of cols) {
+    c.sort((a, b) => a[0] - b[0]);
+    for (let i = c.length - 1; i > 0; i--) if (c[i][0] - c[i - 1][0] < 0.005) { c[i - 1][1] = Math.max(c[i - 1][1], c[i][1]); c.splice(i, 1); }
+  }
+  const radius = (y, t) => {
+    const c = cols[Math.min(NA - 1, Math.floor((t / TAU) * NA))];
+    if (!c.length) return hemAt(t)[1];
+    let k = c.findIndex((e) => e[0] >= y);
+    if (k < 0) return c[c.length - 1][1];
+    if (k === 0) return c[0][1];
+    const p = c[k - 1], q = c[k];
+    return p[1] + (q[1] - p[1]) * ((y - p[0]) / Math.max(1e-6, q[0] - p[0]));
+  };
+  return { lo, SPAN, cx, cz, ang, hemAt, radius };
+}
+// 鞋收进裤腿：这个方向的裤脚以上（往上 5mm 内渐渐收足），离中轴比裤腿还远就水平地往中轴收。离裤腿留的余量越往上越大
+// （贴着裤脚 6mm，每高 1cm 多 4mm，最多 2.5cm）：动起来裤子和鞋各按各的骨头走，脚踝一弯裤腿后面就贴上来，
+// 高帮球鞋的后跟拉环只比裤腿往里收一点的话，待机动作里还会从裤脚后面露出来。裤脚以下看得见，不动
+function tuckInLeg(X, n, Y, m, border) {
+  for (const side of [-1, 1]) {
+    const L = legRings(Y, m, side, border);
+    if (!L) continue;
+    for (let i = 0; i < n; i++) {
+      const x = X[i * 3], y = X[i * 3 + 1], z = X[i * 3 + 2];
+      if (Math.sign(x) !== side || y > L.lo + L.SPAN) continue;
+      const t = L.ang(x, z), up = y - L.hemAt(t)[0], w = Math.min(1, up / 0.005);
+      if (w <= 0) continue;
+      const lim = L.radius(y, t) - Math.min(0.025, 0.006 + 0.4 * up), d = Math.hypot(x - L.cx, z - L.cz);
+      if (!(d > lim) || lim <= 0) continue;
+      const k = 1 + (lim / d - 1) * w;
+      X[i * 3] = L.cx + (x - L.cx) * k;
+      X[i * 3 + 2] = L.cz + (z - L.cz) * k;
+    }
+  }
+}
 function layerFix(P) {
   const gs = Object.values(SLOTS).filter((s) => GARMENT.includes(s.p.cat)).sort((a, b) => layerZ(b.p) - layerZ(a.p));
   if (!gs.length) return null;
@@ -1232,6 +1322,8 @@ function layerFix(P) {
   const height = (X, i, v) => (X[i * 3] - P[v * 3]) * N[v * 3] + (X[i * 3 + 1] - P[v * 3 + 1]) * N[v * 3 + 1] + (X[i * 3 + 2] - P[v * 3 + 2]) * N[v * 3 + 2];
   for (const s of gs) {
     const X = s.P, foot = restFit(s.p).foot;
+    // 鞋穿在裤腿里：先按裤腿的截面水平收一遍
+    if (s.p.cat === 'shoes') for (const o of gs) if (layerZ(o.p) > layerZ(s.p) && (o.p.cat === 'bottom' || o.p.cat === 'outfit')) tuckInLeg(X, s.p.nv, o.P, o.p.nv, coverBorder(o.p));
     // 先把这一件压到外面几层底下
     for (let i = 0; i < s.p.nv; i++) {
       const v = foot[i];
@@ -1632,6 +1724,9 @@ function applyColors() {
       u.uPartCol.value.forEach((v, i) => {
         if (cols[i]) { const c = new THREE.Color(cols[i]); v.set(c.r, c.g, c.b, 1); } else v.set(0, 0, 0, 0);
       });
+      // 跟随的一块用它跟着的那个部位的颜色
+      const lc = u.uLinkTo.value >= 0 && cols[u.uLinkTo.value];
+      if (lc) { const c = new THREE.Color(lc); u.uLinkCol.value.set(c.r, c.g, c.b, 1); } else u.uLinkCol.value.set(0, 0, 0, 0);
     }
   }
 }
@@ -2283,17 +2378,20 @@ function bakeDye(tex, color, mean, size = 1024, absorb = false) {
 function bakeParts(map, u) {
   const size = Math.min(2048, map.image.width || 2048);
   const D = pixels(map.image, size), M = pixels(u.uPartMask.value.image, size), out = new Uint8ClampedArray(size * size * 4);
-  const parts = u.uPartCol.value.map((c, p) => {
+  // 跟随的一块当第 4 个部位（权重在它自己那张图的 R 里）
+  const LM = u.uLinkTo.value >= 0 && u.uLinkCol.value.w > 0.5 ? pixels(u.uLinkMask.value.image, size) : null;
+  const part = (c, d) => {
     if (c.w < 0.5) return null;
-    const d = u.uPartDom.value[p], Ld = Math.max(1e-4, 0.2126 * d.x + 0.7152 * d.y + 0.0722 * d.z), Lt = 0.2126 * c.x + 0.7152 * c.y + 0.0722 * c.z;
+    const Ld = Math.max(1e-4, 0.2126 * d.x + 0.7152 * d.y + 0.0722 * d.z), Lt = 0.2126 * c.x + 0.7152 * c.y + 0.0722 * c.z;
     return { r: c.x, g: c.y, b: c.z, Ld, e: recolorGamma(Ld, Lt) };
-  });
+  };
+  const parts = [...u.uPartCol.value.map((c, p) => part(c, u.uPartDom.value[p])), LM ? part(u.uLinkCol.value, u.uLinkDom.value) : null];
   for (let i = 0; i < size * size; i++) {
     const o = i * 4;
     let r = lin(D[o]), g = lin(D[o + 1]), b = lin(D[o + 2]);
     const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    for (let p = 0; p < 3; p++) {
-      const P = parts[p], w = M[o + p] / 255;
+    for (let p = 0; p < 4; p++) {
+      const P = parts[p], w = p < 3 ? M[o + p] / 255 : LM ? LM[o] / 255 : 0;
       if (!P || w <= 0) continue;
       const k = Math.max(L / P.Ld, 1e-4) ** P.e;
       r += (Math.min(1, P.r * k) - r) * w; g += (Math.min(1, P.g * k) - g) * w; b += (Math.min(1, P.b * k) - b) * w;

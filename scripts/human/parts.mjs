@@ -81,11 +81,11 @@ export function classifyShoe(r, pos, isl, { toUpper = null, mean = null } = {}) 
   });
 }
 
-// 把每个三角形的部位号画进 W×H 的格子（-1 = 没有布，-2 = 有布、不换色）；给了 vh（每个渲染顶点离地多高，米）
-// 就顺便插值出每个像素离地的高度（out.hgt）
-function rasterParts(r, triPart, W, H, vh = null) {
-  const out = new Int8Array(W * H).fill(-1), hgt = vh ? new Float32Array(W * H) : null;
-  out.hgt = hgt;
+// 把每个三角形的部位号画进 W×H 的格子（-1 = 没有布，-2 = 有布、不换色）；attrs 是每个渲染顶点上的几样值
+// （离地高度、前后位置……），顺便插值到每个像素上（out.attr[k]）
+function rasterParts(r, triPart, W, H, attrs = []) {
+  const out = new Int8Array(W * H).fill(-1);
+  out.attr = attrs.map(() => new Float32Array(W * H));
   for (let t = 0; t < r.idx.length; t += 3) {
     const P = [0, 1, 2].map((k) => [r.uv[r.idx[t + k] * 2] * W, (1 - r.uv[r.idx[t + k] * 2 + 1]) * H]);
     const x0 = Math.max(0, Math.floor(Math.min(P[0][0], P[1][0], P[2][0]))), x1 = Math.min(W - 1, Math.ceil(Math.max(P[0][0], P[1][0], P[2][0])));
@@ -98,7 +98,7 @@ function rasterParts(r, triPart, W, H, vh = null) {
       const w1 = ((P[2][0] - px) * (P[0][1] - py) - (P[0][0] - px) * (P[2][1] - py)) / area;
       if (w0 >= -0.01 && w1 >= -0.01 && w0 + w1 <= 1.01) {
         out[y * W + x] = triPart[t / 3];
-        if (hgt) hgt[y * W + x] = w0 * vh[r.idx[t]] + w1 * vh[r.idx[t + 1]] + (1 - w0 - w1) * vh[r.idx[t + 2]];
+        attrs.forEach((a, k) => { out.attr[k][y * W + x] = w0 * a[r.idx[t]] + w1 * a[r.idx[t + 1]] + (1 - w0 - w1) * a[r.idx[t + 2]]; });
       }
     }
   }
@@ -112,16 +112,31 @@ function rasterParts(r, triPart, W, H, vh = null) {
 //   或者直接给一个颜色 '#rrggbb'（从它出发，取跟它一起换色的像素的中位数。白球鞋鞋面的贴图里，鞋里子、鞋口的深色网布
 //   占的地方比白色还大——虽然穿着看不见——中位数和覆盖面积都会挑中深灰，只能直接说“白的那块”）；
 // exclude：[[部位, u0, v0, u1, v1], …] 贴图上这些框里（0~1，v 朝下）不换色
-// relabel(部位, 线性颜色, 离地高度)：逐像素改部位（vh 是每个渲染顶点离地的高度）。白色运动鞋看得见的那圈深色鞋底侧边
-// 画在鞋面那片上，按岛分只能跟着鞋面（又是深色，鞋面换什么颜色它都不动）：离地 2.5cm 以内的深色像素划给鞋底
-// 返回 { mask: RGB Uint8（R、G、B = 部位 0、1、2 的权重）, dom: 每个部位的主色（线性） }
-export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], qmin = [], pick = [], exclude = [], out = 1024, vh = null, relabel = null } = {}) {
-  const part = rasterParts(r, triPart, W, H, relabel ? vh : null);
+// 逐像素的规则（vh、vf、vs 是每个渲染顶点离地的高度（米）、在这只鞋上的前后位置（0 后跟 ~ 1 鞋尖）、离鞋面和鞋底的
+// 接缝多远（米），插值到像素上一起给）：
+// relabel(部位, 线性颜色, 高度, 前后, u, v, 离接缝)：改部位。白色运动鞋看得见的那圈深色鞋底侧边画在鞋面那片上，按岛分只能跟着鞋面
+//   （又是深色，鞋面换什么颜色它都不动）：离接缝 2.5cm 以内的深色像素划给鞋底
+// link：{ test(…同上), tol, qmax, qmin, pick }：test 说是的像素单独算一块“跟随”的部位（自己的主色、自己的权重图），
+//   网页里它跟着别的部位换色（颜色用那个部位的，明暗按自己的主色算）。白色运动鞋鞋面后半截是深灰的，按白色主色算亮度，
+//   换什么颜色都还是黑的；几双 MakeHuman 鞋的鞋底侧边和鞋面画在一片上、颜色也差不多，只能单独挑出来跟着鞋底
+// 返回 { mask: RGB Uint8（R、G、B = 部位 0、1、2 的权重）, dom: 每个部位的主色（线性）, link?: 跟随部位的权重（单通道）, linkDom? }
+export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], qmin = [], pick = [], exclude = [], out = 1024, vh = null, vf = null, vs = null, relabel = null, link = null } = {}) {
+  const per = relabel || link;
+  const part = rasterParts(r, triPart, W, H, per ? [vh, vf, ...(vs ? [vs] : [])] : []);
   const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
   const chroma = (c) => { const s = c[0] + c[1] + c[2] + 1e-5; return [c[0] / s, c[1] / s]; };
   const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const px = (i) => [LUT[rgba[i * 4]], LUT[rgba[i * 4 + 1]], LUT[rgba[i * 4 + 2]]];
-  if (relabel) for (let i = 0; i < W * H; i++) if (part[i] >= 0) part[i] = relabel(part[i], px(i), part.hgt[i]);
+  // 跟随的那块用第 4 个部位号（3）
+  const LINK = 3;
+  if (per) for (let i = 0; i < W * H; i++) {
+    if (part[i] < 0) continue;
+    const c = px(i), h = part.attr[0][i], f = part.attr[1][i], u = (i % W) / W, v = Math.floor(i / W) / H, s = vs ? part.attr[2][i] : Infinity;
+    if (relabel) part[i] = relabel(part[i], c, h, f, u, v, s);
+    if (link && link.test(part[i], c, h, f, u, v, s)) part[i] = LINK;
+  }
+  if (link) { tol = [...tol]; qmax = [...qmax]; qmin = [...qmin]; pick = [...pick]; tol[LINK] = link.tol; qmax[LINK] = link.qmax; qmin[LINK] = link.qmin; pick[LINK] = link.pick; }
+  const plist = [...Array(nParts).keys(), ...(link ? [LINK] : [])];
   // 一个像素跟着主色换色的权重：色度接近 × 亮度在主色的 q0 ~ Q 倍之间
   const weightFor = (d, T, Q, q0 = 0.4) => {
     const Ld = Math.max(1e-4, luma(d)), cd = chroma(d);
@@ -134,12 +149,12 @@ export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], 
   };
   const median = (ch) => ch.map((v) => { v.sort((a, b) => a - b); return v.length ? v[v.length >> 1] : 0.5; });
   const dom = [];
-  for (let p = 0; p < nParts; p++) {
+  for (const p of plist) {
     const T = tol[p] ?? 0.07, Q = qmax[p] ?? 3.3, q0 = qmin[p] ?? 0.4;
     if (!pick[p] || pick[p] === 'median') {
       const ch = [[], [], []];
       for (let i = 0; i < W * H; i += 3) if (part[i] === p) for (let c = 0; c < 3; c++) ch[c].push(LUT[rgba[i * 4 + c]]);
-      dom.push(median(ch));
+      dom[p] = median(ch);
       continue;
     }
     // 均匀取约 8000 个像素当样本，其中约 160 个当候选主色，挑覆盖（权重和）最大的（直接给了颜色就用它）；再取跟它一起换色的像素的中位数
@@ -156,11 +171,11 @@ export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], 
     }
     const f = weightFor(best ?? [0.5, 0.5, 0.5], T, Q, q0), ch = [[], [], []];
     for (const [c, L] of S) if (f(c, L) > 0.5) for (let q = 0; q < 3; q++) ch[q].push(c[q]);
-    dom.push(median(ch));
+    dom[p] = median(ch);
   }
-  // 按输出分辨率算（先在原分辨率算，再盒式缩小）
-  const k = W / out, img = new Float32Array(out * out * 3), wt = new Float32Array(out * out);
-  for (let p = 0; p < nParts; p++) {
+  // 按输出分辨率算（先在原分辨率算，再盒式缩小）；第 4 个通道是跟随的那块
+  const NC = link ? 4 : 3, k = W / out, img = new Float32Array(out * out * NC), wt = new Float32Array(out * out);
+  for (const p of plist) {
     const f = weightFor(dom[p], tol[p] ?? 0.07, qmax[p] ?? 3.3, qmin[p] ?? 0.4), boxes = exclude.filter((e) => e[0] === p);
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const i = y * W + x;
@@ -168,7 +183,7 @@ export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], 
       if (boxes.some(([, u0, v0, u1, v1]) => x >= u0 * W && x < u1 * W && y >= v0 * H && y < v1 * H)) continue;
       const c = px(i), w = f(c, luma(c));
       const o = Math.floor(y / k) * out + Math.floor(x / k);
-      img[o * 3 + p] += w / (k * k);
+      img[o * NC + p] += w / (k * k);
     }
   }
   // 有布的地方权重为准（包括不换色的布，-2），外面往外填（贴图缩小时岛边不会被 0 拉低），再轻轻模糊一下
@@ -176,10 +191,13 @@ export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], 
     const x = Math.floor((i % out) * k), y = Math.floor(Math.floor(i / out) * k);
     wt[i] = part[y * W + x] !== -1 ? 1 : 0;
   }
-  pushPull(img, wt, out, out, 3);
-  const ch = [0, 1, 2].map((c) => { const a = new Float32Array(out * out); for (let i = 0; i < out * out; i++) a[i] = img[i * 3 + c]; return blur(a, out, out, 0.7); });
+  pushPull(img, wt, out, out, NC);
+  const ch = [...Array(NC).keys()].map((c) => { const a = new Float32Array(out * out); for (let i = 0; i < out * out; i++) a[i] = img[i * NC + c]; return blur(a, out, out, 0.7); });
   // 32 级就够（无损 WebP 小一半）
+  const q32 = (x) => Math.min(255, Math.round(Math.min(1, Math.max(0, x)) * 32) * 8);
   const mask = new Uint8Array(out * out * 3);
-  for (let i = 0; i < out * out; i++) for (let c = 0; c < 3; c++) mask[i * 3 + c] = Math.min(255, Math.round(Math.min(1, Math.max(0, ch[c][i])) * 32) * 8);
-  return { mask, dom: dom.map((d) => d.map((x) => +x.toFixed(5))) };
+  for (let i = 0; i < out * out; i++) for (let c = 0; c < 3; c++) mask[i * 3 + c] = q32(ch[c][i]);
+  const res = { mask, dom: [...Array(nParts).keys()].map((p) => dom[p].map((x) => +x.toFixed(5))) };
+  if (link) { res.link = Uint8Array.from(ch[LINK], q32); res.linkDom = dom[LINK].map((x) => +x.toFixed(5)); }
+  return res;
 }

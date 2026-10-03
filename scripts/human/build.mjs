@@ -697,8 +697,9 @@ const KIND = {
 // texCloth 的 onData：算部位、主色和权重图（size²，R/G/B = 部位 0/1/2，无损 WebP，文件名跟着贴图：<file>-parts.webp），结果放进 out
 // remap：岛的类别 → 部位（靴子：靴筒在“袜子”的高度，归鞋面）
 // byColor(rgb)：按岛在贴图上的平均颜色分上下（背带裤的背带在肩上，按高度会分到 T 恤那边）
-// toUpper(rgb, 中位高度)：鞋的矮岛里哪些归鞋面（见 classifyShoe）；relabel：逐像素改部位（见 partMask）
-const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, byColor = null, toUpper = null, relabel = null }) => async (rgba, W, H, r) => {
+// toUpper(rgb, 中位高度)：鞋的矮岛里哪些归鞋面（见 classifyShoe）；relabel、link：逐像素改部位、挑出跟随的一块（见 partMask，
+// link 多一个 to：跟着哪个部位换色）
+const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, byColor = null, toUpper = null, relabel = null, link = null }) => async (rgba, W, H, r) => {
   const def = PARTS[n], isl = islands(r), pos = restProxy(typeof clo === 'string' ? parseMhclo(clo) : clo);
   const opt = def.map(([, k, o]) => ({ ...KIND[k], ...o }));
   // 每个岛在贴图上的平均颜色（sRGB，按三角形中心取样）
@@ -721,18 +722,50 @@ const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, 
     return opt[p]?.keep && mean[k] && opt[p].keep(mean[k]) ? -2 : p;
   });
   size = Math.min(size, W);
-  // 每个渲染顶点离地多高（逐像素改部位时用）
-  let vh = null;
-  if (relabel) {
+  // 每个渲染顶点离地多高、在这只鞋上前后的位置（0 后跟 ~ 1 鞋尖，两只鞋按 x 的正负分开算）、离鞋面和鞋底的接缝多远：
+  // 逐像素改部位时用。静止姿势里两腿岔开，鞋往外歪着（外侧比内侧高 1.5cm 多），按离地高度量，鞋沿两边不一样高；
+  // 接缝是鞋面岛、鞋底岛在 3D 里共用的那些边，离它的距离两边一样
+  let vh = null, vf = null, vs = null;
+  if (relabel || link) {
     let y0 = Infinity;
-    for (let i = 1; i < pos.length; i += 3) y0 = Math.min(y0, pos[i]);
+    const nv = pos.length / 3, z0 = [Infinity, Infinity], z1 = [-Infinity, -Infinity], sd = (v) => (pos[v * 3] > 0 ? 1 : 0);
+    for (let v = 0; v < nv; v++) { y0 = Math.min(y0, pos[v * 3 + 1]); z0[sd(v)] = Math.min(z0[sd(v)], pos[v * 3 + 2]); z1[sd(v)] = Math.max(z1[sd(v)], pos[v * 3 + 2]); }
     vh = Float32Array.from(r.map, (v) => pos[v * 3 + 1] - y0);
+    vf = Float32Array.from(r.map, (v) => (pos[v * 3 + 2] - z0[sd(v)]) / Math.max(1e-6, z1[sd(v)] - z0[sd(v)]));
+    if (shoe) {
+      const side = new Map();
+      for (let t = 0; t < r.idx.length; t += 3) for (let k = 0; k < 3; k++) {
+        const a = r.map[r.idx[t + k]], b = r.map[r.idx[t + (k + 1) % 3]], key = Math.min(a, b) * nv + Math.max(a, b);
+        side.set(key, (side.get(key) ?? 0) | (1 << cls[isl.triIsl[t / 3]]));
+      }
+      const seg = [...side].filter(([, m]) => (m & 3) === 3).map(([key]) => [Math.floor(key / nv), key % nv]);
+      const dist = (v) => {
+        let best = Infinity;
+        for (const [a, b] of seg) {
+          let ab2 = 0, t = 0;
+          for (let i = 0; i < 3; i++) { const e = pos[b * 3 + i] - pos[a * 3 + i]; ab2 += e * e; t += (pos[v * 3 + i] - pos[a * 3 + i]) * e; }
+          t = ab2 > 0 ? Math.max(0, Math.min(1, t / ab2)) : 0;
+          let d2 = 0;
+          for (let i = 0; i < 3; i++) d2 += (pos[v * 3 + i] - pos[a * 3 + i] - t * (pos[b * 3 + i] - pos[a * 3 + i])) ** 2;
+          best = Math.min(best, d2);
+        }
+        return Math.sqrt(best);
+      };
+      if (seg.length) vs = Float32Array.from(r.map, dist);
+    }
   }
-  const { mask, dom } = partMask(rgba, W, H, r, triPart, def.length, {
-    tol: opt.map((o) => o.tol), qmax: opt.map((o) => o.qmax), qmin: opt.map((o) => o.qmin), pick: opt.map((o) => o.pick), exclude: opt.flatMap((o, p) => (o.exclude ?? []).map((b) => [p, ...b])), out: size, vh, relabel,
+  const res = partMask(rgba, W, H, r, triPart, def.length, {
+    tol: opt.map((o) => o.tol), qmax: opt.map((o) => o.qmax), qmin: opt.map((o) => o.qmin), pick: opt.map((o) => o.pick), exclude: opt.flatMap((o, p) => (o.exclude ?? []).map((b) => [p, ...b])), out: size, vh, vf, vs, relabel,
+    link: link && { ...KIND[def[link.to][1]], ...link },
   });
+  const { mask, dom } = res;
   out.file = `tex/${file}-parts.webp`;
   await sharp(Buffer.from(mask), { raw: { width: size, height: size, channels: 3 } }).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${out.file}`);
+  if (link) {
+    out.linkFile = `tex/${file}-link.webp`;
+    out.link = { to: link.to, dom: res.linkDom };
+    await sharp(Buffer.from(res.link), { raw: { width: size, height: size, channels: 1 } }).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${out.linkFile}`);
+  }
   out.parts = def.map(([label, kind], p) => ({ label, kind, dom: dom[p], ...(opt[p].weave ? { weave: opt[p].weave } : {}) }));
   // 拆成上衣、下装时用：每个三角形按岛分的类别（0 上 1 下），权重图原始数据
   out.triCls = Int8Array.from(isl.triIsl, (k) => cls[k]);
@@ -861,15 +894,38 @@ async function splitOutfit(n, geom, c, pj, maps, sex, pieces) {
 }
 // 鞋也分男女（m 男款，f 女款，u 都行），网页里按它排序、随机
 const SHOES = { shoes05: ['白色运动鞋', 'u'], shoes06: ['蓝色运动鞋', 'u'], shoes02: ['旧运动鞋', 'u'], shoes01: ['棕色皮鞋', 'm'], shoes04: ['黑色休闲皮鞋', 'm'], shoes03: ['黑色皮鞋', 'u'] };
-// 白色运动鞋：鞋面那片上离地 2.5cm 以内的深色像素（看得见的那圈鞋底侧边）划给鞋底，配色方案里的鞋底颜色才看得见。
-// 只限深色的：鞋头的白鞋面也低，不能跟着走；蓝色、旧运动鞋的侧边和鞋面一个颜色，跟着鞋面换就好
-const RELABEL = { shoes05: (p, c, h) => (p === 0 && h < 0.025 && 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] < 0.06 ? 1 : p) };
+// 白色运动鞋：鞋面那片上离接缝（见 partsJob）2.5cm 以内的深色像素（看得见的那圈鞋底侧边）划给鞋底，配色方案里的鞋底颜色才看得见。
+// 只限深色的：鞋头的白鞋面也低，不能跟着走。划出来的这圈记成一张图（三双运动鞋是同一个网格，贴图上的位置一样），
+// 旧运动鞋拿它挑鞋底侧边
+const lumaS = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+const RIM = { n: 512, a: new Uint8Array(512 * 512) }, rimAt = (u, v) => RIM.a[Math.min(RIM.n - 1, Math.floor(v * RIM.n)) * RIM.n + Math.min(RIM.n - 1, Math.floor(u * RIM.n))];
+const RELABEL = {
+  shoes05: (p, c, h, f, u, v, s) => {
+    if (p !== 0 || s >= 0.025 || lumaS(c) >= 0.06) return p;
+    RIM.a[Math.min(RIM.n - 1, Math.floor(v * RIM.n)) * RIM.n + Math.min(RIM.n - 1, Math.floor(u * RIM.n))] = 1;
+    return 1;
+  },
+};
+// 跟随的一块（见 partMask 的 link）：白色运动鞋鞋面后半截的深灰（鞋跟、鞋口一圈）跟着鞋面换色；蓝色运动鞋鞋底侧边上的白色、
+// 旧运动鞋那圈鞋底侧边（位置照白色运动鞋的）、两双 MakeHuman 皮鞋的鞋沿和鞋跟侧面跟着鞋底。
+// 皮鞋（两双是同一个网格）：鞋面那片上离接缝 1.3cm 以内是鞋沿；后跟那段（前后 0.3 以内）的鞋跟侧面有 2.5cm 高，
+// 0.3 ~ 0.36 之间（鞋跟前脸）慢慢收窄。鞋沿、鞋跟是皮的，深浅差得多（鞋跟上磨出来的浅色、黑鞋跟上更黑的斑），
+// 按皮料的容差算权重，不然换浅色鞋底时鞋跟上一块块留着原来的黑
+const welt = { to: 1, ...KIND.leather, test: (p, c, h, f, u, v, s) => p === 0 && s < (f < 0.3 ? 0.025 : f < 0.36 ? 0.025 - (f - 0.3) / 0.06 * 0.012 : 0.013) };
+const LINK = {
+  shoes05: { to: 0, test: (p, c, h, f) => p === 0 && f < 0.38 && lumaS(c) < 0.06 },
+  shoes06: { to: 1, test: (p, c, h, f, u, v, s) => p === 0 && s < 0.02 && lumaS(c) > 0.2 },
+  shoes02: { to: 1, test: (p, c, h, f, u, v, s) => p === 0 && s < 0.03 && rimAt(u, v) },
+  shoes01: welt,
+  shoes04: welt,
+};
 for (const [n, [label, sex]] of Object.entries(SHOES)) {
   const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
-  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `shoe-${n}`, 1024, { q: 84, geom: npmDir('clothes', n), onData: partsJob(n, clo, pj, { size: 512, file: `shoe-${n}`, shoe: true, relabel: RELABEL[n] }) }) };
+  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `shoe-${n}`, 1024, { q: 84, geom: npmDir('clothes', n), onData: partsJob(n, clo, pj, { size: 512, file: `shoe-${n}`, shoe: true, relabel: RELABEL[n], link: LINK[n] }) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, `shoe-${n}-n`, 1024, { q: 85 });
   maps.parts = pj.file;
-  await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { sex, parts: pj.parts } });
+  if (pj.linkFile) maps.link = pj.linkFile;
+  await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { sex, parts: pj.parts, ...(pj.link ? { link: pj.link } : {}) } });
   log('shoes', n, pj.parts.map((x) => `${x.label} ${x.dom.map((v) => Math.round(255 * v ** (1 / 2.2))).join(',')}`).join(' / '));
 }
 // 帽子：礼帽（Ubuntu 包里的 .mhclo）；歪戴的礼帽是同一顶帽子换一套贴合数据，UV 一样，贴图和权重图共用；
