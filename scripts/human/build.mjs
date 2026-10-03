@@ -697,13 +697,13 @@ const KIND = {
 // texCloth 的 onData：算部位、主色和权重图（size²，R/G/B = 部位 0/1/2，无损 WebP，文件名跟着贴图：<file>-parts.webp），结果放进 out
 // remap：岛的类别 → 部位（靴子：靴筒在“袜子”的高度，归鞋面）
 // byColor(rgb)：按岛在贴图上的平均颜色分上下（背带裤的背带在肩上，按高度会分到 T 恤那边）
-const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, byColor = null }) => async (rgba, W, H, r) => {
+// toUpper(rgb, 中位高度)：鞋的矮岛里哪些归鞋面（见 classifyShoe）；relabel：逐像素改部位（见 partMask）
+const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, byColor = null, toUpper = null, relabel = null }) => async (rgba, W, H, r) => {
   const def = PARTS[n], isl = islands(r), pos = restProxy(typeof clo === 'string' ? parseMhclo(clo) : clo);
-  const cls = shoe ? classifyShoe(r, pos, isl) : classify(r, pos, isl);
   const opt = def.map(([, k, o]) => ({ ...KIND[k], ...o }));
   // 每个岛在贴图上的平均颜色（sRGB，按三角形中心取样）
   let mean = null;
-  if (byColor || opt.some((o) => o.keep)) {
+  if (byColor || toUpper || opt.some((o) => o.keep)) {
     const sum = Array.from({ length: isl.count }, () => [0, 0, 0, 0]);
     for (let t = 0; t < r.idx.length; t += 3) {
       const u = (r.uv[r.idx[t] * 2] + r.uv[r.idx[t + 1] * 2] + r.uv[r.idx[t + 2] * 2]) / 3, v = (r.uv[r.idx[t] * 2 + 1] + r.uv[r.idx[t + 1] * 2 + 1] + r.uv[r.idx[t + 2] * 2 + 1]) / 3;
@@ -713,6 +713,7 @@ const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, 
     }
     mean = sum.map((s) => (s[3] ? s.slice(0, 3).map((x) => x / s[3]) : null));
   }
+  const cls = shoe ? classifyShoe(r, pos, isl, { toUpper, mean }) : classify(r, pos, isl);
   if (byColor) for (let k = 0; k < isl.count; k++) if (mean[k]) cls[k] = byColor(mean[k]);
   // 部位的 keep(rgb)：这种颜色的岛不跟着换色（-2：有布，权重 0），比如毛领大衣的米白滚边
   const triPart = Int8Array.from(isl.triIsl, (k) => {
@@ -720,8 +721,15 @@ const partsJob = (n, clo, out, { size = 1024, file, shoe = false, remap = null, 
     return opt[p]?.keep && mean[k] && opt[p].keep(mean[k]) ? -2 : p;
   });
   size = Math.min(size, W);
+  // 每个渲染顶点离地多高（逐像素改部位时用）
+  let vh = null;
+  if (relabel) {
+    let y0 = Infinity;
+    for (let i = 1; i < pos.length; i += 3) y0 = Math.min(y0, pos[i]);
+    vh = Float32Array.from(r.map, (v) => pos[v * 3 + 1] - y0);
+  }
   const { mask, dom } = partMask(rgba, W, H, r, triPart, def.length, {
-    tol: opt.map((o) => o.tol), qmax: opt.map((o) => o.qmax), qmin: opt.map((o) => o.qmin), pick: opt.map((o) => o.pick), exclude: opt.flatMap((o, p) => (o.exclude ?? []).map((b) => [p, ...b])), out: size,
+    tol: opt.map((o) => o.tol), qmax: opt.map((o) => o.qmax), qmin: opt.map((o) => o.qmin), pick: opt.map((o) => o.pick), exclude: opt.flatMap((o, p) => (o.exclude ?? []).map((b) => [p, ...b])), out: size, vh, relabel,
   });
   out.file = `tex/${file}-parts.webp`;
   await sharp(Buffer.from(mask), { raw: { width: size, height: size, channels: 3 } }).webp({ lossless: true, effort: 5 }).toFile(`${OUT}/${out.file}`);
@@ -853,9 +861,12 @@ async function splitOutfit(n, geom, c, pj, maps, sex, pieces) {
 }
 // 鞋也分男女（m 男款，f 女款，u 都行），网页里按它排序、随机
 const SHOES = { shoes05: ['白色运动鞋', 'u'], shoes06: ['蓝色运动鞋', 'u'], shoes02: ['旧运动鞋', 'u'], shoes01: ['棕色皮鞋', 'm'], shoes04: ['黑色休闲皮鞋', 'm'], shoes03: ['黑色皮鞋', 'u'] };
+// 白色运动鞋：鞋面那片上离地 2.5cm 以内的深色像素（看得见的那圈鞋底侧边）划给鞋底，配色方案里的鞋底颜色才看得见。
+// 只限深色的：鞋头的白鞋面也低，不能跟着走；蓝色、旧运动鞋的侧边和鞋面一个颜色，跟着鞋面换就好
+const RELABEL = { shoes05: (p, c, h) => (p === 0 && h < 0.025 && 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] < 0.06 ? 1 : p) };
 for (const [n, [label, sex]] of Object.entries(SHOES)) {
   const mm = mat('clothes', n), clo = `${DEB}/clothes/${n}/${n}.mhclo`, pj = {};
-  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `shoe-${n}`, 1024, { q: 84, geom: npmDir('clothes', n), onData: partsJob(n, clo, pj, { size: 512, file: `shoe-${n}`, shoe: true }) }) };
+  const maps = { map: await texCloth(`${mm.dir}/${mm.diffuseTexture}`, `shoe-${n}`, 1024, { q: 84, geom: npmDir('clothes', n), onData: partsJob(n, clo, pj, { size: 512, file: `shoe-${n}`, shoe: true, relabel: RELABEL[n] }) }) };
   if (mm.normalmapTexture) maps.normal = tex(`${mm.dir}/${mm.normalmapTexture}`, `shoe-${n}-n`, 1024, { q: 85 });
   maps.parts = pj.file;
   await proxy('shoes', n, { label, geom: npmDir('clothes', n), clo, maps, extra: { sex, parts: pj.parts } });
@@ -963,8 +974,8 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
     dinner_jacket: ['toigo_suit_with_dinner_jacket', 'outfit', '白色礼服', [['外套', 'suit', { pick: '#f0efee' }], ['西裤', 'suit']], { sex: 'm' }],
     suit_navy: ['toigo_male_suit_3', 'outfit', '藏青西装', [['西装', 'suit']], { sex: 'm' }],
     suit_db: ['toigo_male_double-breasted_suit', 'outfit', '双排扣西装', [['西装', 'suit']], { sex: 'm' }],
-    // 高帮球鞋：贴图上黑色的鞋里子比红色鞋面占的地方大，主色直接说从红色找
-    hightops: ['culturalibre_sneakers', 'shoes', '高帮球鞋', [['鞋面', 'sneaker', { pick: '#9e3e31' }], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
+    // 高帮球鞋：贴图上黑色的鞋里子比红色鞋面占的地方大，主色直接说从红色找；红棕色有深有浅、有的偏橙，色度容差放宽
+    hightops: ['culturalibre_sneakers', 'shoes', '高帮球鞋', [['鞋面', 'sneaker', { pick: '#9e3e31', tol: 0.12 }], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
     runners: ['punkduck_running_shoes_01', 'shoes', '跑鞋', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
     slipons: ['punkduck_comfortable_sneakers', 'shoes', '一脚蹬', [['鞋面', 'sneaker'], ['鞋底', 'sole']], { z: 5, sex: 'u' }],
     oxford: ['mindfront_shoes_oxford_male', 'shoes', '牛津鞋', [['鞋面', 'leather'], ['鞋底', 'sole'], ['袜子', 'sock']], { z: 5, sex: 'u' }],
@@ -1040,11 +1051,19 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
     leather_helmet: ['maciekg_leather_helmet', 'hat', '皮飞行帽', [['帽子', 'hat']]],
     witch_hat: ['elvs_witchy_hallows_hat1', 'hat', '女巫帽', [['帽子', 'hat']], { sex: 'f' }],
   };
+  // 鞋头、鞋帮下半截单独裁成一片的鞋：这些岛整片在离地 8cm 以内，按高度会算成鞋底，换配色时鞋头留着原色（高帮球鞋的红鞋头、
+  // 复古训练鞋的黄鞋头、跑鞋的黑鞋头），或者跟着鞋底变（T 字带鞋的鞋面下半截、中筒靴的靴头）。按颜色或中位高度找回鞋面；
+  // 网球鞋、骑行鞋的防撞鞋头和切尔西靴的鞋跟本来就该跟鞋底一起，不动
+  const TO_UPPER = {
+    hightops: (c) => c[0] > 1.6 * c[1], // 红棕色的
+    kill_bill: (c, med) => med > 0.035, runners: (c, med) => med > 0.035, // 鞋头和鞋带孔边上的几块小片
+    t_bar: (c, med) => med > 0.03, calf_boots: (c, med) => med > 0.03,
+  };
   for (const [id, [src, slot, label, parts, over]] of Object.entries(C)) {
     PARTS[id] = parts;
     const { dir, clo, geom, mm, credit } = packItem('clothes', src);
     const shoe = slot === 'shoes', file = `${shoe ? 'shoe' : slot === 'hat' ? 'hat' : 'cloth'}-${id}`, pj = {};
-    const maps = { map: await texCloth(packFile(dir, mm.diffuseTexture), file, 1024, { q: 84, geom, logos: LOGOS[id] ?? [], onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe && parts.length === 2 ? [0, 1, 0] : null }) }) };
+    const maps = { map: await texCloth(packFile(dir, mm.diffuseTexture), file, 1024, { q: 84, geom, logos: LOGOS[id] ?? [], onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe && parts.length === 2 ? [0, 1, 0] : null, toUpper: TO_UPPER[id] }) }) };
     if (mm.normalmapTexture) maps.normal = tex(packFile(dir, mm.normalmapTexture), `${file}-n`, 512, { q: 85 });
     // 只给了 bumpTexture 的（中筒靴的皮纹、黑色西装套裙；泳裤、罗纹毛衣写在 bumpTexture 里的其实是法线贴图）：
     // 以前没用上，中筒靴光溜溜的像胶靴。鞋的皮纹细，法线留 1024²

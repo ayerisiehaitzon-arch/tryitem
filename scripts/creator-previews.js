@@ -12,8 +12,9 @@
 //   docs/previews/creator-clothes-men2.jpg 男装（二）：社区资源包里的卫衣、毛衣、Polo 衫、短裤、礼服、西装、鞋、帽子
 //   docs/previews/creator-clothes-women2.jpg 女装（二）：旗袍、连衣裙、西装套装，上衣、半身裙、裤子随意搭，平底鞋、马靴、帽子
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
-//   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
+//   docs/previews/creator-shoes.jpg        鞋按部位换色（鞋面、鞋底、袜子）
 //   docs/previews/creator-shoes2.jpg       鞋（二）：社区资源包里的 12 双鞋（孟克鞋、凉拖、训练鞋、网球鞋、骑行鞋、短靴，女款平底鞋、长靴）
+//   docs/previews/creator-shoeways.jpg     鞋的配色方案（一点换整双）：球鞋、皮鞋和靴子、女款平底鞋和凉拖各几套
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
 //   docs/previews/creator-hats2.jpg        帽子（二）：社区资源包里的 12 顶帽子（棒球帽、平顶帽、圣诞帽、宽松毛线帽、高礼帽、厨师帽、迷彩帽、护耳帽、马术头盔、泳帽、皮飞行帽、女巫帽）
 //   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上；坐着、蹲下修理带着琴凳和工具箱）
@@ -267,6 +268,30 @@ try {
   ];
   const ss2 = await shoot(shoe2.map(([n, q]) => [n, `${q}&bare=1&cam=feet&az=25&el=16&anim=idle&t=0.5`]), [480, 420]);
   await grid(ss2, 4, 360, 315, path.join(out, 'creator-shoes2.jpg'), { labels: shoe2.map((c) => c[2]) });
+  // 鞋的配色方案：页面上一点就把鞋面、鞋底、袜子一起换掉；sc 就是那套方案的三个颜色（creator.html 的 SHOE_WAYS）。
+  // 一排球鞋（小满的热裤），一排皮鞋和靴子（大力的短裤），一排女鞋和凉拖
+  const way = [
+    ['way-0', 'preset=1&shoes=shoes05', '白色运动鞋 · 原色'],
+    ['way-1', 'preset=1&shoes=shoes05&sc=1c1c1e,f2f0eb,f2f0eb', '白色运动鞋 · 黑白'],
+    ['way-2', 'preset=1&shoes=shoes05&sc=b0262c,f2f0eb,f2f0eb', '白色运动鞋 · 大学红'],
+    ['way-3', 'preset=1&shoes=shoes05&sc=c9b38f,a8743c,f2f0eb', '白色运动鞋 · 沙色生胶底'],
+    ['way-4', 'preset=1&shoes=kill_bill&sc=1f2f52,f2f0eb', '复古训练鞋 · 藏青'],
+    ['way-5', 'preset=1&shoes=hightops&sc=f2f0eb,f2f0eb', '高帮球鞋 · 纯白'],
+    ['way-6', 'preset=4&shoes=shoes01', '棕色皮鞋 · 原色'],
+    ['way-7', 'preset=4&shoes=shoes01&sc=151515,1c1c1e,1c1c1e', '棕色皮鞋 · 黑色'],
+    ['way-8', 'preset=4&shoes=shoes01&sc=4a1a1c,1c1c1e,1c1c1e', '棕色皮鞋 · 酒红'],
+    ['way-9', 'preset=4&shoes=oxford&sc=9a6a3c,3b2418,1f2f52', '牛津鞋 · 焦糖'],
+    ['way-10', 'preset=4&shoes=chelsea&sc=c9b38f,a8743c', '切尔西靴 · 沙色'],
+    ['way-11', 'preset=4&shoes=biker_boots&sc=3b2418,3b2418', '机车靴 · 深棕'],
+    ['way-12', 'preset=1&shoes=ballet_flats&sc=d9b8a0', '芭蕾平底鞋 · 裸色'],
+    ['way-13', 'preset=1&shoes=mary_janes&sc=b0262c,1c1c1e', '玛丽珍鞋 · 正红'],
+    ['way-14', 'preset=1&shoes=flats_bow&sc=ece8e0', '蝴蝶结芭蕾鞋 · 奶白'],
+    ['way-15', 'preset=3&shoes=riding_boots&sc=3b2418,3b2418', '马靴 · 深棕'],
+    ['way-16', 'preset=3&shoes=calf_boots&sc=9a6a3c,3b2418', '中筒靴 · 焦糖'],
+    ['way-17', 'preset=4&shoes=flip_flops&sc=d9682b', '凉拖 · 橙色'],
+  ];
+  const sw = await shoot(way.map(([n, q]) => [n, `${q}&bare=1&cam=feet&az=25&el=16&anim=idle&t=0.5`]), [400, 380]);
+  await grid(sw, 6, 300, 285, path.join(out, 'creator-shoeways.jpg'), { labels: way.map((c) => c[2]) });
   // 帽子：四种款式，再换几个颜色、几种发型
   const hat = [
     ['hat-0', 'preset=6&hat=fedora01', '礼帽'],

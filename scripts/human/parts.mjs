@@ -61,7 +61,9 @@ export function classify(r, pos, isl, { split = 0.1 } = {}) {
 
 // 鞋：每个岛归哪一类（0 鞋面、1 鞋底、2 袜子）。按岛在静止姿势里的高度（相对整只鞋的最低点）：
 // 鞋底整片贴着地（最高点离地不到 8cm），袜子是鞋口上面那一大片（中位高度离地 9cm 以上），其余（鞋面、鞋带、小标签）算鞋面
-export function classifyShoe(r, pos, isl) {
+// toUpper(岛的平均颜色 sRGB, 中位高度 米)：矮的岛里哪些其实是鞋面（单独裁出来的鞋头、鞋帮下半截整片都在 8cm 以内，
+// 按高度会算成鞋底：换配色时鞋头留着原色，或者跟着鞋底变）；mean 是每个岛的平均颜色
+export function classifyShoe(r, pos, isl, { toUpper = null, mean = null } = {}) {
   const n = isl.count, ys = Array.from({ length: n }, () => []), area = new Float64Array(n);
   let ymin = Infinity;
   for (let t = 0; t < r.idx.length; t += 3) {
@@ -74,13 +76,16 @@ export function classifyShoe(r, pos, isl) {
   const total = area.reduce((s, x) => s + x, 0);
   return Int8Array.from({ length: n }, (_, k) => {
     const s = ys[k].sort((p, q) => p - q), med = s[s.length >> 1] - ymin, top = s[s.length - 1] - ymin;
-    return area[k] >= total * 0.05 && med > 0.09 ? 2 : top < 0.08 ? 1 : 0;
+    if (area[k] >= total * 0.05 && med > 0.09) return 2;
+    return top < 0.08 && !(toUpper && mean?.[k] && toUpper(mean[k], med)) ? 1 : 0;
   });
 }
 
-// 把每个三角形的部位号画进 W×H 的格子（-1 = 没有布，-2 = 有布、不换色）
-function rasterParts(r, triPart, W, H) {
-  const out = new Int8Array(W * H).fill(-1);
+// 把每个三角形的部位号画进 W×H 的格子（-1 = 没有布，-2 = 有布、不换色）；给了 vh（每个渲染顶点离地多高，米）
+// 就顺便插值出每个像素离地的高度（out.hgt）
+function rasterParts(r, triPart, W, H, vh = null) {
+  const out = new Int8Array(W * H).fill(-1), hgt = vh ? new Float32Array(W * H) : null;
+  out.hgt = hgt;
   for (let t = 0; t < r.idx.length; t += 3) {
     const P = [0, 1, 2].map((k) => [r.uv[r.idx[t + k] * 2] * W, (1 - r.uv[r.idx[t + k] * 2 + 1]) * H]);
     const x0 = Math.max(0, Math.floor(Math.min(P[0][0], P[1][0], P[2][0]))), x1 = Math.min(W - 1, Math.ceil(Math.max(P[0][0], P[1][0], P[2][0])));
@@ -91,7 +96,10 @@ function rasterParts(r, triPart, W, H) {
       const px = x + 0.5, py = y + 0.5;
       const w0 = ((P[1][0] - px) * (P[2][1] - py) - (P[2][0] - px) * (P[1][1] - py)) / area;
       const w1 = ((P[2][0] - px) * (P[0][1] - py) - (P[0][0] - px) * (P[2][1] - py)) / area;
-      if (w0 >= -0.01 && w1 >= -0.01 && w0 + w1 <= 1.01) out[y * W + x] = triPart[t / 3];
+      if (w0 >= -0.01 && w1 >= -0.01 && w0 + w1 <= 1.01) {
+        out[y * W + x] = triPart[t / 3];
+        if (hgt) hgt[y * W + x] = w0 * vh[r.idx[t]] + w1 * vh[r.idx[t + 1]] + (1 - w0 - w1) * vh[r.idx[t + 2]];
+      }
     }
   }
   return out;
@@ -104,13 +112,16 @@ function rasterParts(r, triPart, W, H) {
 //   或者直接给一个颜色 '#rrggbb'（从它出发，取跟它一起换色的像素的中位数。白球鞋鞋面的贴图里，鞋里子、鞋口的深色网布
 //   占的地方比白色还大——虽然穿着看不见——中位数和覆盖面积都会挑中深灰，只能直接说“白的那块”）；
 // exclude：[[部位, u0, v0, u1, v1], …] 贴图上这些框里（0~1，v 朝下）不换色
+// relabel(部位, 线性颜色, 离地高度)：逐像素改部位（vh 是每个渲染顶点离地的高度）。白色运动鞋看得见的那圈深色鞋底侧边
+// 画在鞋面那片上，按岛分只能跟着鞋面（又是深色，鞋面换什么颜色它都不动）：离地 2.5cm 以内的深色像素划给鞋底
 // 返回 { mask: RGB Uint8（R、G、B = 部位 0、1、2 的权重）, dom: 每个部位的主色（线性） }
-export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], qmin = [], pick = [], exclude = [], out = 1024 } = {}) {
-  const part = rasterParts(r, triPart, W, H);
+export function partMask(rgba, W, H, r, triPart, nParts, { tol = [], qmax = [], qmin = [], pick = [], exclude = [], out = 1024, vh = null, relabel = null } = {}) {
+  const part = rasterParts(r, triPart, W, H, relabel ? vh : null);
   const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
   const chroma = (c) => { const s = c[0] + c[1] + c[2] + 1e-5; return [c[0] / s, c[1] / s]; };
   const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const px = (i) => [LUT[rgba[i * 4]], LUT[rgba[i * 4 + 1]], LUT[rgba[i * 4 + 2]]];
+  if (relabel) for (let i = 0; i < W * H; i++) if (part[i] >= 0) part[i] = relabel(part[i], px(i), part.hgt[i]);
   // 一个像素跟着主色换色的权重：色度接近 × 亮度在主色的 q0 ~ Q 倍之间
   const weightFor = (d, T, Q, q0 = 0.4) => {
     const Ld = Math.max(1e-4, luma(d)), cd = chroma(d);

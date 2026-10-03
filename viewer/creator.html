@@ -113,6 +113,7 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 13px; line-height: 1.2; }
   .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .chip .dot { display: inline-block; width: 12px; height: 12px; margin: 0 6px 0 -3px; vertical-align: -2px; border-radius: 50%; background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%); box-shadow: 0 0 0 1px var(--line); }
   .swatches { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
   .sw { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; padding: 0; background: var(--c); }
   .sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--accent); }
@@ -351,10 +352,23 @@ const CLOTHC = {
   bucket: ['#4b5a32', '#c2a77d', '#d8c9a3', '#1f2f52', '#1c1c1e', '#f2f0eb', '#d9682b', '#8c1d24', '#8fb7d9', '#7d7f82', '#e3a7b4', '#e0b52a'],
   helmet: ['#c8b48a', '#ece8e0', '#d8c9a3', '#4b5a32', '#6b4a32', '#1b1d22', '#22304a', '#7d7f82'],
   // 鞋：皮鞋鞋面、球鞋鞋面、鞋底、袜子
-  leather: ['#151515', '#3b2418', '#6b3f22', '#9a6a3c', '#8e4a1e', '#4a1a1c', '#1f2a40', '#55575a', '#ece8e0'],
+  leather: ['#151515', '#3b2418', '#6b3f22', '#9a6a3c', '#8e4a1e', '#4a1a1c', '#1f2a40', '#55575a', '#ece8e0', '#d9b8a0', '#c9b38f', '#b0262c', '#e3a7b4'],
   sneaker: ['#f2f0eb', '#1c1c1e', '#7d7f82', '#1f2f52', '#2b59c3', '#8fb7d9', '#b0262c', '#e3a7b4', '#e0b52a', '#d9682b', '#2f6b4f', '#c9b38f'],
   sole: ['#f2f0eb', '#1c1c1e', '#8a8c8f', '#a8743c', '#c9a77d', '#3b2418', '#b0262c', '#1f2f52'],
   sock: ['#f2f0eb', '#1c1c1e', '#8a8c8f', '#1f2f52', '#b0262c', '#2f6b4f', '#e0b52a', '#e3a7b4', '#c9b38f'],
+};
+// 鞋的配色方案：一点就把鞋面、鞋底、袜子一起换掉，之后还能在下面一块块调。按鞋的种类各一套，
+// 每条是 [名字, 鞋面, 鞋底, 袜子]（没写的鞋底跟鞋面一样）；颜色都在上面的色板里
+const LEATHER_WAYS = [['黑色', '#151515', '#1c1c1e', '#1c1c1e'], ['深棕', '#3b2418', '#3b2418', '#1f2f52'], ['焦糖', '#9a6a3c', '#3b2418', '#1f2f52'], ['红棕', '#8e4a1e', '#3b2418', '#1c1c1e'],
+  ['酒红', '#4a1a1c', '#1c1c1e', '#1c1c1e'], ['藏青', '#1f2a40', '#1c1c1e', '#1f2f52'], ['灰色', '#55575a', '#1c1c1e', '#8a8c8f'], ['奶白', '#ece8e0', '#c9a77d', '#f2f0eb']];
+const SHOE_WAYS = {
+  sneaker: [['纯白', '#f2f0eb', '#f2f0eb', '#f2f0eb'], ['黑白', '#1c1c1e', '#f2f0eb', '#f2f0eb'], ['全黑', '#1c1c1e', '#1c1c1e', '#1c1c1e'], ['灰白', '#7d7f82', '#f2f0eb', '#8a8c8f'], ['藏青', '#1f2f52', '#f2f0eb', '#f2f0eb'],
+    ['宝蓝', '#2b59c3', '#f2f0eb', '#f2f0eb'], ['大学红', '#b0262c', '#f2f0eb', '#f2f0eb'], ['森林绿', '#2f6b4f', '#f2f0eb', '#f2f0eb'], ['沙色生胶底', '#c9b38f', '#a8743c', '#f2f0eb'], ['樱花粉', '#e3a7b4', '#f2f0eb', '#f2f0eb']],
+  leather: LEATHER_WAYS, // 男款和男女都能穿的皮鞋
+  boot: [...LEATHER_WAYS, ['沙色', '#c9b38f', '#a8743c']],
+  flat: [['黑色', '#151515', '#1c1c1e'], ['裸色', '#d9b8a0', '#c9a77d'], ['奶白', '#ece8e0', '#c9a77d'], ['樱花粉', '#e3a7b4', '#c9a77d'], ['正红', '#b0262c', '#1c1c1e'],
+    ['酒红', '#4a1a1c', '#1c1c1e'], ['藏青', '#1f2a40', '#1c1c1e'], ['焦糖', '#9a6a3c', '#3b2418']], // 女款的平底鞋、玛丽珍、T 字带
+  sandal: [['黑色', '#1c1c1e'], ['白色', '#f2f0eb'], ['红色', '#b0262c'], ['橙色', '#d9682b'], ['黄色', '#e0b52a'], ['绿色', '#2f6b4f'], ['天蓝', '#8fb7d9'], ['粉色', '#e3a7b4'], ['卡其', '#c9b38f']],
 };
 const EYEC = Object.keys(H.meta.eyeTex);
 const EYE_LABEL = { brown: '棕', brownlight: '浅棕', blue: '蓝', lightblue: '浅蓝', deepblue: '深蓝', bluegreen: '蓝绿', green: '绿', grey: '灰', ice: '冰蓝' };
@@ -1631,6 +1645,31 @@ function setColor(id, i, c) {
 }
 // 主色（线性）→ 网页颜色，给“原色”那一格用
 const domCss = (d) => `#${new THREE.Color().setRGB(d[0], d[1], d[2], THREE.LinearSRGBColorSpace).getHexString()}`;
+// 线性 RGB → CIELAB，算色差（CIE76 ΔE）
+function lab([r, g, b]) {
+  const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const x = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.9505), y = f(0.2126 * r + 0.7152 * g + 0.0722 * b), z = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.089);
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+const deltaE = (css, dom) => { const c = new THREE.Color(css), a = lab([c.r, c.g, c.b]), b = lab(dom); return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); };
+// 这双鞋能用的配色方案 [{ name, colors: 每个部位一个颜色 }]。鞋的种类看部位：靴面 → 靴子，只有一块的球鞋料是凉拖、
+// 皮料是女款平底鞋，女款皮鞋按平底鞋配。鞋面和本来的颜色差不多（ΔE < 15）、鞋底也差不多（< 30）的方案不列：
+// 黑皮鞋没有“黑色”，白网球鞋没有“纯白”（袜子不算，只换袜子不算一套新配色）
+function shoeWays(id) {
+  const px = H.proxies[id], parts = px?.parts;
+  if (!id.startsWith('shoes/') || !parts?.length) return [];
+  const kind = parts[0].label === '靴面' ? 'boot' : parts[0].kind === 'sneaker' ? (parts.length > 1 ? 'sneaker' : 'sandal') : px.sex === 'f' || parts.length === 1 ? 'flat' : 'leather';
+  const sole = parts.find((p) => p.kind === 'sole');
+  return SHOE_WAYS[kind].filter(([, up, so = up]) => deltaE(up, parts[0].dom) >= 15 || (sole && deltaE(so, sole.dom) >= 30))
+    .map(([name, up, so = up, sock = '#f2f0eb']) => ({ name, colors: parts.map((p) => (p.kind === 'sole' ? so : p.kind === 'sock' ? sock : up)) }));
+}
+// 现在穿的是第几套方案：'' 是原色，null 是自己调过的
+function wayOf(id, ways) {
+  const cur = S.colors[id];
+  if (!cur || cur.every((x) => !x)) return '';
+  const i = ways.findIndex((w) => w.colors.every((c, j) => c === (cur[j] || '').toLowerCase()));
+  return i < 0 ? null : i;
+}
 
 // —— 换装：按当前状态加载各个槽位 ——
 async function syncSlots() {
@@ -1891,13 +1930,26 @@ function renderPane() {
   } else if (tab === 'outfit') {
     const outfits = proxyList('outfit');
     // 每个部位一组色板（第一格“原”是贴图本来的颜色；最后一格自选）
-    const colorGroups = (id) => (H.proxies[id]?.parts ?? []).map((part, i) => group(`${part.label.replace(/ /g, '')}颜色`, i === 0 ? '第一格是原色' : null,
-      swatches(CLOTHC[part.kind] ?? CLOTHC.top, S.colors[id]?.[i] ?? '', (c) => setColor(id, i, c), { none: '原色', noneColor: domCss(part.dom) })));
+    const colorGroups = (id, after) => (H.proxies[id]?.parts ?? []).map((part, i) => group(`${part.label.replace(/ /g, '')}颜色`, i === 0 ? '第一格是原色' : null,
+      swatches(CLOTHC[part.kind] ?? CLOTHC.top, S.colors[id]?.[i] ?? '', (c) => { setColor(id, i, c); after?.(); }, { none: '原色', noneColor: domCss(part.dom) })));
     if (wearSub === 'shoes') {
       const shoeCredit = H.proxies[`shoes/${S.shoes}`]?.credit;
       // 本性别的鞋排在前面，男女都能穿的跟在后面；换了鞋重新取景（靴筒高矮不一样）
       g.push(group('鞋', shoeCredit ? `${shoeCredit.author} · ${shoeCredit.license}` : null, chips([['', '光脚'], ...bySex(proxyList('shoes')).map((p) => [p.name, p.label])], S.shoes, (id) => { S.shoes = id; syncSlots().then(() => { dirty.shape = false; updateShape(); focus(tabFocus()); }); renderPane(); })));
-      if (S.shoes) g.push(...colorGroups(`shoes/${S.shoes}`));
+      if (H.proxies[`shoes/${S.shoes}`]?.parts?.length) {
+        // 配色方案：每个按钮前一个小圆点，左上是鞋面、右下是鞋底的颜色；下面单独调了哪一块，方案就不再高亮
+        const id = `shoes/${S.shoes}`, parts = H.proxies[id].parts, ways = shoeWays(id), soleI = parts.findIndex((p) => p.kind === 'sole');
+        const dot = (c) => el('span', { class: 'dot', style: `--a:${c[0]};--b:${c[soleI] ?? c[0]}` });
+        const pickWay = (cols) => { if (cols) S.colors[id] = [...cols]; else delete S.colors[id]; applyColors(); renderPane(); };
+        const box = el('div', { class: 'chips' });
+        const draw = () => {
+          const cur = wayOf(id, ways);
+          box.replaceChildren(el('button', { class: 'chip', 'aria-pressed': String(cur === ''), on: { click: () => pickWay(null) } }, dot(parts.map((p) => domCss(p.dom))), '原色'),
+            ...ways.map((w, i) => el('button', { class: 'chip', 'aria-pressed': String(cur === i), on: { click: () => pickWay(w.colors) } }, dot(w.colors), w.name)));
+        };
+        draw();
+        g.push(group('配色', '一点换整双，下面还能一块块调', box), ...colorGroups(id, draw));
+      }
     } else if (wearSub === 'hat') {
       // 社区作者的帽子（CC BY）在标题右边署名
       const hatCredit = H.proxies[`hat/${S.hat}`]?.credit;
@@ -2127,10 +2179,11 @@ function randomize() {
     shoes: pick(proxyList('shoes').filter((p) => fitsSex(p, sex))).name, hat: r() < 0.25 ? pick(proxyList('hat').filter((p) => fitsSex(p, sex))).name : '', colors: {},
     anim: pick(['idle', 'idle', 'idle_talking', 'dance', 'walk']), expr: pick(['neutral', 'neutral', 'smile']),
   };
-  // 一半左右的部位换个颜色（鞋底少换一点，太花）
+  // 一半左右的部位换个颜色（鞋底少换一点，太花）；鞋一半换一套配色方案，各部位乱配容易配出怪颜色
   for (const id of [`outfit/${S.outfit}`, `top/${S.top}`, `bottom/${S.bottom}`, `shoes/${S.shoes}`, `hat/${S.hat}`]) {
     const parts = H.proxies[id]?.parts;
     if (!parts) continue;
+    if (id.startsWith('shoes/')) { const ways = shoeWays(id); if (ways.length && r() < 0.5) S.colors[id] = [...pick(ways).colors]; continue; }
     const a = parts.map((p) => (r() < (p.kind === 'sole' ? 0.2 : 0.45) ? pick(CLOTHC[p.kind] ?? CLOTHC.top) : ''));
     if (a.some(Boolean)) S.colors[id] = a;
   }
