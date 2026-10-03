@@ -15,6 +15,7 @@
 //   docs/previews/creator-shoes.jpg        鞋的配色（鞋面、鞋底、袜子）
 //   docs/previews/creator-shoes2.jpg       鞋（二）：社区资源包里的 12 双鞋（孟克鞋、凉拖、训练鞋、网球鞋、骑行鞋、短靴，女款平底鞋、长靴）
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
+//   docs/previews/creator-hats2.jpg        帽子（二）：社区资源包里的 12 顶帽子（棒球帽、平顶帽、圣诞帽、宽松毛线帽、高礼帽、厨师帽、迷彩帽、护耳帽、马术头盔、泳帽、皮飞行帽、女巫帽）
 //   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上）
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -279,6 +280,27 @@ try {
   ];
   const hs2 = await shoot(hat.map(([n, q]) => [n, `${q}&bare=1&cam=bust${q.includes('az=') ? '' : '&az=30'}&anim=idle&t=0.5`]), [420, 460]);
   await grid(hs2, 4, 300, 330, path.join(out, 'creator-hats.jpg'), { labels: hat.map((h) => h[2]) });
+  // 帽子（二）：资源包里后来补的帽子，各戴在一位预设角色头上（帽子里的头发压进去，帽檐下面露出来），再换两个颜色、转两个背面
+  const hat2 = [
+    ['hat2-0', 'preset=4&hat=baseball_cap', '棒球帽'],
+    ['hat2-1', 'preset=0&hat=baseball_cap&hatc=22304a', '棒球帽 · 藏青'],
+    ['hat2-2', 'preset=2&hat=flat_cap', '平顶帽'],
+    ['hat2-3', 'preset=6&hat=flat_cap&hatc=6b4a32', '平顶帽 · 棕'],
+    ['hat2-4', 'preset=0&hat=slouchy_beanie', '宽松毛线帽'],
+    ['hat2-5', 'preset=1&hat=santa_hat', '圣诞帽'],
+    ['hat2-6', 'preset=6&hat=top_hat', '高礼帽'],
+    ['hat2-7', 'preset=4&hat=chef_hat', '厨师帽'],
+    ['hat2-8', 'preset=5&hat=patrol_cap', '迷彩帽'],
+    ['hat2-9', 'preset=5&hat=patrol_cap&az=150', '马尾 + 迷彩帽（背面）'],
+    ['hat2-10', 'preset=7&hat=sherpa_hat', '护耳帽'],
+    ['hat2-11', 'preset=3&hat=riding_helmet', '马术头盔'],
+    ['hat2-12', 'preset=1&hat=swim_cap', '泳帽'],
+    ['hat2-13', 'preset=0&hat=leather_helmet', '皮飞行帽'],
+    ['hat2-14', 'preset=3&hat=witch_hat', '女巫帽'],
+    ['hat2-15', 'preset=3&hat=witch_hat&az=160', '女巫帽（背面）'],
+  ];
+  const hs3 = await shoot(hat2.map(([n, q]) => [n, `${q}&bare=1&cam=bust${q.includes('az=') ? '' : '&az=30'}&anim=idle&t=0.5`]), [420, 460]);
+  await grid(hs3, 4, 300, 330, path.join(out, 'creator-hats2.jpg'), { labels: hat2.map((h) => h[2]) });
   // 动作
   const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话']];
   const ms = await shoot(mo.map(([a, t]) => [`mo-${a}`, `preset=5&bare=1&az=30&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);

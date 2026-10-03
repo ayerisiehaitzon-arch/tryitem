@@ -899,31 +899,57 @@ function updateShape() {
   bindRest();
   timing.shape = performance.now() - t0;
 }
-// 戴帽子时把帽子里的头发压进去（不然头发从帽顶穿出来）：以头的中心为原点，把帽子的三角形撒成点，
-// 按方向记下帽子离中心最近的距离（方向用从脚底那一极做的球极投影铺成一张 120×120 的图，帽顶附近也不会有空格）；
-// 头发顶点比它远的，沿着这个方向拉回到帽子里面 8mm
+// 戴帽子时把帽子里的头发压进去（不然头发从帽顶穿出来）：以头的中心为原点，把帽子和头皮的三角形都投到方向图上
+// （方向用从脚底那一极做的球极投影铺成一张 120×120 的图），每个格子记下帽子离中心最近的距离、头皮离中心最远的距离；
+// 头发顶点比帽子远的，沿着这个方向拉回到帽子里面 8mm
+let HEAD_TRI = null;
 function hatHair(hat, hair) {
   const J = HM.joints(H, P), hb = H.rig.bones[BI.head];
   const c = [0, 1, 2].map((a) => (J[hb.head * 3 + a] + J[hb.tail * 3 + a]) / 2);
   const N = 120, R = 2.5;
-  const rmin = new Float32Array(N * N).fill(Infinity);
-  const bin = (x, y, z) => {
+  // 投影：图上的坐标（连续的，格子 i 的中心在 i + 0.5）和离中心的距离；脚底那一半不要
+  const proj = (x, y, z) => {
     const dx = x - c[0], dy = y - c[1], dz = z - c[2], r = Math.hypot(dx, dy, dz), s2 = 1 + dy / r;
-    if (s2 < 0.4) return [-1, r];
-    const i = Math.floor(((dx / r / s2 + R) / (2 * R)) * N), j = Math.floor(((dz / r / s2 + R) / (2 * R)) * N);
-    return i < 0 || j < 0 || i >= N || j >= N ? [-1, r] : [j * N + i, r];
+    return s2 < 0.4 ? null : [((dx / r / s2 + R) / (2 * R)) * N, ((dz / r / s2 + R) / (2 * R)) * N, r];
   };
-  const d = hat.p.data, X = hat.P;
-  for (let t = 0; t < d.index.length; t += 3) {
-    const v = [d.map[d.index[t]], d.map[d.index[t + 1]], d.map[d.index[t + 2]]];
-    for (let k = 0; k < 15; k++) {
-      let r1 = (k * 0.618034) % 1, r2 = (k * 0.381966 + 0.5) % 1;
-      if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
-      const q = [0, 1, 2].map((a) => X[v[0] * 3 + a] + (X[v[1] * 3 + a] - X[v[0] * 3 + a]) * r1 + (X[v[2] * 3 + a] - X[v[0] * 3 + a]) * r2);
-      const [b, r] = bin(q[0], q[1], q[2]);
-      if (b >= 0 && r < rmin[b]) rmin[b] = r;
+  const bin = (x, y, z) => {
+    const q = proj(x, y, z);
+    if (!q) return [-1, Math.hypot(x - c[0], y - c[1], z - c[2])];
+    const i = Math.floor(q[0]), j = Math.floor(q[1]);
+    return i < 0 || j < 0 || i >= N || j >= N ? [-1, q[2]] : [j * N + i, q[2]];
+  };
+  // 每个三角形铺满它盖住的格子（中心落在三角形里的，按重心坐标插值距离），顶点也各记一下（太细的三角形一个格子中心都盖不住）。
+  // 在三角形上撒点的话，图上帽顶那块被放大，点撒不满，漏掉的格子里头发会从帽子上冒出来
+  const raster = (X, idx, map, near, fn) => {
+    for (let t = 0; t < idx.length; t += 3) {
+      const q = [0, 1, 2].map((k) => { const v = (map ? map[idx[t + k]] : idx[t + k]) * 3; return proj(X[v], X[v + 1], X[v + 2]); });
+      if (q.some((x) => !x || x[2] > near)) continue;
+      for (const [u, w, r] of q) { const i = Math.floor(u), j = Math.floor(w); if (i >= 0 && j >= 0 && i < N && j < N) fn(j * N + i, r); }
+      const [a, b, e] = q, den = (b[1] - e[1]) * (a[0] - e[0]) + (e[0] - b[0]) * (a[1] - e[1]);
+      if (Math.abs(den) < 1e-12) continue;
+      const i0 = Math.max(0, Math.floor(Math.min(a[0], b[0], e[0]))), i1 = Math.min(N - 1, Math.ceil(Math.max(a[0], b[0], e[0])));
+      const j0 = Math.max(0, Math.floor(Math.min(a[1], b[1], e[1]))), j1 = Math.min(N - 1, Math.ceil(Math.max(a[1], b[1], e[1])));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const u = i + 0.5, w = j + 0.5;
+        const l1 = ((b[1] - e[1]) * (u - e[0]) + (e[0] - b[0]) * (w - e[1])) / den, l2 = ((e[1] - a[1]) * (u - e[0]) + (a[0] - e[0]) * (w - e[1])) / den, l3 = 1 - l1 - l2;
+        if (l1 < 0 || l2 < 0 || l3 < 0) continue;
+        fn(j * N + i, l1 * a[2] + l2 * b[2] + l3 * e[2]);
+      }
     }
-  }
+  };
+  // 头皮：每个方向上皮肤最外面那层离中心多远（只看离中心 20cm 以内的三角形；头附近的三角形第一次挑出来记住）
+  HEAD_TRI ??= BODY_TRI.filter((_, k, a) => { const t = k - (k % 3); for (let m = t; m < t + 3; m++) if (Math.hypot(P[a[m] * 3] - c[0], P[a[m] * 3 + 1] - c[1], P[a[m] * 3 + 2] - c[2]) > 0.3) return false; return true; });
+  const rskin = new Float32Array(N * N);
+  raster(P, HEAD_TRI, null, 0.2, (o, r) => { if (r > rskin[o]) rskin[o] = r; });
+  // 帽子：埋在头皮底下 3mm 以上的面不算（平顶帽这种做成封闭的帽子，帽口封着一张平平的底，穿过脑袋；按它压的话头发压进头骨里，
+  // 帽檐下面露出秃的一圈）。某个方向上帽子整个埋在皮肤下面的，按埋得最浅的那层算
+  const rmin = new Float32Array(N * N).fill(Infinity), rin = new Float32Array(N * N), rmax = new Float32Array(N * N);
+  const d = hat.p.data;
+  raster(hat.P, d.index, d.map, Infinity, (o, r) => {
+    if (r > rmax[o]) rmax[o] = r;
+    if (r >= rskin[o] - 0.003) { if (r < rmin[o]) rmin[o] = r; } else if (r > rin[o]) rin[o] = r;
+  });
+  for (let o = 0; o < N * N; o++) if (rmin[o] === Infinity && rin[o] > 0) rmin[o] = rin[o];
   // 往外扩 8 圈：帽子盖住的格子 dist = 0，往外每圈 +1。帽檐下面一圈的头发也压一部分（越远越少），
   // 不然一片发片一头被压进帽子、一头留在外面，会从帽墙上斜着穿出来
   const K = 8, dist = new Uint8Array(N * N).fill(255);
@@ -939,11 +965,14 @@ function hatHair(hat, hair) {
     }
     rmin.set(nxt);
   }
+  // 头发最多压到皮肤外 2mm：帽子外面那一圈（看得见）一律如此；帽子里面，帽子贴着头皮的地方（最里层离皮肤不到 5mm、
+  // 最外层不到 1cm：毛线帽、泳帽）压到帽子里面（压进皮肤也看不见）。不然戴得靠后的帽子（宽松毛线帽）前面，
+  // 刘海按帽檐的半径往里压会压进额头；平顶帽帽檐根部贴着额头的那圈帽底下面，头发压进额头，帽檐下面露出一块块头皮
   const Y = hair.P;
   for (let i = 0; i < hair.p.nv; i++) {
     const [b, r] = bin(Y[i * 3], Y[i * 3 + 1], Y[i * 3 + 2]);
     if (b < 0 || dist[b] > K) continue;
-    const lim = rmin[b] - 0.008;
+    const lim = rskin[b] ? Math.max(rmin[b] - 0.008, Math.min(rskin[b] + 0.002, dist[b] ? Infinity : Math.max(rmin[b] - 0.003, rmax[b] - 0.008))) : rmin[b] - 0.008;
     if (!(r > lim)) continue;
     const w = dist[b] <= 1 ? 1 : 1 - (dist[b] - 1) / K;
     const k = (r - (r - lim) * w) / r;
@@ -1912,7 +1941,7 @@ function randomize() {
       beard: sex === 'm' && r() < 0.5 ? 0.2 + r() * 0.7 : 0, beardStyle: beard3?.name ?? '', moustache: stache, lips: sex === 'f' && r() < 0.6 ? 0.2 + r() * 0.5 : 0, lipColor: pick(MAKEUP), blush: sex === 'f' ? r() * 0.5 : 0, freckles: r() < 0.2 ? r() : 0,
     },
     outfit: sep ? '' : pick(outfits).name, top: sep ? pick(proxyList('top').filter((p) => fitsSex(p, sex))).name : '', bottom: sep ? pick(proxyList('bottom').filter((p) => fitsSex(p, sex))).name : '',
-    shoes: pick(proxyList('shoes').filter((p) => fitsSex(p, sex))).name, hat: r() < 0.25 ? pick(proxyList('hat')).name : '', colors: {},
+    shoes: pick(proxyList('shoes').filter((p) => fitsSex(p, sex))).name, hat: r() < 0.25 ? pick(proxyList('hat').filter((p) => fitsSex(p, sex))).name : '', colors: {},
     anim: pick(['idle', 'idle', 'idle_talking', 'dance', 'walk']), expr: pick(['neutral', 'neutral', 'smile']),
   };
   // 一半左右的部位换个颜色（鞋底少换一点，太花）

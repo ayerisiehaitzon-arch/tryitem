@@ -574,6 +574,8 @@ const LOGOS = {
   male_casualsuit06: [{ box: [815, 245, 1295, 425], from: [0, 260] }, { box: [395, 245, 615, 340], from: [0, 260] }, { box: [1490, 300, 1560, 380], from: [0, 120] }],
   female_casualsuit01: [{ box: [1455, 300, 1770, 645], from: [-330, 0] }],
   female_casualsuit02: [{ box: [1455, 300, 1770, 645], from: [-330, 0] }],
+  // 资源包里的那顶红色棒球帽（MargaretToigo，CC0）帽子正面绣着一行竞选口号：擦掉，从上面一点搬干净的布过来，就是一顶普通的棒球帽
+  baseball_cap: [{ box: [770, 1780, 1290, 1955], from: [0, -280] }],
 };
 // 配色：每套分几个部位（衣服按裁片在身上的高度分上衣 / 下装，西装、帽子整件一个部位；鞋分鞋面、鞋底、袜子），每个部位可以换颜色。
 // 种类决定网页里的色板和权重图的宽严：牛仔布洗白的地方更亮、更灰，皮面有磨旧的浅色、高光和很深的褶子，都要放宽才能一起换色；
@@ -860,12 +862,27 @@ for (const [n, [label, sex]] of Object.entries(SHOES)) {
     cloche: ['aethelraed_unraed_cloche_hat', 'hat', '钟形帽', [['帽子', 'hat']]],
     bowler: ['culturalibre_cl_bowler_hat', 'hat', '圆顶礼帽', [['帽子', 'hat']]],
     visor: ['punkduck_sun_visor_sports_visor', 'hat', '遮阳帽', [['帽子', 'hat']]],
+    // 帽子（二）：棒球帽擦掉了正面的字（见上面 LOGOS）。女巫帽作者说是给女性模型做的，男性的头大一圈，帽檐盖住眼睛，标成女款。
+    // 没收的：和已有的太像的（特里尔比帽像礼帽，另一顶圣诞帽，巫师帽像女巫帽）；戏服、面具一类（骷髅、牛角、斯巴达、十字军头盔，
+    // 荆棘冠、羽毛头饰、套头的袋子、面纱、女仆头饰、堂吉诃德帽）；盖住整张脸的摩托车头盔、计时赛自行车头盔；三顶军用钢盔
+    baseball_cap: ['toigo_maga_hat', 'hat', '棒球帽', [['帽子', 'hat']]],
+    flat_cap: ['elvs_male_flat_cap1', 'hat', '平顶帽', [['帽子', 'hat']]],
+    santa_hat: ['elvs_santa_hat', 'hat', '圣诞帽', [['帽子', 'hat']]],
+    slouchy_beanie: ['elvs_slouchy_beanie1', 'hat', '宽松毛线帽', [['毛线帽', 'hat']]],
+    top_hat: ['elvs_tophat1', 'hat', '高礼帽', [['帽子', 'hat']]],
+    chef_hat: ['elvs_unisex_chef_hat_1', 'hat', '厨师帽', [['帽子', 'hat']]],
+    patrol_cap: ['mindfront_patrol_cap', 'hat', '迷彩帽', [['帽子', 'hat']]],
+    sherpa_hat: ['mindfront_sherpa_hat', 'hat', '护耳帽', [['帽子', 'hat']]],
+    riding_helmet: ['punkduck_riding_helmet', 'hat', '马术头盔', [['头盔', 'helmet']]],
+    swim_cap: ['punkduck_swim_cap', 'hat', '泳帽', [['泳帽', 'hat']]],
+    leather_helmet: ['maciekg_leather_helmet', 'hat', '皮飞行帽', [['帽子', 'hat']]],
+    witch_hat: ['elvs_witchy_hallows_hat1', 'hat', '女巫帽', [['帽子', 'hat']], { sex: 'f' }],
   };
   for (const [id, [src, slot, label, parts, over]] of Object.entries(C)) {
     PARTS[id] = parts;
     const { dir, clo, geom, mm, credit } = packItem('clothes', src);
     const shoe = slot === 'shoes', file = `${shoe ? 'shoe' : slot === 'hat' ? 'hat' : 'cloth'}-${id}`, pj = {};
-    const maps = { map: await texCloth(packFile(dir, mm.diffuseTexture), file, 1024, { q: 84, geom, onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe && parts.length === 2 ? [0, 1, 0] : null }) }) };
+    const maps = { map: await texCloth(packFile(dir, mm.diffuseTexture), file, 1024, { q: 84, geom, logos: LOGOS[id] ?? [], onData: partsJob(id, clo, pj, { size: 512, file, shoe, remap: shoe && parts.length === 2 ? [0, 1, 0] : null }) }) };
     if (mm.normalmapTexture) maps.normal = tex(packFile(dir, mm.normalmapTexture), `${file}-n`, 512, { q: 85 });
     maps.parts = pj.file;
     const pm = await proxy(slot, id, { label, geom, clo, maps, extra: { parts: pj.parts, credit, ...over } });

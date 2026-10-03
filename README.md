@@ -2091,6 +2091,8 @@ README 里全屋的近景用预览器的 `d` 参数（绝对取景距离）：�
 
 ![帽子](docs/previews/creator-hats.jpg)
 
+![帽子（二）：社区资源包里后来补的 12 顶，棒球帽、平顶帽、圣诞帽、宽松毛线帽、高礼帽、厨师帽、迷彩帽、护耳帽、马术头盔、泳帽、皮飞行帽、女巫帽](docs/previews/creator-hats2.jpg)
+
 ![动作](docs/previews/creator-motion.jpg)
 
 ### GTA5 是怎么捏人的，这里怎么对应
@@ -2111,7 +2113,7 @@ GTA5 线上模式的创建器分几步，底层都是 3A 游戏里通行的做�
 | 二十个五官参数 | 53 根，分六组：脸型 9、眼睛和眉毛 11、鼻子 9、嘴巴 9、颧骨下巴和脖子 10、耳朵 5，每根对应 MakeHuman 的一个（或两个）形变目标 |
 | 外观贴图层 | 胡茬、老化、雀斑、口红、腮红、眼影、眼线，在皮肤着色器里按遮罩叠加，各有浓淡和颜色；发型 32 种（MakeHuman 自带 10 种，社区资源包 22 种；男款 5、女款 20、男女都行 7，列表里自己性别的排在前面），发色 14 种；3D 的胡须 6 款、小胡子 3 款（社区资源包，可以搭着用，还能再叠一层胡茬；颜色默认跟着头发），眉形 12 种、睫毛 4 种、瞳色 9 种 |
 | 体型（GTA 里没有） | MakeHuman 的宏参数：性别倾向、年龄 20 ~ 80 岁、身高（换算成厘米显示）、胖瘦、肌肉、身材比例、胸围，外加肩宽、腰围、臀围、肚子、臀部、腿长、手臂、大腿、倒三角 9 个局部 |
-| 服装 | 分衣服、鞋、帽子三页（镜头分别对着全身、脚、胸像）。衣服：32 套整套（男 11 套，含白 T 恤工装背带裤、白色礼服、藏青西装、双排扣西装；女 21 套：MakeHuman 自带的 4 套，连衣裙 13 条——含旗袍、晚礼服长裙、网球裙，西装套装 3 套，毛领大衣 1 件），也可以不穿整套，上衣和下装随意搭：男款上衣 9 件（白 T 恤、蓝 T 恤、长袖 T 恤、衬衫、条纹衬衫、夹克、西装外套、Polo 衫、休闲衬衫）、下装 9 条（牛仔裤、灰牛仔裤、做旧牛仔裤、西裤、羊毛西裤、工装裤、工装背带裤、休闲短裤、沙滩短裤），女款上衣 14 件（T 恤、修身条纹衬衫、运动短上衣、碎花长衫、无袖系带衬衫、系带衬衫、露肩上衣、红色复古上衣、蕾丝高领背心、条纹短上衣、抹胸、V 领背心、吊带衫、迷彩短 T）、下装 16 条（修身牛仔裤、紧身牛仔裤、喇叭牛仔裤、刺绣牛仔裤、黑色紧身裤、运动紧身裤、热裤、牛仔短裤、开衩半裙、铅笔裙、波点裙、碎花长裙、蓝格子百褶裙、红格子百褶裙、牛仔短裙、黑色短裙），男女都能穿的上衣 5 件（运动背心、连帽卫衣、粗针毛衣、罗纹毛衣、挪威毛衣开衫；男女款也可以混着穿，列表里自己性别的排在前面）；29 双鞋（白色、蓝色运动鞋，旧运动鞋，高帮球鞋，跑鞋，一脚蹬，复古训练鞋，网球鞋，骑行鞋，三双皮鞋，牛津鞋，孟克鞋，凉拖，芭蕾平底鞋，蝴蝶结芭蕾鞋，拼色平底鞋，编织平底鞋，玛丽珍鞋，T 字带鞋，白色短靴，切尔西靴，翻边短靴，机车靴，中筒靴，马靴，过膝长靴，雪地靴；男款 2、女款 10、男女都行 17，列表里自己性别的排在前面）、9 顶帽子（礼帽、歪戴礼帽、圆顶礼帽、渔夫帽、探险帽、报童帽、毛线帽、钟形帽、遮阳帽）。都能按部位换颜色：套装分上衣、下装（西装、连衣裙、大衣、单件的上衣下装和帽子整件换；白色礼服分外套和西裤），鞋分鞋面、鞋底、袜子；每种材料一套色板（上衣 12 色、牛仔布 8 色、裙子和紧身裤 10 色、西装 8 色、大衣 10 色、礼帽 9 色、渔夫帽 12 色、探险帽 8 色、皮鞋和靴子 9 色、球鞋 12 色、鞋底 8 色、袜子 9 色），也可以自选颜色 |
+| 服装 | 分衣服、鞋、帽子三页（镜头分别对着全身、脚、胸像）。衣服：32 套整套（男 11 套，含白 T 恤工装背带裤、白色礼服、藏青西装、双排扣西装；女 21 套：MakeHuman 自带的 4 套，连衣裙 13 条——含旗袍、晚礼服长裙、网球裙，西装套装 3 套，毛领大衣 1 件），也可以不穿整套，上衣和下装随意搭：男款上衣 9 件（白 T 恤、蓝 T 恤、长袖 T 恤、衬衫、条纹衬衫、夹克、西装外套、Polo 衫、休闲衬衫）、下装 9 条（牛仔裤、灰牛仔裤、做旧牛仔裤、西裤、羊毛西裤、工装裤、工装背带裤、休闲短裤、沙滩短裤），女款上衣 14 件（T 恤、修身条纹衬衫、运动短上衣、碎花长衫、无袖系带衬衫、系带衬衫、露肩上衣、红色复古上衣、蕾丝高领背心、条纹短上衣、抹胸、V 领背心、吊带衫、迷彩短 T）、下装 16 条（修身牛仔裤、紧身牛仔裤、喇叭牛仔裤、刺绣牛仔裤、黑色紧身裤、运动紧身裤、热裤、牛仔短裤、开衩半裙、铅笔裙、波点裙、碎花长裙、蓝格子百褶裙、红格子百褶裙、牛仔短裙、黑色短裙），男女都能穿的上衣 5 件（运动背心、连帽卫衣、粗针毛衣、罗纹毛衣、挪威毛衣开衫；男女款也可以混着穿，列表里自己性别的排在前面）；29 双鞋（白色、蓝色运动鞋，旧运动鞋，高帮球鞋，跑鞋，一脚蹬，复古训练鞋，网球鞋，骑行鞋，三双皮鞋，牛津鞋，孟克鞋，凉拖，芭蕾平底鞋，蝴蝶结芭蕾鞋，拼色平底鞋，编织平底鞋，玛丽珍鞋，T 字带鞋，白色短靴，切尔西靴，翻边短靴，机车靴，中筒靴，马靴，过膝长靴，雪地靴；男款 2、女款 10、男女都行 17，列表里自己性别的排在前面）、21 顶帽子（礼帽、歪戴礼帽、圆顶礼帽、高礼帽、渔夫帽、探险帽、报童帽、平顶帽、棒球帽、迷彩帽、毛线帽、宽松毛线帽、护耳帽、钟形帽、遮阳帽、圣诞帽、厨师帽、泳帽、马术头盔、皮飞行帽、女巫帽；女巫帽是女款，随机只给女性）。都能按部位换颜色：套装分上衣、下装（西装、连衣裙、大衣、单件的上衣下装和帽子整件换；白色礼服分外套和西裤），鞋分鞋面、鞋底、袜子；每种材料一套色板（上衣 12 色、牛仔布 8 色、裙子和紧身裤 10 色、西装 8 色、大衣 10 色、帽子 9 色、渔夫帽 12 色、探险帽和头盔 8 色、皮鞋和靴子 9 色、球鞋 12 色、鞋底 8 色、袜子 9 色），也可以自选颜色 |
 | 动作 | Quaternius 的 20 段：待机、说话、走路、正式步态、慢跑、冲刺、跳舞、蹲下、蹲着走、刺拳、直拳、翻滚、跳跃、互动、拿东西、推、蹲下修理、坐着、被打、倒地；10 个表情；会眨眼，安静的动作里会转头看着镜头，“说话”时嘴会动 |
 
 GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做的只是它的流程和交互（遗传 → 五官 → 外观 → 服装）。
@@ -2144,6 +2146,11 @@ GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做
   列表里自己性别的排在前面，随机只挑合脚的，换性别时穿着另一性别的鞋就换回白色运动鞋。孟克鞋男女各有一版，男版女生穿也合脚，只收一双。
   没收的：高跟的（同上）；卡通风格的和戏服（英雄靴、精灵鞋、盔甲靴、海盗靴）；半透明的雨靴；贴图草草改过的马鞍鞋（鞋舌上一块方形的污渍）；
   面数太多的（豹纹平底鞋一双五万多个三角形，高帮帆布鞋十五万个，都比整个人还多）；转自 Blendswap、原许可没写清的；和收了的太像的几双。
+  帽子后来又从 hats01、hats03、hats04 补了 12 顶（四个包里一共 39 顶）：棒球帽、平顶帽、圣诞帽、宽松毛线帽、高礼帽、厨师帽、迷彩帽、护耳帽、
+  马术头盔、泳帽、皮飞行帽、女巫帽。棒球帽是 MargaretToigo 的那顶红色竞选帽，构建时把帽子正面绣的那行字擦掉（和去 T 恤上的标志同一个办法），
+  就是一顶普通的红色棒球帽。女巫帽作者写明是给女性模型做的，男性的头大一圈，帽檐会盖住眼睛，标成女款（列表里照样有，随机只给女性）。
+  没收的：和已有的太像的（特里尔比帽、另一顶圣诞帽、巫师帽）；戏服、面具一类（骷髅、牛角、斯巴达、十字军头盔，荆棘冠、羽毛头饰、套头的袋子、
+  面纱、女仆头饰、堂吉诃德帽）；盖住整张脸的摩托车头盔、计时赛自行车头盔；三顶军用钢盔。
   发型也从资源包（hair01、hair02）补了 22 款：同样是作者原版的 `.mhclo` + `.obj` + `.mhmat` + 贴图，走和 MakeHuman 自带头发同一套处理
   （贴图保留 alpha，原图比 2048² 小的不放大；切线空间的法线图一起带上；照样算发丝流向图、烘焙自遮挡），网页里染色、戴帽子压头发都不用改。
   不少 `.mhclo` 开头的注释写着 `license AGPL3`，那是 MakeClothes 导出时默认填的，以包里清单写的许可（CC0 / CC BY）为准。
@@ -2196,6 +2203,9 @@ GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做
   染色按“吸收”的模型：贴图里每根发丝的相对亮度 d（压缩成 d^0.45），染出来的颜色 = 发色^(1/d)，
   暗的发丝更深、更饱和，亮的更浅、更淡（直接“亮度 × 发色”的话，金发会染成一片橙色）。
   戴帽子时，帽子里的头发按方向压回到帽子内表面以内 8mm，帽檐下面一圈逐渐放开，头发不会从帽顶穿出来。
+  帽子和头皮的三角形都投到同一张方向图上（以头的中心为原点、从脚底那一极做的球极投影，120×120），每个格子记下帽子最近、头皮最外的距离：
+  埋在头皮底下的帽子面不算（平顶帽做成封闭的，帽口有一张穿过脑袋的平底）；帽子外面那一圈头发最多压到皮肤外 2mm，
+  帽子贴着头皮的地方（毛线帽、泳帽）才压进皮肤里。这样戴得靠后的帽子（宽松毛线帽）前面、平顶帽的帽檐底下，刘海不会压进额头、碎成一块块。
 - **衣服**：MakeHuman 的 T 恤上印着它的标志，构建时去掉：框里和布的颜色差得多的像素算标志，从旁边干净的布上搬一块过来，
   边界上原图和补丁的差值平滑地扩散进去（简化的无缝克隆），布纹和褶皱都接得上。所有衣服、鞋、帽子的贴图都把 UV 岛往外填色
   （push-pull），贴图缩小、mipmap 的时候，接缝处不会漏出黑色或白色的底。再叠一张平铺的平纹法线（经纬线一上一下，约 3mm 一根线），
@@ -2216,7 +2226,7 @@ GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做
 
 - 身体 26,756 个三角形；八个预设角色穿戴齐全是 42,072 ~ 66,220 个三角形（被衣服盖住的身体面不画；界面左下角实时显示；最多的是穿连帽卫衣的大力，卫衣一件就近两万）。
 - 拖一下滑杆（加形变、算法线、重新贴衣服和头发、叠穿防穿插、重算关节、重新绑定）约 30 ~ 60ms。
-- 数据一共 75MB（`viewer/human/`）：人体和形变 4.3MB、动作 0.4MB、183 个代理网格 21MB、449 张 WebP 贴图 50MB
+- 数据一共 78MB（`viewer/human/`）：人体和形变 4.3MB、动作 0.4MB、195 个代理网格 21MB、480 张 WebP 贴图 51MB
   （皮肤 2048²，头发 1024² ~ 2048²，胡子 512² ~ 1024²，衣服 512² ~ 2048²，虹膜、头发的法线图 1024²，头发的流向图 512²，衣服和鞋配色的权重图 512² ~ 1024²）。第一次打开只下载当前这个人用到的，约 6.7MB，换发型、换衣服时再按需下载。
 - 导出一个穿戴齐全的人，`.glb` 约 15MB：9 个蒙皮网格、54 根骨头、20 段动画、34 个表情形变，混合好的皮肤、染过色的头发、换过颜色的衣服烘焙成贴图。
 
@@ -2238,13 +2248,13 @@ GTA 的模型和贴图是 Rockstar 的版权，这里一个都没用，照着做
 `viewer/human/` 已经在仓库里，只有改了构建脚本才需要重新生成：
 
 ```bash
-npm run fetch-human   # 下载素材到 .cache/human-src/（约 2.5GB：MakeHuman 仓库、Ubuntu 包、npm 包、动作库、22 个社区资源包；固定版本，核对校验和；资源包只解出用到的那几件，需要 unzip）
+npm run fetch-human   # 下载素材到 .cache/human-src/（约 2.5GB：MakeHuman 仓库、Ubuntu 包、npm 包、动作库、23 个社区资源包；固定版本，核对校验和；资源包只解出用到的那几件，需要 unzip）
 npm run build-human   # 生成 viewer/human/（约 11 分钟，大半是头发的流向图、自遮挡和衣服配色的权重图；同样的素材、同一版本的 sharp，生成的文件逐字节相同）
 ```
 
 有的静态托管只发常见类型的文件，不发 `.bin`：把每个 `.bin` 用 base64 转成同名的 `.bin.txt`（`base64 -w0 human.bin > human.bin.txt`），
 网址加上 `?bin=.txt` 就读这一份（文件大三分之一；读的时候按开头的 `H4sI` 认出来，先解 base64 再解 gzip）。
-文件数还有上限的托管（比如 claude.ai 的 Artifact，一个版本最多 511 个文件，而 `viewer/human/` 有 560 多个）用
+文件数还有上限的托管（比如 claude.ai 的 Artifact，一个版本最多 511 个文件，而 `viewer/human/` 有将近 680 个）用
 `node scripts/human/pack.mjs <输出目录>` 打包：每个代理（一款头发、一件衣服）的网格和贴图拼成一个 base64 的包，
 几件共用的贴图（拆开的上衣、下装和原来那一整套）单独一个包，`packs.json` 记着每个文件在哪个包的哪一段，一共两百个左右的文件；
 网址再加上 `&packs=packs.json`，网页就从包里切出要用的那一段（贴图当成 `blob:` 读），换发型、换衣服时还是用到哪个才下载哪个。
@@ -2260,19 +2270,21 @@ npm run build-human   # 生成 viewer/human/（约 11 分钟，大半是头发�
   - Mindfront (Sweden)，CC BY 4.0：渔夫帽（Fishing_Hat_01）、酒红连衣裙（F_Dress_01）、薄荷绿背心裙（F_Dress_02）、黑色小礼服（F_Dress_04）、运动背心（Tank_Top_01）、
     湖蓝连衣裙（f_dress_06）、珊瑚红连衣裙（f_dress_08）、格纹连衣裙（f_dress_11）、粗针毛衣（knitted_sweater_01）、挪威毛衣开衫（lusekofta）、
     沙滩短裤（male_swimming_trunks_01）、做旧牛仔裤（male_trousers_1）、刺绣牛仔裤（female_trousers_1）、牛津鞋（shoes_oxford_male）、
-    机车靴（shoes_biker_boots_male）、孟克鞋（shoes_monk_strap_male）、毛线帽（knitted_hat_01）；
+    机车靴（shoes_biker_boots_male）、孟克鞋（shoes_monk_strap_male）、毛线帽（knitted_hat_01）、迷彩帽（patrol_cap）、护耳帽（sherpa_hat）；
   - punkduck，CC BY 3.0：白色抹胸裙（TubeDress）、毛领大衣（Coat）、旗袍（middle_length_qipao）、晚礼服长裙（evening_gown）、网球裙（tennis_dress）、
     无袖系带衬衫（Sleeveless）、露肩上衣（off-shoulder_long-sleeve_top）、红色复古上衣（retro_top）、抹胸（TubeTop）、V 领背心（VNeckTop）、吊带衫（spaghetti-top）、
     紧身牛仔裤（Tightjeans）、牛仔短裤（ShortJeans）、牛仔短裙（JeansSkirt）、黑色短裙（miniskirt）、波点裙（retro_polka_dot_skirt）、雪地靴（WinterBoots）、
-    跑鞋（running_shoes_01）、一脚蹬（comfortable_sneakers）、复古训练鞋（kill_bill_shoes）、网球鞋（tennis_shoes）、骑行鞋（cycling_shoes）、遮阳帽（sun_visor_sports_visor）；
-    CC BY 4.0：系带衬衫（lace_up_blouse）、蕾丝高领背心（high_neck_crop_top）、马靴（riding_boots）、翻边短靴（medieval_boots）；
+    跑鞋（running_shoes_01）、一脚蹬（comfortable_sneakers）、复古训练鞋（kill_bill_shoes）、网球鞋（tennis_shoes）、骑行鞋（cycling_shoes）、遮阳帽（sun_visor_sports_visor）、
+    泳帽（swim_cap）；CC BY 4.0：系带衬衫（lace_up_blouse）、蕾丝高领背心（high_neck_crop_top）、马靴（riding_boots）、翻边短靴（medieval_boots）、马术头盔（riding_helmet）；
   - DredNicolson，CC BY（没写版本）：探险帽（pith_helmet）、碎花长衫（Asymmetric_Tunic_and_Sash）、迷彩短 T（short_tail_camo_tee）；
   - Elvaerwyn，CC BY（没写版本）：连帽卫衣（hooded_sweat_jacket1）、休闲衬衫（male_shirt_untucked_bd1）、休闲短裤（male_trouser_short_1）、
     红色挂脖裙（halter_dress_knee_length）、蓝格子百褶裙（pleated_plaid_mini_skirt）、铅笔裙（pencil_skirt）、喇叭牛仔裤（jeans_bootcut）、黑色紧身裤（disco_pants_skinny），
     凉拖（male_flip_flop_sandals1）、拼色平底鞋（flatshoe_pointy1）、编织平底鞋（flatshoe_plain1），
+    圣诞帽（santa_hat）、宽松毛线帽（slouchy_beanie1）、高礼帽（tophat1）、厨师帽（unisex_chef_hat_1）、女巫帽（witchy_hallows_hat1），
     发型 15 款：刺猬头（maxwell_hair）、三七分（grump_hair）、半扎发（keylth_hair）、蓬松长发（that_80s_babe_hair）、玉米辫（braided_rows）、双丸子头（micky_afro）、
     复古盘发（50s_updo）、侧分长卷发（adrienne_hair）、羽毛剪（ashley_may_hair）、编发丸子头（braid_bun）、中长发（short_daisy_hair）、长波浪（hazel_hair）、
-    公主头（island_princess_hair）、斜刘海中长发（katherine_hair）、长辫子（lara_hair），胡须：蓬乱长须（scruffy_beard1）；CC0：双麻花辫（double_mh_braid）；
+    公主头（island_princess_hair）、斜刘海中长发（katherine_hair）、长辫子（lara_hair），胡须：蓬乱长须（scruffy_beard1）；CC BY 4.0：平顶帽（male_flat_cap1）；
+    CC0：双麻花辫（double_mh_braid）；
   - culturalibre，CC BY（没写版本）：高帮球鞋（sneakers）、圆顶礼帽（cl_bowler_hat）、达利胡（dal_moustache）；CC0：纹理短发（hair_02，MakeHuman 早年的一款男发）、山羊胡（faun_beard）；
   - grinsegold，CC BY（没写版本）：络腮胡（full_beard）、八字胡（moustache）；CC0：短络腮胡（beard_sigmund_wip）；WDG，CC0：粗犷络腮胡（scruffy_beard）；
   - EWS，CC BY：条纹短上衣（striped_shirt）；MTKnife，CC BY：红格子百褶裙（pleated_mini_skirt）；
@@ -2280,12 +2292,13 @@ npm run build-human   # 生成 viewer/human/（约 11 分钟，大半是头发�
     双排扣西装（male_double-breasted_suit）、碎花吊带裙（camisole_dress_with_full_skirt）、挂脖蛋糕裙（dress_with_tiered_skirt）、黑色西装套裙（female_suit）、
     粉色西装套装（female_suit_2）、灰色双排扣套装（female_double-breasted_suit）、碎花长裙（long_full_skirt）、切尔西靴（ankle_boots_male）、
     芭蕾平底鞋（ballet_flats）、蝴蝶结芭蕾鞋（ballet_flats_with_bows）、玛丽珍鞋（mj_cloth_shoes）、白色短靴（ankle_boots_female），
-    发型：齐刘海波波头（blunt_bob_with_bangs）、内扣短发（curled_under_bob）、前长后短波波头（inverted_bob）；
+    发型：齐刘海波波头（blunt_bob_with_bangs）、内扣短发（curled_under_bob）、前长后短波波头（inverted_bob），棒球帽（maga_hat，去掉了帽子正面的字）；
   - Cortu，CC0：工装裤（cargo_pants）、T 字带鞋（t-bar）、过膝长靴（floppy_overknee_shoes）；madmanny，CC BY：中筒靴（tight_leather_boots）；namuhekam，CC0：Polo 衫（male_polo_shirt）；jujube，CC0：报童帽（newsboy_cap）；Aethelraed_Unraed，CC0：钟形帽（cloche_hat）；
+    MaciekG，CC BY（没写版本）：皮飞行帽（leather_helmet）；
     sonntag78，CC0：中长碎发（junglebook_hair）；RehmanPolanski，CC0：发髻（hair_bun_brown）、维京长须（beard_viking）、一字胡（moustache_viking）。
 
   前三位作者最早的那些在 npm 包里，其余的来自社区的资源包（[asset packs](https://static.makehumancommunity.org/assets/assetpacks/index.html)：
-  shirts01 ~ 03、pants01 ~ 03、suits01、suits03、dress01 ~ 03、skirts01 ~ 02、shoes01 ~ 03、hats01、hats03、hair01 ~ 02、bodyparts05 ~ 06），每件的来源页（www.makehumancommunity.org/node/…）记在数据里。
+  shirts01 ~ 03、pants01 ~ 03、suits01、suits03、dress01 ~ 03、skirts01 ~ 02、shoes01 ~ 03、hats01、hats03 ~ 04、hair01 ~ 02、bodyparts05 ~ 06），每件的来源页（www.makehumancommunity.org/node/…）记在数据里。
   网页里发型页、胡子页、服装页各组标题的右边、导出的 `素材来源.txt` 里都写着作者和许可（资源包里的那些还附上来源页）；
 - CC0 不要求署名，导出的 zip 里还是附了一份 `素材来源.txt`（用了社区作者的发型、胡子、衣服、鞋、帽子，会把作者和许可写进去）。
 
@@ -2533,6 +2546,8 @@ export default {
   戴帽子时头发是按方向往里压的，没有专门的“戴帽子的发型”，爆炸头、斜刘海压进去以后帽檐下面会显得薄一些；
   社区的发型精细程度、做法差得多（刺猬头不到八百个顶点，玉米辫两万多个；有的是一片片宽发片，有的是一缕缕细发片），挨着换时质感有落差；
   个别蓬松的发型（三七分、侧分长卷发）戴礼帽时，帽檐、帽顶上会透出一两点发梢；双丸子头戴有檐的帽子，两个丸子会被压扁在帽檐底下；
+  爆炸头戴厨师帽、宽松毛线帽，帽口附近会透出几点头发，太阳穴上方露出一点头皮（厨师帽作者说明了没打算配头发）；
+  女巫帽的帽檐往后垂，从正面平视，脑后那半圈帽檐只剩一条细线，像挂着两根线；
   凉拖和拼色、编织两双平底鞋的面数偏多（一双一万六千到两万三千个三角形）；中筒靴的网格很简单（不到一千个顶点），近看有点像胶靴；
   胡子只跟着头和表情走，不和衣服比高低：垂到胸口的长胡子（蓬乱长须、维京长须）配西装外套这样离身体远的外衣，从侧面看胡梢会被翻领挡住一点，
   低头的动作里胡梢会戳进衣服；胡子的做法也各不相同（维京长须是一缕缕细发片，粗犷络腮胡是一片片宽发片），挨着换时质感有落差；
