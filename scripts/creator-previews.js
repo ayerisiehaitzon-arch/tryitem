@@ -14,7 +14,7 @@
 //   docs/previews/creator-colors.jpg       衣服配色（同一套衣服换几种颜色）
 //   docs/previews/creator-shoes.jpg        鞋按部位换色（鞋面、鞋底、袜子）
 //   docs/previews/creator-shoes2.jpg       鞋（二）：社区资源包里的 12 双鞋（孟克鞋、凉拖、训练鞋、网球鞋、骑行鞋、短靴，女款平底鞋、长靴）
-//   docs/previews/creator-shoeways.jpg     鞋的配色方案（一点换整双）：球鞋、皮鞋和靴子、女款平底鞋和凉拖各几套
+//   docs/previews/creator-shoeways.jpg     鞋的配色方案（一点换整双）：球鞋、皮鞋和靴子、女款平底鞋和凉拖各几套，再加一排后来加的
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
 //   docs/previews/creator-hats2.jpg        帽子（二）：社区资源包里的 12 顶帽子（棒球帽、平顶帽、圣诞帽、宽松毛线帽、高礼帽、厨师帽、迷彩帽、护耳帽、马术头盔、泳帽、皮飞行帽、女巫帽）
 //   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上；坐着、蹲下修理带着琴凳和工具箱）
@@ -269,7 +269,7 @@ try {
   const ss2 = await shoot(shoe2.map(([n, q]) => [n, `${q}&bare=1&cam=feet&az=25&el=16&anim=idle&t=0.5`]), [480, 420]);
   await grid(ss2, 4, 360, 315, path.join(out, 'creator-shoes2.jpg'), { labels: shoe2.map((c) => c[2]) });
   // 鞋的配色方案：页面上一点就把鞋面、鞋底、袜子一起换掉；sc 就是那套方案的三个颜色（creator.html 的 SHOE_WAYS）。
-  // 一排球鞋（小满的热裤），一排皮鞋和靴子（大力的短裤），一排女鞋和凉拖
+  // 一排球鞋（小满的热裤），一排皮鞋和靴子（大力的短裤），一排女鞋和凉拖，最后一排是后来加的几套
   const way = [
     ['way-0', 'preset=1&shoes=shoes05', '白色运动鞋 · 原色'],
     ['way-1', 'preset=1&shoes=shoes05&sc=1c1c1e,f2f0eb,f2f0eb', '白色运动鞋 · 黑白'],
@@ -289,6 +289,12 @@ try {
     ['way-15', 'preset=3&shoes=riding_boots&sc=3b2418,3b2418', '马靴 · 深棕'],
     ['way-16', 'preset=3&shoes=calf_boots&sc=9a6a3c,3b2418', '中筒靴 · 焦糖'],
     ['way-17', 'preset=4&shoes=flip_flops&sc=d9682b', '凉拖 · 橙色'],
+    ['way-18', 'preset=1&shoes=shoes05&sc=1c1c1e,b0262c,1c1c1e', '白色运动鞋 · 黑红'],
+    ['way-19', 'preset=1&shoes=kill_bill&sc=8fb7d9,f2f0eb', '复古训练鞋 · 天蓝'],
+    ['way-20', 'preset=4&shoes=shoes01&sc=151515,c9a77d,1c1c1e', '棕色皮鞋 · 黑面浅底'],
+    ['way-21', 'preset=4&shoes=biker_boots&sc=b5843f,3b2418', '机车靴 · 小麦色'],
+    ['way-22', 'preset=1&shoes=mary_janes&sc=a8d5c2,c9a77d', '玛丽珍鞋 · 薄荷绿'],
+    ['way-23', 'preset=1&shoes=ballet_flats&sc=a99ad0', '芭蕾平底鞋 · 薰衣草'],
   ];
   const sw = await shoot(way.map(([n, q]) => [n, `${q}&bare=1&cam=feet&az=25&el=16&anim=idle&t=0.5`]), [400, 380]);
   await grid(sw, 6, 300, 285, path.join(out, 'creator-shoeways.jpg'), { labels: way.map((c) => c[2]) });
