@@ -194,7 +194,7 @@ try {
   await grid(mw, 8, 300, 520, path.join(out, 'creator-clothes-men.jpg'), { labels: men.map((c) => c[2]) });
   // 男装（二）：MakeHuman 社区资源包里的男装、鞋、帽子；卫衣、毛衣、开衫男女都能穿（最后一排有两格女生）
   const men2 = [
-    ['men2-0', 'preset=4', '连帽卫衣 · 休闲短裤 · 跑鞋'],
+    ['men2-0', 'preset=4&top=hoodie', '连帽卫衣 · 休闲短裤 · 跑鞋'],
     ['men2-1', 'preset=0&top=sweater_grey&bottom=worn_jeans&shoes=chelsea&hat=beanie', '粗针毛衣 · 做旧牛仔裤 · 毛线帽'],
     ['men2-2', 'preset=2&top=polo&bottom=wool_pants&shoes=chelsea&hat=newsboy', '报童帽 · Polo 衫 · 羊毛西裤'],
     ['men2-3', 'preset=0&top=shirt_casual&bottom=board_shorts&shoes=slipons', '休闲衬衫 · 沙滩短裤 · 一脚蹬'],
