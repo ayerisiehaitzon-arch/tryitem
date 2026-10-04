@@ -557,6 +557,69 @@ function weaveNormal(kind, size = 256) {
 const WEAVES = WEAVE_KINDS.map((k) => weaveNormal(k));
 const FLAT_NORMAL = (() => { const t = new THREE.DataTexture(new Uint8Array([128, 128, 255, 255]), 1, 1); t.needsUpdate = true; return t; })();
 const NO_PARTS = (() => { const t = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); t.needsUpdate = true; return t; })();
+// —— 腿的碰撞体：衣服不让大腿、小腿穿过去 ——
+// 衣服用自己的蒙皮权重（宽松的地方平滑过），大腿一抬九十度，裙子前片只跟过去九成，就陷进大腿里；裙子后片离大腿
+// 本来有几厘米，坐下时跟着大腿转到大腿底下，悬在半空——从前面看进裙子里面，像是大腿从裙子里穿了出来。
+// 每条大腿、小腿一个碰撞体：跟着骨头走，截面是从这个体型的腿上量出来的（沿腿 24 段、绕腿 16 个方向，取最外面的皮肤）。
+// 着色器里蒙皮以后：① 大腿抬起来（坐下、蹲下）时，裙子、连衣裙这些整套和下装宽松的地方往大腿上收：离大腿 8mm 以外的部分
+// 按抬腿的程度收掉，两条腿中间的布按离哪条腿近平滑地混着收，绷在两腿之间（上衣不收：下摆会收到裤子里面去）。只收静止时在
+// 胯关节以下、离大腿不远的部分（蹲下、坐下时胸口也到了大腿跟前，西装、礼服的上身不能往大腿上拽），离大腿 15 ~ 30cm 以外的渐渐不收；
+// ② 再把布推到四个碰撞体外面（离表面至少 2 ~ 4mm）。贴身的（静止时离皮肤 3mm 以内）平时跟着皮肤走，不推，抬腿时也推：
+// 贴身连衣裙的前片离大腿不到 3mm，坐下时大腿表面一鼓，皮肤就从布的三角形之间冒出来，像布透明了一样；
+// 两头靠近关节的地方皮肤是几根骨头混着动的，碰撞体是硬的，那里渐渐不管。腿没怎么动的时候（站着、待机）碰撞体完全不管，
+// 站着的样子一点不变（见 updateColliders）。衣服的材质和投影用的深度材质都加
+const COLS = [['thigh_l', 'calf_l'], ['thigh_r', 'calf_r'], ['calf_l', 'foot_l'], ['calf_r', 'foot_r']], COL_NS = 24, COL_NA = 16, COL_DS = 0.05;
+const colTex = new THREE.DataTexture(new Float32Array(COL_NA * COL_NS * COLS.length), COL_NA, COL_NS * COLS.length, THREE.RedFormat, THREE.FloatType);
+const COL_U = {
+  uColM: { value: COLS.map(() => new THREE.Matrix4()) }, uColMi: { value: COLS.map(() => new THREE.Matrix4()) },
+  uColL: { value: new THREE.Vector4(1, 1, 1, 1) }, uColC: { value: new THREE.Vector4(0, 0, 0, 0) }, uColA: { value: new THREE.Vector4(0, 0, 0, 0) }, uColProf: { value: colTex },
+};
+function pushOut(sh) {
+  Object.assign(sh.uniforms, COL_U);
+  sh.vertexShader = sh.vertexShader
+    .replace('#include <common>', `#include <common>
+uniform mat4 uColM[ 4 ]; uniform mat4 uColMi[ 4 ]; uniform vec4 uColL; uniform vec4 uColC; uniform vec4 uColA; uniform highp sampler2D uColProf;
+attribute vec2 cloth;
+// 碰撞体 c 的截面半径：轴上 s 处（0 = 上头的关节，1 = 下头的关节）、绕轴角度 th（0 ~ 2π），在表里双线性插值
+float colR( int c, float s, float th ) {
+  float fy = clamp( ( s + 0.1 ) / ${COL_DS} - 0.5, 0.0, ${COL_NS - 1}.0 ), fx = th * ( ${COL_NA}.0 / 6.2831853 ) - 0.5;
+  float x0 = floor( fx ), tx = fx - x0, y0 = min( floor( fy ), ${COL_NS - 2}.0 ), ty = fy - y0;
+  int i0 = int( mod( x0, ${COL_NA}.0 ) ), i1 = int( mod( x0 + 1.0, ${COL_NA}.0 ) ), j = c * ${COL_NS} + int( y0 );
+  return mix( mix( texelFetch( uColProf, ivec2( i0, j ), 0 ).r, texelFetch( uColProf, ivec2( i1, j ), 0 ).r, tx ),
+    mix( texelFetch( uColProf, ivec2( i0, j + 1 ), 0 ).r, texelFetch( uColProf, ivec2( i1, j + 1 ), 0 ).r, tx ), ty );
+}`)
+    .replace('#include <skinning_vertex>', `#include <skinning_vertex>
+#ifdef USE_SKINNING
+{
+  // cloth.x：静止时离皮肤多高；cloth.y：抬腿时往大腿上收多少（静止时在胯关节以下、离大腿不远的部分，见 clothFit）
+  vec3 p = transformed;
+  float loose = smoothstep( 0.008, 0.025, cloth.x ) * cloth.y;
+  if ( loose > 0.0 && uColC.x + uColC.y > 0.0 ) {
+    vec3 pc[ 2 ]; float gp[ 2 ];
+    for ( int c = 0; c < 2; c ++ ) {
+      vec3 q = ( uColM[ c ] * vec4( p, 1.0 ) ).xyz;
+      float s = q.y / uColL[ c ], r = length( q.xz ), g = r - colR( c, s, atan( q.z, q.x ) + PI ) - 0.008;
+      float k = uColC[ c ] * loose * smoothstep( 0.0, 0.15, s ) * ( 1.0 - smoothstep( 0.95, 1.1, s ) ) * ( 1.0 - smoothstep( 0.15, 0.3, g ) );
+      if ( g > 0.0 && r > 1e-4 ) q.xz *= ( r - g * k ) / r;
+      pc[ c ] = ( uColMi[ c ] * vec4( q, 1.0 ) ).xyz; gp[ c ] = g;
+    }
+    p = mix( pc[ 0 ], pc[ 1 ], 1.0 / ( 1.0 + exp( clamp( ( gp[ 1 ] - gp[ 0 ] ) / 0.01, - 30.0, 30.0 ) ) ) );
+  }
+  float soft = smoothstep( 0.003, 0.01, cloth.x );
+  for ( int c = 0; c < 4; c ++ ) {
+    if ( uColA[ c ] <= 0.0 ) continue;
+    vec3 q = ( uColM[ c ] * vec4( p, 1.0 ) ).xyz;
+    float s = q.y / uColL[ c ], r = length( q.xz ), R = colR( c, s, atan( q.z, q.x ) + PI ) + 0.002 + 0.002 * smoothstep( 0.01, 0.025, cloth.x );
+    float k = uColA[ c ] * max( soft, uColC[ c ] ) * smoothstep( 0.05, 0.2, s ) * ( 1.0 - smoothstep( 0.95, 1.08, s ) );
+    if ( r < R && r > 1e-4 && k > 0.0 ) { q.xz *= mix( 1.0, R / r, k ); p = ( uColMi[ c ] * vec4( q, 1.0 ) ).xyz; }
+  }
+  transformed = p;
+}
+#endif`);
+}
+const PUSH_DEPTH = new THREE.MeshDepthMaterial();
+PUSH_DEPTH.onBeforeCompile = pushOut;
+PUSH_DEPTH.customProgramCacheKey = () => 'depth-push';
 // 换色的公式（着色器和导出烘焙共用）：新颜色 × 亮度比（像素亮度 / 这块布主色的亮度），褶皱、洗白、布纹的明暗都留着；
 // 往亮了换很多（黑布换白、牛仔裤换卡其）时把亮度比压一压（指数 < 1），不然深色布里洗色、褶皱的深浅会被放大成脏斑
 const recolorGamma = (Ld, Lt) => 1 / (1 + 0.5 * Math.max(0, Math.log2(Math.max(1e-4, Lt) / Math.max(1e-4, Ld))));
@@ -567,7 +630,8 @@ const recolorGamma = (Ld, Lt) => 1 / (1 + 0.5 * Math.max(0, Math.log2(Math.max(1
 const PART_U = new WeakMap();
 // link：跟随的一块（{ mask, dom, to }）：单独一张权重图、自己的主色，颜色跟着第 to 个部位换（白色运动鞋鞋面后半截的深灰
 // 跟着鞋面，几双 MakeHuman 鞋的鞋底侧边跟着鞋底）
-function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = [], rough = [], weave = [], link = null } = {}) {
+// push：衣服（几何体上有 cloth：静止时离皮肤多高、抬腿时收不收）蒙皮以后再推到腿的碰撞体外面，见 pushOut
+function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = [], rough = [], weave = [], link = null, push = false } = {}) {
   const wk = [0, 1, 2].map((p) => Math.max(0, WEAVE_KINDS.indexOf(weave[p] ?? weave[0] ?? 'plain')));
   const u = {
     uWeave: { value: WEAVES[0] }, uWeave1: { value: WEAVES[1] }, uWeave2: { value: WEAVES[2] }, uWeaveScale: { value: scale }, uWeaveAmt: { value: amount },
@@ -582,6 +646,7 @@ function fabricMaterial(params, { scale = 40, amount = 0.3, parts = null, dom = 
   PART_U.set(mat, u);
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, u);
+    if (push) pushOut(sh);
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
 uniform sampler2D uWeave; uniform sampler2D uWeave1; uniform sampler2D uWeave2; uniform float uWeaveScale; uniform float uWeaveAmt; uniform vec3 uPartWeave;
@@ -604,6 +669,11 @@ vec3 partW = texture2D( uPartMask, vMapUv ).rgb;
   diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uPartDom[ 2 ], uPartCol[ 2 ], partW.b );
   diffuseColor.rgb = recolorPart( diffuseColor.rgb, L, uLinkDom, uLinkCol, texture2D( uLinkMask, vMapUv ).r );
 }`)
+      .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
+#ifdef USE_SHEEN
+// 光泽带上布本身的颜色：白色的光泽盖在深色布上，掠射角看过去发白，像蒙了一层纱（酒红连衣裙坐下时搭在腿上那块看着像透明的）
+material.sheenColor *= mix( vec3( 1.0 ), diffuseColor.rgb / max( 1e-3, max( diffuseColor.r, max( diffuseColor.g, diffuseColor.b ) ) ), 0.7 );
+#endif`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
 roughnessFactor = mix( roughnessFactor, uPartRough.x, partW.r * step( 0.001, uPartRough.x ) );
 roughnessFactor = mix( roughnessFactor, uPartRough.y, partW.g * step( 0.001, uPartRough.y ) );
@@ -620,7 +690,7 @@ vec3 weaveN = mix( mix( mix( wp0, wp1, partW.g ), wp2, partW.b ), wp0, partW.r )
 mapN = normalize( vec3( mapN.xy + weaveN.xy * uWeaveAmt, mapN.z ) );
 normal = normalize( tbn * mapN );`);
   };
-  mat.customProgramCacheKey = () => 'fabric';
+  mat.customProgramCacheKey = () => (push ? 'fabric-push' : 'fabric');
   return mat;
 }
 
@@ -842,6 +912,13 @@ async function setSlot(slot, id) {
   geo.setAttribute('skinIndex', new THREE.BufferAttribute(si, 4));
   geo.setAttribute('skinWeight', new THREE.BufferAttribute(sw, 4));
   geo.setIndex(new THREE.BufferAttribute(d.index, 1));
+  // 衣服：每个顶点静止时离皮肤多高、抬腿时往大腿上收多少（随体型变，见 clothFit），着色器里用，见 pushOut
+  const push = ['outfit', 'top', 'bottom'].includes(p.cat);
+  if (push) {
+    const h = restFit(p).rest, a = new Float32Array(p.nr * 2);
+    for (let r = 0; r < p.nr; r++) a[r * 2] = h[d.map[r]];
+    geo.setAttribute('cloth', new THREE.BufferAttribute(a, 2));
+  }
   // 脸上的代理（眉毛、睫毛、牙齿、舌头、胡子）跟着表情动：代理顶点的增量 = 三个参考顶点增量的加权和
   const face = ['eyebrows', 'eyelashes', 'teeth', 'tongue', 'beard', 'moustache'].includes(p.cat);
   if (face) {
@@ -901,8 +978,10 @@ async function setSlot(slot, id) {
     const mat = recolor ? fabricMaterial(params, {
       ...(p.cat === 'hat' ? { scale: 24, amount: 0.2 } : p.cat === 'shoes' ? { amount: 0 } : {}),
       parts, dom: (p.parts ?? []).map((x) => x.dom), rough: (p.parts ?? []).map((x) => (x.kind === 'sock' ? 0.95 : 0)), weave: (p.parts ?? []).map((x) => x.weave), link,
+      push,
     }) : new THREE.MeshPhysicalMaterial(params);
     const m = add(mat, p.cat);
+    if (push) m.customDepthMaterial = PUSH_DEPTH;
     if (p.cat === 'teeth' || p.cat === 'tongue') m.castShadow = false;
   }
   SLOTS[slot] = { id, p, meshes, geo, P: new Float32Array(p.nv * 3) };
@@ -969,6 +1048,8 @@ function updateShape() {
   groundY = lo; topY = top;
   bodyGeo.computeBoundingSphere();
   bindRest();
+  colliderFit(Pb);
+  for (const s of Object.values(SLOTS)) if (s.geo.attributes.cloth) clothFit(s);
   timing.shape = performance.now() - t0;
 }
 // 戴帽子时把帽子里的头发压进去（不然头发从帽顶穿出来）：以头的中心为原点，把帽子和头皮的三角形都投到方向图上
@@ -1454,12 +1535,29 @@ function skinUnder(p, use, shrinkBy) {
   }
   return shrink(grow(set, 3), shrinkBy);
 }
+// 大腿上的皮肤顶点（两根大腿骨的权重过半）
+const THIGH_V = (() => {
+  const f = new Uint8Array(H.nv), t = [BI.thigh_l, BI.thigh_r];
+  for (let v = 0; v < H.nv; v++) {
+    let w = 0, sum = 0;
+    for (let k = 0; k < 4; k++) { sum += H.rig.skinWeight[v * 4 + k]; if (t.includes(H.rig.skinIndex[v * 4 + k])) w += H.rig.skinWeight[v * 4 + k]; }
+    f[v] = w > 0.5 * sum ? 1 : 0;
+  }
+  return f;
+})();
+const tightThigh = (p) => (p.tightThigh ??= skinUnder(p, (i) => p.rest[i] < 0.01, 4).map((x, v) => x & THIGH_V[v]));
 function updateHidden() {
   hiddenDirty = false;
   const del = new Uint8Array(H.nv);
   let any = false;
   for (const s of Object.values(SLOTS)) {
-    if (s.p.data.del) { any = true; for (const v of s.p.data.del) del[v] = 1; }
+    if (s.p.data.del) {
+      any = true;
+      for (const v of s.p.data.del) del[v] = 1;
+      // 整套、下装贴身的地方（静止时离皮肤 1cm 以内，权重和皮肤一样，怎么动都盖着）底下的大腿也藏：MakeHuman 原版的短连衣裙
+      // 删皮肤的列表不管大腿，坐下时大腿一鼓，皮肤从贴身的前片的三角形之间冒出来，像布透明了一样
+      if (s.p.cat === 'outfit' || s.p.cat === 'bottom') { const u = tightThigh(s.p); for (let v = 0; v < H.nv; v++) if (u[v]) del[v] = 1; }
+    }
     // 没带 delete_verts 的（社区的短裙、短裤）：按衣服实际盖住的地方藏，离边再留一圈
     else if (GARMENT.includes(s.p.cat)) { any = true; const u = underOf(s.p); for (let v = 0; v < H.nv; v++) if (u[v]) del[v] = 1; }
   }
@@ -1543,6 +1641,94 @@ function bindRest() {
   }
 }
 let pelvisRest = new THREE.Vector3();
+// 腿的碰撞体（见 pushOut），每个体型量一次：原点在上头的关节，y 轴沿骨头指向下头的关节，x 轴左右（和 y 正交），z = x × y；
+// s = y / 骨头长。这根骨头权重过半的皮肤顶点按 (s, 绕轴的角度) 分格，每格取离轴最远的那个（碰撞体包住皮肤：收紧的布离它 8mm，
+// 离皮肤也至少 8mm，不会贴得太近和皮肤互相穿插）。空格子（大腿根内侧的皮肤跟着骨盆）按同一段里两边的格子插，整段空的抄最近的一段
+const COL_F = COLS.map(() => new THREE.Matrix4());
+const SKIN_V = (() => { const f = new Uint8Array(H.nv); for (const v of BODY_TRI) f[v] = 1; return f; })();
+function colliderFit(X) {
+  const prof = colTex.image.data;
+  prof.fill(-1);
+  COLS.forEach(([b0, b1], c) => {
+    const bi = BI[b0], a = new THREE.Vector3().fromArray(J, H.rig.bones[bi].head * 3), y = new THREE.Vector3().fromArray(J, H.rig.bones[BI[b1]].head * 3).sub(a);
+    const L = y.length();
+    y.divideScalar(L);
+    const x = new THREE.Vector3(1, 0, 0).addScaledVector(y, -y.x).normalize(), z = new THREE.Vector3().crossVectors(x, y);
+    COL_F[c].makeBasis(x, y, z);
+    COL_U.uColL.value.setComponent(c, L);
+    const row = (j) => (c * COL_NS + j) * COL_NA;
+    for (let v = 0; v < H.nv; v++) {
+      if (!SKIN_V[v]) continue;
+      let w = 0, sum = 0;
+      for (let k = 0; k < 4; k++) { sum += H.rig.skinWeight[v * 4 + k]; if (H.rig.skinIndex[v * 4 + k] === bi) w += H.rig.skinWeight[v * 4 + k]; }
+      if (w < 0.5 * sum) continue;
+      const dx = X[v * 3] - a.x, dy = X[v * 3 + 1] - a.y, dz = X[v * 3 + 2] - a.z;
+      const qx = dx * x.x + dy * x.y + dz * x.z, qy = dx * y.x + dy * y.y + dz * y.z, qz = dx * z.x + dy * z.y + dz * z.z;
+      const j = Math.floor((qy / L + 0.1) / COL_DS);
+      if (j < 0 || j >= COL_NS) continue;
+      const i = Math.min(COL_NA - 1, Math.floor(((Math.atan2(qz, qx) + Math.PI) / (2 * Math.PI)) * COL_NA)), r = Math.hypot(qx, qz);
+      if (r > prof[row(j) + i]) prof[row(j) + i] = r;
+    }
+    const filled = [];
+    for (let j = 0; j < COL_NS; j++) {
+      const o = row(j), src = prof.slice(o, o + COL_NA);
+      if (!src.some((r) => r >= 0)) continue;
+      filled.push(j);
+      for (let i = 0; i < COL_NA; i++) {
+        if (src[i] >= 0) continue;
+        let dp = 1, dq = 1;
+        while (src[(i - dp + COL_NA) % COL_NA] < 0) dp++;
+        while (src[(i + dq) % COL_NA] < 0) dq++;
+        const rp = src[(i - dp + COL_NA) % COL_NA], rq = src[(i + dq) % COL_NA];
+        prof[o + i] = rp + ((rq - rp) * dp) / (dp + dq);
+      }
+    }
+    for (let j = 0; j < COL_NS; j++) {
+      if (filled.includes(j)) continue;
+      const near = filled.reduce((b, f) => (b < 0 || Math.abs(f - j) < Math.abs(b - j) ? f : b), -1);
+      for (let i = 0; i < COL_NA; i++) prof[row(j) + i] = near < 0 ? 0 : prof[row(near) + i];
+    }
+  });
+  colTex.needsUpdate = true;
+}
+// 抬腿时往大腿上收多少：整套、下装静止时在胯关节以下（沿大腿 s > 0，到 0.12 收满）、离大腿的轴 18cm 以内（28cm 以外不收）的部分；
+// 腰、上身、上衣都不收
+function clothFit(s) {
+  const p = s.p, a = s.geo.attributes.cloth, X = s.P, map = p.data.map, w = new Float32Array(p.nv);
+  const step = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+  if (p.cat !== 'top') for (let c = 0; c < 2; c++) {
+    const F = COL_F[c].elements, L = COL_U.uColL.value.getComponent(c), h = H.rig.bones[BI[COLS[c][0]]].head * 3;
+    for (let i = 0; i < p.nv; i++) {
+      const dx = X[i * 3] - J[h], dy = X[i * 3 + 1] - J[h + 1], dz = X[i * 3 + 2] - J[h + 2];
+      const qx = dx * F[0] + dy * F[1] + dz * F[2], qy = dx * F[4] + dy * F[5] + dz * F[6], qz = dx * F[8] + dy * F[9] + dz * F[10];
+      w[i] = Math.max(w[i], step(0, 0.12, qy / L) * (1 - step(0.18, 0.28, Math.hypot(qx, qz))));
+    }
+  }
+  for (let r = 0; r < p.nr; r++) a.array[r * 2 + 1] = w[map[r]];
+  a.needsUpdate = true;
+}
+// 每次画之前（骨头都摆好了）：碰撞体的变换跟着骨头走。抬腿的程度——大腿和竖直向下的夹角，30° 以下不收（走路、跑步），
+// 75° 以上收满（坐下、蹲下）；不和骨盆比：动作库里坐着时骨盆这根骨头本身就往前转了快九十度（腰往回转），大腿相对它没抬多少。
+// 推出去的程度看腿离静止姿势转了多少（静止时大腿本来就斜着：胯宽膝窄）：大腿看它自己转了多少，小腿看膝盖比静止时多弯了多少，
+// 18° 以下不推（站着、待机，动作库的待机姿势大腿本来就转了十几度），45° 以上推满
+const colInv = new THREE.Matrix4(), colR3 = new THREE.Matrix4(), colA = new THREE.Vector3(), colB = new THREE.Vector3(), colD = new THREE.Vector3();
+const colStep = (cos, c0, c1) => { const t = Math.min(1, Math.max(0, (c0 - cos) / (c0 - c1))); return t * t * (3 - 2 * t); };
+function updateColliders() {
+  colInv.copy(rig.matrixWorld).invert();
+  COLS.forEach(([b0], c) => {
+    const Mi = COL_U.uColMi.value[c].multiplyMatrices(colInv, bones[BI[b0]].matrixWorld).multiply(COL_F[c]);
+    COL_U.uColM.value[c].copy(Mi).invert();
+  });
+  for (const c of [0, 1]) {
+    const thigh = colA.setFromMatrixColumn(COL_U.uColMi.value[c], 1).normalize(), calf = colB.setFromMatrixColumn(COL_U.uColMi.value[c + 2], 1).normalize();
+    COL_U.uColC.value.setComponent(c, colStep(-thigh.y, 0.866, 0.259));
+    COL_U.uColA.value.setComponent(c, colStep(thigh.dot(colD.setFromMatrixColumn(COL_F[c], 1)), 0.951, 0.707));
+    // 膝盖伸直时小腿该在的方向：静止时的小腿方向跟着大腿转
+    colR3.multiplyMatrices(colInv, bones[BI[COLS[c][0]]].matrixWorld);
+    COL_U.uColA.value.setComponent(c + 2, colStep(calf.dot(colD.setFromMatrixColumn(COL_F[c + 2], 1).transformDirection(colR3)), 0.951, 0.707));
+  }
+}
+scene.onBeforeRender = updateColliders;
 
 // —— 动作播放：按名字取源骨头的“世界空间相对旋转”D，我们的骨头世界旋转 = D · Q（Q 把静止方向对上），再换成局部旋转 ——
 const animState = { id: null, t0: 0, prev: null, blend0: 0 };
@@ -2798,6 +2984,10 @@ async function exportModel() {
   rig.name = S.name || 'character';
   // 动作演示里人可能侧着身、跳在半空：导出的根节点按对着正前方、站在地上
   rig.rotation.y = 0; rig.position.y = -groundY;
+  // 衣服推出腿外用的顶点属性是给我们的着色器的，别的软件用不上，不导出；导出的这一会儿衣服换成了普通材质，
+  // 投影的深度材质也先摘掉（它要用这个属性）
+  const clothA = Object.values(SLOTS).filter((s) => s.geo.attributes.cloth).map((s) => [s.geo, s.geo.attributes.cloth, s.meshes]);
+  for (const [g, , ms] of clothA) { g.deleteAttribute('cloth'); for (const m of ms) m.customDepthMaterial = undefined; }
   try {
     const glb = await new GLTFExporter().parseAsync(rig, { binary: true, onlyVisible: true, maxTextureSize: 2048, animations: bakeClips() });
     await saveFile(`${fileName()}.zip`, zipStore([
@@ -2809,6 +2999,7 @@ async function exportModel() {
     // 换回原来的材质；只释放导出时烘焙出来的贴图（别的贴图还在用）
     for (const [m, mat] of swaps.reverse()) { if (m.material !== mat) { if (m.material.map?.userData.baked) m.material.map.dispose(); m.material.dispose(); } m.material = mat; }
     rig.name = name;
+    for (const [g, a, ms] of clothA) { g.setAttribute('cloth', a); for (const m of ms) m.customDepthMaterial = PUSH_DEPTH; }
     softHair.forEach((m) => { m.visible = true; });
     savedM.forEach(([m, v]) => { if (v) m.morphTargetInfluences.splice(0, v.length, ...v); });
     savedQ.forEach(([q, p], j) => { bones[j].quaternion.copy(q); bones[j].position.copy(p); });
