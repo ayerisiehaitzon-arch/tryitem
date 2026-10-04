@@ -1522,23 +1522,32 @@ function sampleClip(clip, time, outLocal, outHips) {
 }
 const hipsNow = new THREE.Vector3(), hipsPrev = new THREE.Vector3();
 const prevLocal = bones.map(() => new THREE.Quaternion());
+// 整个人的朝向（弧度）和离地高度（米）：动作演示里会转身、跳起来
+let yawNow = 0, liftNow = 0, yawPrev = 0, liftPrev = 0;
 function startAnim(id) {
-  // 交叉淡入：记下现在的姿势，0.35 秒里过渡到新动作
+  // 交叉淡入：记下现在的姿势（连同转到的朝向、跳起的高度），0.35 秒里过渡到新动作
   bones.forEach((b, i) => prevLocal[i].copy(b.quaternion));
   hipsPrev.copy(bones[BI.pelvis].position).sub(pelvisRest);
+  yawPrev = yawNow; liftPrev = liftNow;
   animState.id = id; animState.t0 = performance.now(); animState.blend0 = performance.now();
+  // 动作演示：先按开始那一刻（截图时按 t）该有的道具准备好
+  if (DEMOS[id]) { demoId = null; demoProp = demoPose(SHOT ? Number(params.get('t') ?? 0) : 0).prop; }
   propReady = syncProp();
 }
 
 // —— 动作的道具：坐着时屁股底下一张琴凳（家具展厅里的模型，凳面高度按人调），蹲下修理时面前一个工具箱。
 //    动作是按胯高缩放到每个人身上的，道具的位置（和琴凳的高矮）也按胯高跟参考的阿哲（静止时胯高 0.92m）的比例缩放 ——
 const PROP_DIR = '../models/', PROP_EXT = '.glb';
+// 阿哲坐着时大腿根在 0.62m 高、z = -0.35，凳面放在 0.52m，凳子中心在 z = -0.30（大腿前半截悬在凳子外面）；
+// 坐下、坐着聊天、站起来都是这张凳子（同一个对象，几段之间换着播不会重新载入）
+const BENCH = { model: 'piano_bench', place: (o, s) => { o.scale.set(1, (0.52 * s) / 0.51, 1); o.position.set(0, 0, -0.3 * s); } };
 const PROPS = {
-  // 阿哲坐着时大腿根在 0.62m 高、z = -0.35，凳面放在 0.52m，凳子中心在 z = -0.30（大腿前半截悬在凳子外面）
-  sitting_idle: { model: 'piano_bench', place: (o, s) => { o.scale.set(1, (0.52 * s) / 0.51, 1); o.position.set(0, 0, -0.3 * s); } },
+  sitting_idle: BENCH, sitting_enter: BENCH, sitting_exit: BENCH, sitting_talking: BENCH,
   // 跪下以后两手在 0.3 ~ 0.45m 高、身前 0.43 ~ 0.61m 的地方忙活：工具箱靠人这一侧的边放在 0.42m
   fixing_kneeling: { model: 'toolbox', place: (o, s) => o.position.set(0, 0, 0.42 * s + 0.125) },
 };
+// 动作演示“捡箱子”的纸箱：位置每一帧由演示算（地上、手里），这里只按人的大小缩放
+const BOX = { model: 'cardbox', place: (o, s) => o.scale.setScalar(s) };
 const propCache = {};
 let prop = null, propReady = Promise.resolve();
 // 工具箱：红色烤漆铁皮，盖子和箱身之间一道缝，正面两个搭扣，顶上黑色提手（几个圆角盒子拼的）
@@ -1556,8 +1565,21 @@ async function makeToolbox() {
 }
 // 展厅的模型：.glb，或者“JSON + base64 二进制块”的 glTF（scripts/export-gltf-json.js 的产物，给只收文本的托管用），
 // 后者在内存里还原成 .glb 再解析，不用对 data: 地址发请求
+// 纸箱：牛皮纸色的圆角盒子，顶上一道胶带，侧面两个提手孔（深色的圆角小块）；底面中心在原点
+async function makeCardbox() {
+  const { RoundedBoxGeometry } = await import('three/addons/geometries/RoundedBoxGeometry.js');
+  const g = new THREE.Group(), kraft = new THREE.MeshStandardMaterial({ color: 0xb98a55, roughness: 0.85 });
+  const tape = new THREE.MeshStandardMaterial({ color: 0xc9a46a, roughness: 0.4 }), hole = new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.9 });
+  const box = (w, h, d, mat, x, y, z, r = 0.004) => { const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, r), mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; g.add(m); return m; };
+  box(CARD.w, CARD.h, CARD.d, kraft, 0, CARD.h / 2, 0, 0.01);
+  box(0.06, 0.004, CARD.d + 0.004, tape, 0, CARD.h + 0.001, 0, 0.002);
+  for (const x of [-1, 1]) box(0.006, 0.03, 0.09, hole, x * (CARD.w / 2 + 0.001), CARD.h * 0.72, 0, 0.002);
+  return g;
+}
+const CARD = { w: 0.34, h: 0.26, d: 0.28 };
 async function loadProp(id) {
   if (id === 'toolbox') return makeToolbox();
+  if (id === 'cardbox') return makeCardbox();
   const res = await fetch(`${PROP_DIR}${id}${PROP_EXT}`);
   if (!res.ok) throw new Error(`${id}${PROP_EXT} 载入失败（${res.status}）`);
   let buf = await res.arrayBuffer();
@@ -1578,37 +1600,293 @@ async function loadProp(id) {
   root.traverse((o) => { if (!o.isMesh) return; if (/_LOD[12]$/.test(o.name)) o.visible = false; else if (!/_Shadow$/.test(o.name)) o.castShadow = o.receiveShadow = true; });
   return root;
 }
+// 现在要哪件道具：普通动作按 PROPS；动作演示按演示走到哪一段（坐下那段是凳子，捡箱子那段是纸箱）
+let demoProp = null;
+const propWanted = () => (DEMOS[animState.id] ? demoProp : PROPS[animState.id] ?? null);
 async function syncProp() {
-  const want = PROPS[animState.id] ?? null;
+  const want = propWanted();
   if (prop && prop.want !== want) { scene.remove(prop.obj); prop = null; }
   if (!want) return;
   if (!prop) {
     const obj = await (propCache[want.model] ??= loadProp(want.model));
-    if ((PROPS[animState.id] ?? null) !== want || prop) return; // 等的时候又换了动作
+    if (propWanted() !== want || prop) return; // 等的时候又换了动作
     prop = { want, obj };
     scene.add(obj);
   }
   want.place(prop.obj, (pelvisRest.y - groundY) / 0.92);
 }
+
+// —— 动作演示：几段动作接起来连着播（走路跑步、蹲下站起、跳跃、捡箱子、坐下站起）——
+// 一段 = { clip, dur（秒）, fade（从上一段淡入几秒，默认 0.35）, from（从动作的第几秒播起）, rate（播放速度，0 = 定格在 from）,
+//   yaw（转到朝哪，度：0 对着镜头，90 朝画面右边）, turn（转身用几秒，默认和淡入一样长，至少 0.4） }。
+// 走、跑这些原地循环的动作，人不挪地方，地上的格子按 anims.json 里量出来的步速往后滚（着地那只脚往后挪多快，地就滚多快，
+// 脚不打滑），镜头、影子、道具都不用跟着跑。两段步子接着播时按左脚迈到最前面的时刻对齐相位，淡入那几百毫秒里步频
+// 从上一段的慢慢变成这一段的，左右脚不会突然换过来
+const ROUTINES = {
+  walkrun: { segs: [
+    { clip: 'idle', dur: 0.6 },
+    { clip: 'walk', dur: 4.2, fade: 0.5, yaw: 90, turn: 1.5 },
+    { clip: 'jog_fwd', dur: 3, fade: 0.45 },
+    { clip: 'sprint', dur: 2.4, fade: 0.4 },
+    { clip: 'jog_fwd', dur: 1.6, fade: 0.45 },
+    { clip: 'walk', dur: 2.6, fade: 0.6 },
+    { clip: 'idle', dur: 1.4, fade: 0.7, yaw: 0, turn: 1.1 },
+  ] },
+  crouch: { segs: [
+    { clip: 'idle', dur: 0.6 },
+    { clip: 'crouch_idle', dur: 1.6, fade: 0.8 },
+    { clip: 'crouch_fwd', dur: 3.4, fade: 0.5, yaw: 90, turn: 1 },
+    { clip: 'crouch_idle', dur: 1.3, fade: 0.5, yaw: 0, turn: 0.9 },
+    { clip: 'idle', dur: 1.4, fade: 0.9 },
+  ] },
+  // 跳：先定格在起跳动作的第一帧（下蹲蓄力），再从头播——蹬地以后动作库里胯的高度不变、只把腿收起来，
+  // 腾空交给这里：起跳到落地 0.55 秒，抛物线顶点高 0.4 个胯高（一米七五的人跳起 37cm）；快落地时淡到落地动作
+  // 的第一帧（腿伸直），落地动作第 0.07 秒脚着地，正好接上抛物线的终点
+  jump: { segs: [
+    { clip: 'idle', dur: 0.8 },
+    { clip: 'jump_up', dur: 0.4, fade: 0.38, rate: 0 },
+    { clip: 'jump_up', dur: 0.57, fade: 0 },
+    { clip: 'jump_land', dur: 1.25, fade: 0.1 },
+    { clip: 'idle', dur: 1, fade: 0.35 },
+  ], lifts: [{ at: [1.29, 1.84], h: 0.4 }] },
+  // 捡箱子：用“蹲下修理”里跪下（0 ~ 1.05 秒）和站起来（4.2 ~ 5.17 秒）的两截，跪着的时候定格；弯腰、两只手够到箱子
+  // 两侧是另算的（腰往前弯，两条胳膊各用两节骨头的 IK 把手腕送到箱子边上），抓住以后箱子跟着手走
+  pickup: { prop: BOX, segs: [
+    { clip: 'idle', dur: 0.6 },
+    { clip: 'fixing_kneeling', dur: 1.05, fade: 0.25 },
+    { clip: 'fixing_kneeling', from: 1.05, rate: 0, dur: 1.4, fade: 0 },
+    { clip: 'fixing_kneeling', from: 4.2, dur: 0.97, fade: 0.25 },
+    { clip: 'idle', dur: 1.3, fade: 0.25 },
+    { clip: 'fixing_kneeling', dur: 1.05, fade: 0.25 },
+    { clip: 'fixing_kneeling', from: 1.05, rate: 0, dur: 1.05, fade: 0 },
+    { clip: 'fixing_kneeling', from: 4.2, dur: 0.97, fade: 0.25 },
+    { clip: 'idle', dur: 0.8, fade: 0.25 },
+  ], pick: {
+    // 跪下以后手本来就搭在箱子顶上，腰再往前弯 22° 手就够到箱子两侧；起身时箱子先竖着离地，再跟着胯一起升到身前
+    bend: [[0, 0], [1.75, 0], [2.3, 22], [3.05, 22], [3.6, 4], [5.4, 4], [6.05, 22], [6.85, 22], [7.5, 0]], // 腰往前弯几度
+    reach: [[0, 0], [1.85, 0], [2.45, 1], [6.7, 1], [7.2, 0]], // 手伸向箱子（IK 的权重）
+    lift: [[0, 0], [3, 0], [4, 1], [5.3, 1], [6.35, 0]], // 箱子从地上（0）到抱在身前（1）
+    hold: [2.45, 6.7], // 这段时间箱子在手里
+  } },
+  sit: { prop: BENCH, segs: [
+    { clip: 'idle', dur: 0.8 },
+    { clip: 'sitting_enter', dur: 1.29, fade: 0.25 },
+    { clip: 'sitting_talking', dur: 2.9, fade: 0.3 },
+    { clip: 'sitting_exit', dur: 1, fade: 0.3 },
+    { clip: 'idle', dur: 1, fade: 0.25 },
+  ] },
+};
+const DEMOS = {
+  demo_all: { label: '全套', parts: ['walkrun', 'crouch', 'jump', 'pickup', 'sit'] },
+  demo_walkrun: { label: '走路跑步', parts: ['walkrun'] },
+  demo_crouch: { label: '蹲下站起', parts: ['crouch'] },
+  demo_jump: { label: '跳跃', parts: ['jump'] },
+  demo_pickup: { label: '捡箱子', parts: ['pickup'] },
+  demo_sit: { label: '坐下站起', parts: ['sit'] },
+};
+const clipDur = (c) => c.frames / ANIM.fps;
+const smooth = (u) => { u = Math.min(1, Math.max(0, u)); return u * u * (3 - 2 * u); };
+// 关键帧曲线（相邻两个关键帧之间缓入缓出）
+const curve = (keys, t) => {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let k = 1; k < keys.length; k++) if (t <= keys[k][0]) { const [t0, v0] = keys[k - 1], [t1, v1] = keys[k]; return v0 + (v1 - v0) * smooth((t - t0) / (t1 - t0)); }
+  return keys[keys.length - 1][1];
+};
+// 两段步子之间的相位：淡入（F 秒）期间步频从上一段（一圈 dA 秒）线性地缓变到这一段（dB 秒），积分出走到哪一圈的哪里
+function phaseAt(s, tau) {
+  const F = s.fade, u = Math.min(1, tau / F);
+  return s.ph0 + Math.min(tau, F) / s.dA + (1 / s.dB - 1 / s.dA) * F * (u ** 3 - u ** 4 / 2) + Math.max(0, tau - F) / s.dB;
+}
+const clipTime = (s, tau) => (s.sync ? CLIPS[s.clip].phase + phaseAt(s, tau) * s.dB : s.from + tau * s.rate);
+const demoCache = {};
+function buildDemo(id) {
+  const segs = [], lifts = [], props = [], picks = [];
+  let t = 0;
+  for (const r of DEMOS[id].parts.map((k) => ROUTINES[k])) {
+    const t0 = t;
+    for (const g of r.segs) { segs.push({ ...g, start: t, fade: segs.length ? g.fade ?? 0.35 : 0, rate: g.rate ?? 1, from: g.from ?? 0 }); t += g.dur; }
+    for (const l of r.lifts ?? []) lifts.push({ t0: t0 + l.at[0], t1: t0 + l.at[1], h: l.h });
+    if (r.prop) props.push({ t0, t1: t, prop: r.prop });
+    if (r.pick) picks.push({ t0, t1: t, ...r.pick });
+  }
+  let yaw = 0;
+  segs.forEach((g, i) => {
+    g.yaw0 = yaw; g.yaw1 = g.yaw ?? yaw; g.turnT = g.turn ?? Math.max(g.fade, 0.4); yaw = g.yaw1;
+    const c = CLIPS[g.clip], p = segs[i - 1], pc = p && CLIPS[p.clip];
+    g.move = c.speed && g.rate === 1 ? c.speed : 0; // 胯高/秒
+    g.sync = !!(g.move && p?.move && g.fade > 0);
+    if (g.sync) {
+      g.dA = clipDur(pc); g.dB = clipDur(c);
+      const tA = clipTime(p, g.start - p.start);
+      g.ph0 = (((tA - pc.phase) / g.dA) % 1 + 1) % 1;
+    }
+  });
+  const D = { segs, lifts, props, picks, total: t };
+  // 地面往后滚了多远：每 1/120 秒按当时的步速（淡入时两段的步速按权重混）和朝向积一次分，单位胯高
+  const N = Math.ceil(t * 120) + 2, fx = new Float32Array(N), fz = new Float32Array(N);
+  for (let k = 1; k < N; k++) {
+    const st = demoState(D, (k - 0.5) / 120);
+    fx[k] = fx[k - 1] + Math.sin(st.yaw) * st.move / 120;
+    fz[k] = fz[k - 1] + Math.cos(st.yaw) * st.move / 120;
+  }
+  Object.assign(D, { fx, fz });
+  return D;
+}
+// 演示在 tt 秒：哪一段、段内第几秒、淡入权重、朝向、步速
+function demoState(D, tt) {
+  let i = D.segs.length - 1;
+  while (i > 0 && D.segs[i].start > tt) i--;
+  const g = D.segs[i], tau = tt - g.start, e = i > 0 && tau < g.fade ? smooth(tau / g.fade) : 1;
+  const yaw = (g.yaw0 + (g.yaw1 - g.yaw0) * smooth(tau / g.turnT)) * Math.PI / 180;
+  const move = i > 0 && e < 1 ? D.segs[i - 1].move + (g.move - D.segs[i - 1].move) * e : g.move;
+  return { i, g, tau, e, yaw, move };
+}
+const demoA = bones.map(() => new THREE.Quaternion()), demoHipsA = new THREE.Vector3();
+let demo = null, demoId = null;
+// 演示的姿势写进 localNow / hipsNow；返回根节点的朝向、离地高度、地面滚了多远，和捡箱子的状态
+function demoPose(t) {
+  if (demoId !== animState.id) { demoId = animState.id; demo = demoCache[demoId] ??= buildDemo(demoId); }
+  const D = demo, tt = ((t % D.total) + D.total) % D.total, st = demoState(D, tt), { i, g, tau, e } = st;
+  sampleClip(CLIPS[g.clip], clipTime(g, tau), localNow, hipsNow);
+  if (e < 1) {
+    const p = D.segs[i - 1], pc = CLIPS[p.clip];
+    sampleClip(pc, g.sync ? pc.phase + phaseAt(g, tau) * g.dA : clipTime(p, tt - p.start), demoA, demoHipsA);
+    localNow.forEach((q, k) => q.copy(demoA[k].slerp(q, e)));
+    hipsNow.copy(demoHipsA.lerp(hipsNow, e));
+  }
+  let lift = 0;
+  for (const l of D.lifts) if (tt > l.t0 && tt < l.t1) { const u = (tt - l.t0) / (l.t1 - l.t0); lift = 4 * l.h * u * (1 - u); }
+  const k = Math.min(D.fx.length - 2, tt * 120), k0 = Math.floor(k), f = k - k0;
+  const pk = D.picks.find((x) => tt >= x.t0 && tt < x.t1), pt = pk ? tt - pk.t0 : 0;
+  const pw = D.props.find((x) => tt >= x.t0 && tt < x.t1);
+  return {
+    clip: g.clip, yaw: st.yaw, lift, fx: D.fx[k0] + (D.fx[k0 + 1] - D.fx[k0]) * f, fz: D.fz[k0] + (D.fz[k0 + 1] - D.fz[k0]) * f,
+    // 道具在这一段开头 0.3 秒里从地上长出来，结尾 0.3 秒缩回去（人这时候都站在旁边）
+    prop: pw?.prop ?? null, propK: pw ? smooth((tt - pw.t0) / 0.3) * smooth((pw.t1 - tt) / 0.3) : 0,
+    pick: pk && { bend: curve(pk.bend, pt), reach: curve(pk.reach, pt), lift: curve(pk.lift, pt), held: pt >= pk.hold[0] && pt < pk.hold[1] },
+  };
+}
+
+// —— 地上的格子：动作演示和走、跑这些原地循环的动作里淡入，按步速往后滚，看得出人在往前走。一格 0.5m，每米一道深一点的线，
+//    往圆台边上渐渐淡掉；线条接影子（主光的阴影落在格子上也暗下去）——
+const gridMat = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 512; // 2m × 2m
+  const g = c.getContext('2d');
+  for (let k = 0; k < 4; k++) {
+    const x = 64 + k * 128, w = k % 2 ? 2 : 4;
+    g.fillStyle = `rgba(255,255,255,${k % 2 ? 0.55 : 1})`;
+    g.fillRect(x - w / 2, 0, w, 512); g.fillRect(0, x - w / 2, 512, w);
+  }
+  const map = new THREE.CanvasTexture(c);
+  map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(4, 4); map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const f = document.createElement('canvas');
+  f.width = f.height = 128;
+  const fg = f.getContext('2d'), rg = fg.createRadialGradient(64, 64, 0, 64, 64, 64);
+  rg.addColorStop(0, '#fff'); rg.addColorStop(0.45, '#fff'); rg.addColorStop(1, '#000');
+  fg.fillStyle = rg; fg.fillRect(0, 0, 128, 128);
+  return new THREE.MeshStandardMaterial({ map, alphaMap: new THREE.CanvasTexture(f), transparent: true, opacity: 0, depthWrite: false, roughness: 1 });
+})();
+const grid = new THREE.Mesh(new THREE.CircleGeometry(4, 72), gridMat);
+grid.rotation.x = -Math.PI / 2; grid.position.y = 0.002; grid.receiveShadow = true; grid.visible = false;
+scene.add(grid);
+let gridWant = 0;
+function gridTheme() {
+  const st = new THREE.Color(css('--stage')), lum = 0.3 * st.r + 0.6 * st.g + 0.1 * st.b;
+  gridMat.color.copy(st).multiplyScalar(lum > 0.3 ? 0.55 : 2.2);
+}
+gridTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', gridTheme);
+
+// —— 捡箱子：腰往前弯、两条胳膊伸到箱子两侧 ——
+const Y_AXIS = new THREE.Vector3(0, 1, 0), qT = new THREE.Quaternion(), qP = new THREE.Quaternion();
+// 骨头在世界空间里再转 q（绕它自己的关节）：局部 = 父⁻¹ · q · 父 · 局部
+function turnBone(bone, q) {
+  bone.parent.getWorldQuaternion(qP);
+  bone.quaternion.premultiply(qP).premultiply(q).premultiply(qP.invert());
+  bone.updateMatrixWorld(true);
+}
+// 腰往前弯 deg 度：三节脊柱各分三分之一，绕身体的左右轴转
+function bendSpine(deg) {
+  if (Math.abs(deg) < 0.01) return;
+  const axis = new THREE.Vector3(1, 0, 0).applyAxisAngle(Y_AXIS, rig.rotation.y);
+  qT.setFromAxisAngle(axis, (deg * Math.PI) / 540);
+  for (const n of ['spine_01', 'spine_02', 'spine_03']) turnBone(bones[BI[n]], qT);
+}
+// 两节骨头（上臂、前臂）的 IK：手腕送到 target，手肘往身体外侧、往后撑开；w 是权重（目标从手腕现在的位置往 target 挪 w），
+// 够不着就把胳膊伸直指着它
+function reachArm(side, target, w) {
+  if (w < 1e-3) return;
+  const ua = bones[BI[`upperarm_${side}`]], la = bones[BI[`lowerarm_${side}`]], hd = bones[BI[`hand_${side}`]];
+  const S = ua.getWorldPosition(new THREE.Vector3()), E = la.getWorldPosition(new THREE.Vector3()), W = hd.getWorldPosition(new THREE.Vector3());
+  const a = S.distanceTo(E), b = E.distanceTo(W), T = W.clone().lerp(target, w), dir = T.clone().sub(S);
+  const d = Math.min(a + b - 1e-4, Math.max(Math.abs(a - b) + 1e-4, dir.length()));
+  dir.normalize();
+  const out = new THREE.Vector3(side === 'l' ? 1 : -1, 0, -0.6).applyAxisAngle(Y_AXIS, rig.rotation.y);
+  const pole = E.clone().sub(S).addScaledVector(out, 0.3);
+  pole.addScaledVector(dir, -pole.dot(dir)).normalize();
+  const cosA = (a * a + d * d - b * b) / (2 * a * d), sinA = Math.sqrt(Math.max(0, 1 - cosA * cosA));
+  const E2 = S.clone().addScaledVector(dir, a * cosA).addScaledVector(pole, a * sinA), W2 = S.clone().addScaledVector(dir, d);
+  turnBone(ua, qT.setFromUnitVectors(E.sub(S).normalize(), E2.clone().sub(S).normalize()));
+  const E3 = la.getWorldPosition(new THREE.Vector3()), W3 = hd.getWorldPosition(new THREE.Vector3());
+  turnBone(la, qT.setFromUnitVectors(W3.sub(E3).normalize(), W2.sub(E3).normalize()));
+}
+// 箱子中心在哪（人的大小按胯高缩放，跟道具一样以胯高 0.92m 的阿哲为准）：lift 0 在地上；到 0.5 是原地竖着抬到跪着的那条大腿上方；
+// 到 1 是抱在身前——相对胯骨定（往前 0.38m、往上 0.08m），人站起来、跪下去箱子跟着一起升降，不会先飞到脸前面
+function boxCenter(lift, s) {
+  const ground = new THREE.Vector3(0, (CARD.h / 2) * s, 0.47 * s), raised = new THREE.Vector3(0, 0.56 * s, 0.47 * s);
+  if (lift <= 0.5) return ground.lerp(raised, smooth(lift * 2));
+  const carry = bones[BI.pelvis].getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.08 * s, 0.38 * s));
+  return raised.lerp(carry, smooth((lift - 0.5) * 2));
+}
+function applyPick(pk, hipH) {
+  const s = hipH / 0.92;
+  rig.updateMatrixWorld(true);
+  bendSpine(pk.bend);
+  const c = boxCenter(pk.lift, s);
+  for (const [side, sx] of [['l', 1], ['r', -1]]) reachArm(side, new THREE.Vector3(c.x + sx * (CARD.w / 2 + 0.035) * s, c.y + 0.01 * s, c.z - 0.03 * s), pk.reach);
+  if (prop?.want === BOX) prop.obj.position.set(c.x, c.y - (CARD.h / 2) * s, c.z);
+}
+let lookClip = ''; // 转头看镜头按哪个动作算：动作演示按正在播的那一段
 function applyAnim(now) {
-  const clip = CLIPS[animState.id];
-  if (!clip) { bones.forEach((b) => b.quaternion.identity()); bones[BI.pelvis].position.copy(pelvisRest); return; }
-  const t = SHOT ? Number(params.get('t') ?? 0) : (now - animState.t0) / 1000;
-  sampleClip(clip, t, localNow, hipsNow);
+  const isDemo = !!DEMOS[animState.id], clip = CLIPS[animState.id];
+  lookClip = animState.id;
   const hipH = pelvisRest.y - groundY; // 胯高（从地面算：整个人往下挪了 groundY，groundY 是负的）
+  rig.rotation.y = 0; rig.position.y = -groundY;
+  if (!clip && !isDemo) { bones.forEach((b) => b.quaternion.identity()); bones[BI.pelvis].position.copy(pelvisRest); gridWant = 0; yawNow = liftNow = 0; return; }
+  const t = SHOT ? Number(params.get('t') ?? 0) : (now - animState.t0) / 1000;
+  let st = null, fx = 0, fz = 0;
+  if (isDemo) {
+    st = demoPose(t);
+    ({ fx, fz } = st);
+    lookClip = st.clip;
+    if (st.prop !== demoProp) { demoProp = st.prop; propReady = syncProp(); }
+  } else {
+    sampleClip(clip, t, localNow, hipsNow);
+    if (clip.speed) fz = clip.speed * t; // 原地走、跑：人对着镜头，地往人身后滚
+  }
+  gridWant = isDemo || clip?.speed ? 1 : 0;
   const b = SHOT ? 1 : Math.min(1, (now - animState.blend0) / 350), e = b * b * (3 - 2 * b);
   bones.forEach((bone, i) => bone.quaternion.copy(prevLocal[i]).slerp(localNow[i], e));
   const hp = hipsNow.multiplyScalar(hipH);
   // 动作库里的循环动作本来就是原地的；蹲、坐、推这些胯往后坐的位移要留着，不然人会往前栽
   bones[BI.pelvis].position.copy(pelvisRest).add(hipsPrev.clone().lerp(hp, e));
+  // 地面：格子贴图（一个单位 2m）按人走过的路往反方向挪（换成不走的动作时停在原地，跟着淡掉）
+  if (gridWant) gridMat.map.offset.set((fx * hipH) / 2, (-fz * hipH) / 2);
+  yawNow = yawPrev + ((st?.yaw ?? 0) - yawPrev) * e; liftNow = liftPrev + ((st?.lift ?? 0) * hipH - liftPrev) * e;
+  rig.rotation.y = yawNow; rig.position.y = -groundY + liftNow;
+  if (st) {
+    if (prop && prop.want === st.prop) { st.prop.place(prop.obj, hipH / 0.92); prop.obj.scale.multiplyScalar(Math.max(1e-3, st.propK)); }
+    if (st.pick) applyPick(st.pick, hipH);
+  }
 }
 
 // —— 头看镜头：动作库的待机是给大头卡通角色做的，低着头（脸朝下 12° 左右）；捏人的时候让脖子和头往镜头那边转一些，
 //    像 GTA 的创建器那样看着你。只在待机、说话、坐、蹲这些安静的动作里做，换到动作大的片段时慢慢放开 ——
-const LOOK_CLIPS = new Set(['idle', 'idle_talking', 'sitting_idle', 'crouch_idle']);
+const LOOK_CLIPS = new Set(['idle', 'idle_talking', 'sitting_idle', 'sitting_talking', 'crouch_idle']);
 let lookW = 0;
 function headLook(dt) {
-  const want = !CLIPS[animState.id] || LOOK_CLIPS.has(animState.id) ? 1 : 0;
+  const want = !CLIPS[lookClip] || LOOK_CLIPS.has(lookClip) ? 1 : 0;
   lookW += (want - lookW) * Math.min(1, dt * 3);
   if (lookW < 0.01) return;
   rig.updateMatrixWorld(true);
@@ -1655,8 +1933,8 @@ let blink = 0;
 function applyExpr(dt) {
   const want = new Float32Array(UNITS.length);
   for (const [u, v] of Object.entries(EXPR[S.expr]?.u ?? {})) want[UI_[u]] = v;
-  // 说话的动作：嘴巴一张一合
-  if (animState.id === 'idle_talking' && !SHOT) { const tt = performance.now() / 1000; want[UI_['mouth-open']] += 0.18 * Math.max(0, Math.sin(tt * 9) * Math.sin(tt * 2.3 + 1)); }
+  // 说话的动作（说话、坐着聊天；动作演示播到这一段时也算）：嘴巴一张一合
+  if ((lookClip === 'idle_talking' || lookClip === 'sitting_talking') && !SHOT) { const tt = performance.now() / 1000; want[UI_['mouth-open']] += 0.18 * Math.max(0, Math.sin(tt * 9) * Math.sin(tt * 2.3 + 1)); }
   if (blink > 0) { want[UI_['eye-left-closure']] = Math.max(want[UI_['eye-left-closure']], blink); want[UI_['eye-right-closure']] = Math.max(want[UI_['eye-right-closure']], blink); }
   const k = SHOT ? 1 : Math.min(1, dt * 12);
   for (let i = 0; i < UNITS.length; i++) unitNow[i] += (want[i] - unitNow[i]) * (i === UI_['eye-left-closure'] || i === UI_['eye-right-closure'] ? Math.min(1, dt * 40) : k);
@@ -1802,6 +2080,8 @@ function updateStats() {
 // —— 相机 ——
 const FOCUS = {
   full: { t: (Hh) => [0, Hh * 0.5, 0], span: (Hh) => [Hh * 1.14, 0.8], el: 4 },
+  // 动作演示：上面多留出跳起来的高度，左右放得下身后的凳子、身前的纸箱
+  demo: { t: (Hh) => [0, Hh * 0.6, 0], span: (Hh) => [Hh * 1.42, 1.35], el: 7 },
   bust: { t: (Hh) => [0, Hh - 0.3, 0], span: () => [0.72, 0.66], el: 6 },
   face: { t: (Hh) => [0, Hh - 0.16, 0.04], span: () => [0.46, 0.4], el: 3 },
   portrait: { t: (Hh) => [0, Hh - 0.22, 0.03], span: () => [0.62, 0.56], el: 4 },
@@ -1839,23 +2119,35 @@ function bootLift() {
   for (let i = 0; i < s.p.nv; i++) t = Math.max(t, s.P[i * 3 + 1]);
   return Math.max(0, t - groundY - 0.3);
 }
+// 头在哪：刚换了动作（比如从动作演示换到别的页、人站回来）还在交叉淡入，按淡入完以后的姿势算，镜头不会对着上一个动作里头的位置
+function headSoon() {
+  if (DEMOS[animState.id]) return bones[BI.head].getWorldPosition(new THREE.Vector3());
+  const q = bones.map((b) => b.quaternion.clone()), pp = bones[BI.pelvis].position.clone(), ry = rig.rotation.y, py = rig.position.y, yl = [yawNow, liftNow];
+  applyAnim(performance.now() + 400);
+  rig.updateMatrixWorld(true);
+  const hp = bones[BI.head].getWorldPosition(new THREE.Vector3());
+  bones.forEach((b, i) => b.quaternion.copy(q[i])); bones[BI.pelvis].position.copy(pp); rig.rotation.y = ry; rig.position.y = py; [yawNow, liftNow] = yl;
+  rig.updateMatrixWorld(true);
+  return hp;
+}
 function focus(kind, instant = false) {
   focusKind = kind;
   const f = FOCUS[kind] ?? FOCUS.full;
-  const Hh = SHOT && params.has('frameH') ? Number(params.get('frameH')) : kind === 'full' ? figureTop() : headTop();
+  const whole = kind === 'full' || kind === 'demo';
+  const Hh = SHOT && params.has('frameH') ? Number(params.get('frameH')) : whole ? figureTop() : headTop();
   const t = new THREE.Vector3(...f.t(Hh));
   // 戴帽子时胸像、肖像镜头往上抬一点（帽子高出头顶的一半，最多 6cm），帽顶不出画
   if (SLOTS.hat && (kind === 'bust' || kind === 'portrait')) t.y += Math.min(0.06, Math.max(0, figureTop() - headTop()) * 0.5);
   // 对着脸的镜头跟着头现在的位置（动作里头会晃、会低下去）
-  if (kind !== 'full' && kind !== 'feet' && J) {
-    const hp = bones[BI.head].getWorldPosition(new THREE.Vector3());
+  if (!whole && kind !== 'feet' && J) {
+    const hp = headSoon();
     const rest = new THREE.Vector3(J[H.rig.bones[BI.head].head * 3], J[H.rig.bones[BI.head].head * 3 + 1] - groundY, J[H.rig.bones[BI.head].head * 3 + 2]);
     t.add(hp.sub(rest));
   }
   const dir = camera.position.clone().sub(controls.target);
   let az = Math.atan2(dir.x, dir.z) * 180 / Math.PI;
   if (f.az !== undefined) az = f.az;
-  else if (instant || Math.abs(az) > 60 || (kind === 'full' && Math.abs(az) > 40)) az = 16;
+  else if (instant || Math.abs(az) > 60 || (whole && Math.abs(az) > 40)) az = 16;
   const [sh, sw] = f.span(Hh), v = visible(), tanH = Math.tan(camera.fov * Math.PI / 360);
   const d = Math.max(sh / (2 * tanH * v.fh), sw / (2 * tanH * camera.aspect * v.fw));
   const a = az * Math.PI / 180, e = f.el * Math.PI / 180;
@@ -1885,14 +2177,16 @@ const TABS = [
   { id: 'motion', label: '动作', focus: 'full' },
 ];
 const LOOK_SUB = [{ id: 'hair', label: '头发', focus: 'bust' }, { id: 'brows', label: '眉毛睫毛', focus: 'eyes' }, { id: 'eyes', label: '眼睛', focus: 'eyes' }, { id: 'beard', label: '胡子', focus: 'face' }, { id: 'makeup', label: '妆容', focus: 'face' }, { id: 'skin', label: '皮肤', focus: 'face' }];
-let tab = params.get('tab') ?? 'preset';
+let tab = params.get('tab') ?? (DEMOS[params.get('anim')] ? 'motion' : 'preset');
 // 服装分三页：衣服看全身，鞋看脚，帽子看胸像
 const WEAR_SUB = [{ id: 'clothes', label: '衣服', focus: 'full' }, { id: 'shoes', label: '鞋', focus: 'feet' }, { id: 'hat', label: '帽子', focus: 'bust' }];
 let featSub = params.get('feat') ?? 'shape';
 let lookSub = params.get('look') ?? 'hair';
 let wearSub = params.get('wear') ?? 'clothes';
 const tabFocus = () => tab === 'features' ? FEATURES.find((f) => f.id === featSub)?.focus ?? 'face' : tab === 'look' ? LOOK_SUB.find((l) => l.id === lookSub)?.focus ?? 'bust'
-  : tab === 'outfit' ? WEAR_SUB.find((w) => w.id === wearSub)?.focus ?? 'full' : TABS.find((t) => t.id === tab)?.focus ?? 'full';
+  : tab === 'outfit' ? WEAR_SUB.find((w) => w.id === wearSub)?.focus ?? 'full' : tab === 'motion' && DEMOS[S.anim] ? 'demo' : TABS.find((t) => t.id === tab)?.focus ?? 'full';
+// 动作演示会转身、走开、搬道具，只在“动作”页播；换到别的页人先站好（方便看脸、看衣服），回到“动作”页再从头播
+const animFor = () => (!SHOT && DEMOS[S.anim] && tab !== 'motion' ? 'idle' : S.anim);
 
 function el(tag, attrs = {}, ...kids) {
   const e = document.createElement(tag);
@@ -1905,7 +2199,7 @@ function el(tag, attrs = {}, ...kids) {
   return e;
 }
 function renderTabs() {
-  $('tabs').replaceChildren(...TABS.map((t) => el('button', { class: 'tab', role: 'tab', 'aria-selected': String(t.id === tab), on: { click: () => { tab = t.id; renderTabs(); renderPane(); focus(tabFocus()); } } }, t.label)));
+  $('tabs').replaceChildren(...TABS.map((t) => el('button', { class: 'tab', role: 'tab', 'aria-selected': String(t.id === tab), on: { click: () => { tab = t.id; if (animState.id !== animFor()) startAnim(animFor()); renderTabs(); renderPane(); focus(tabFocus()); } } }, t.label)));
   const subs = tab === 'features' ? FEATURES.map((f) => [f.id, f.label, featSub, (id) => { featSub = id; }]) : tab === 'look' ? LOOK_SUB.map((f) => [f.id, f.label, lookSub, (id) => { lookSub = id; }])
     : tab === 'outfit' ? WEAR_SUB.map((f) => [f.id, f.label, wearSub, (id) => { wearSub = id; }]) : [];
   $('sub').replaceChildren(...subs.map(([id, label, cur, set]) => el('button', { class: 'chip', role: 'tab', 'aria-pressed': String(id === cur), on: { click: () => { set(id); renderTabs(); renderPane(); focus(tabFocus()); } } }, label)));
@@ -2073,9 +2367,11 @@ function renderPane() {
       if (S.bottom) g.push(...colorGroups(`bottom/${S.bottom}`));
     }
   } else if (tab === 'motion') {
-    g.push(group('动作', 'Quaternius（CC0）', chips([['', '站着不动'], ...ANIM.clips.map((c) => [c.id, c.label])], S.anim, (id) => { S.anim = id; startAnim(id); })));
+    const play = (id) => { S.anim = id; startAnim(id); renderPane(); focus(tabFocus()); };
+    g.push(group('动作演示', '几段连着播', chips(Object.entries(DEMOS).map(([id, d]) => [id, d.label]), S.anim, play)));
+    g.push(group('动作', 'Quaternius（CC0）', chips([['', '站着不动'], ...ANIM.clips.filter((c) => !c.hidden).map((c) => [c.id, c.label])], S.anim, play)));
     g.push(group('表情', null, chips(Object.entries(EXPR).map(([id, e]) => [id, e.label]), S.expr, (id) => { S.expr = id; })));
-    g.push(el('p', { class: 'hint' }, '待机、说话、坐着的时候会转头看着镜头；眼睛一直跟着镜头，每隔几秒眨一次眼。'));
+    g.push(el('p', { class: 'hint' }, '动作演示只在这一页播（换到别的页人先站好，方便看脸、看衣服）；走、跑的时候人不挪地方，地上的格子往后滚。待机、说话、坐着、蹲着的时候会转头看着镜头；眼睛一直跟着镜头，每隔几秒眨一次眼。'));
   }
   $('pane').replaceChildren(...g);
 }
@@ -2132,6 +2428,8 @@ async function renderParent(kind, i) {
   for (const [slot, s] of Object.entries(SLOTS)) if (['hair', 'beard', 'moustache', 'outfit', 'top', 'bottom', 'hat', 'shoes'].includes(slot)) for (const m of s.meshes) { vis.push([m, m.visible]); m.visible = false; }
   updateShape(); await updateSkin();
   bones.forEach((b) => b.quaternion.identity()); bones[BI.pelvis].position.copy(pelvisRest);
+  // 动作演示里人可能正侧着身、跳在半空：头像按对着镜头、站在地上画（下一帧动作会再摆回去）
+  rig.rotation.y = 0; rig.position.y = -groundY;
   rig.updateMatrixWorld(true);
   const cam = new THREE.PerspectiveCamera(20, 1, 0.05, 10);
   const top = headTop();
@@ -2192,7 +2490,7 @@ function sanitize(o) {
     look: { ...d.look },
     outfit: str(o?.outfit, has('outfit'), d.outfit), top: str(o?.top, has('top'), ''), bottom: str(o?.bottom, has('bottom'), ''),
     shoes: str(o?.shoes, has('shoes'), d.shoes), hat: str(o?.hat, has('hat'), ''), colors: {},
-    anim: typeof o?.anim === 'string' && (o.anim === '' || CLIPS[o.anim]) ? o.anim : 'idle', expr: EXPR[o?.expr] ? o.expr : 'neutral',
+    anim: typeof o?.anim === 'string' && (o.anim === '' || (CLIPS[o.anim] && !CLIPS[o.anim].hidden) || DEMOS[o.anim]) ? o.anim : 'idle', expr: EXPR[o?.expr] ? o.expr : 'neutral',
   };
   if (S2.top || S2.bottom) S2.outfit = '';
   for (const [id, , min, max] of BODY) S2.body[id] = id === 'gender' ? (o?.body?.gender === null || o?.body?.gender === undefined ? null : num(o.body.gender, 0, 1, null)) : num(o?.body?.[id], min, max, d.body[id]);
@@ -2295,7 +2593,7 @@ function randomize() {
 async function afterLoad() {
   $('name').value = S.name;
   await syncSlots();
-  startAnim(S.anim);
+  startAnim(animFor());
   portraits.clear();
   renderTabs(); renderPane();
   updateShape();
@@ -2448,6 +2746,8 @@ async function exportModel() {
   softHair.forEach((m) => { m.visible = false; });
   const name = rig.name;
   rig.name = S.name || 'character';
+  // 动作演示里人可能侧着身、跳在半空：导出的根节点按对着正前方、站在地上
+  rig.rotation.y = 0; rig.position.y = -groundY;
   try {
     const glb = await new GLTFExporter().parseAsync(rig, { binary: true, onlyVisible: true, maxTextureSize: 2048, animations: bakeClips() });
     await saveFile(`${fileName()}.zip`, zipStore([
@@ -2468,7 +2768,7 @@ function bakeClips() {
   const fps = ANIM.fps, out = [];
   const L = bones.map(() => new THREE.Quaternion()), hp = new THREE.Vector3();
   const hipH = pelvisRest.y - groundY;
-  for (const clip of ANIM.clips) {
+  for (const clip of ANIM.clips.filter((c) => !c.hidden)) {
     const n = clip.frames + (clip.loop ? 1 : 0);
     const times = new Float32Array(n), qv = bones.map(() => new Float32Array(n * 4)), pv = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
@@ -2525,7 +2825,7 @@ $('name').addEventListener('input', (e) => { S.name = e.target.value; });
 applyPreset(PRESETS[Number(params.get('preset') ?? 0)] ?? PRESETS[0]);
 if (params.has('code')) { try { S = decode(params.get('code')); } catch { /* 忽略 */ } }
 if (EXPR[params.get('expr')]) S.expr = params.get('expr');
-if (params.has('anim')) S.anim = CLIPS[params.get('anim')] ? params.get('anim') : '';
+if (params.has('anim')) S.anim = CLIPS[params.get('anim')] || DEMOS[params.get('anim')] ? params.get('anim') : '';
 else if (SHOT) S.anim = '';
 for (const k of ['hair', 'eye', 'beardStyle', 'moustache']) if (params.has(k)) S.look[k] = params.get(k);
 if (params.has('hc')) S.look.hairColor = /^[0-9a-f]{6}$/i.test(params.get('hc')) ? '#' + params.get('hc') : '';
@@ -2551,7 +2851,7 @@ await syncSlots();
 updateShape();
 await updateSkin();
 updateHidden();
-startAnim(S.anim);
+startAnim(animFor());
 renderTabs();
 renderPane();
 resize();
@@ -2588,6 +2888,8 @@ function step(now) {
     }
   }
   applyAnim(now);
+  gridMat.opacity += (gridWant * 0.5 - gridMat.opacity) * Math.min(1, dt * 3);
+  grid.visible = gridMat.opacity > 0.004;
   applyExpr(dt);
   headLook(dt);
   rig.updateMatrixWorld(true);
@@ -2605,6 +2907,7 @@ if (SHOT) {
     if (hiddenDirty) updateHidden();
     Promise.all([updateSkin(), propReady]).then(() => {
       applyAnim(performance.now()); applyExpr(1); rig.updateMatrixWorld(true); eyeLook(); rig.updateMatrixWorld(true);
+      gridMat.opacity = gridWant * 0.5; grid.visible = gridWant > 0;
       focus(params.get('cam') ?? tabFocus(), true);
       if (params.has('az')) {
         const t = controls.target, d = camera.position.distanceTo(t), a = Number(params.get('az')) * Math.PI / 180, e = Number(params.get('el') ?? 4) * Math.PI / 180;

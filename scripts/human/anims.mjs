@@ -72,7 +72,13 @@ const CLIPS = [
   ['Crouch_Fwd_Loop', '蹲着走', true], ['Punch_Jab', '刺拳', false], ['Punch_Cross', '直拳', false], ['Roll', '翻滚', false],
   ['Jump_Start+Jump_Loop+Jump_Land', '跳跃', false], ['Interact', '互动', false], ['PickUp_Table', '拿东西', false], ['Push_Loop', '推', true],
   ['Fixing_Kneeling', '蹲下修理', true], ['Sitting_Idle_Loop', '坐着', true], ['Hit_Chest', '被打', false], ['Death01', '倒地', false],
+  ['Sitting_Enter', '坐下', false], ['Sitting_Exit', '站起', false], ['Sitting_Talking_Loop', '坐着聊天', true],
+  // 网页里“动作演示”的跳跃拆开用（起跳、落地之间的腾空是网页里按抛物线算的），不单独列出来
+  ['Jump_Start', '起跳', false, { id: 'jump_up', hidden: true }], ['Jump_Land', '落地', false, { id: 'jump_land', hidden: true }],
 ];
+// 原地循环的走、跑：着地那只脚每秒往后挪多少（以胯高为单位）就是人往前走的速度，网页里地面按这个速度往后滚，脚不打滑；
+// phase 是左脚迈到最前面的那一刻（秒），几段步子接着播时按它对齐，左右脚不会突然换过来
+const STRIDE = new Set(['walk', 'walk_formal', 'jog_fwd', 'sprint', 'crouch_fwd']);
 const FPS = 30;
 const chunks = [];
 let off = 0;
@@ -102,7 +108,7 @@ function sampleClip(anim) {
     return worldAt(local);
   } };
 }
-for (const [names, label, loop] of CLIPS) {
+for (const [names, label, loop, opt = {}] of CLIPS) {
   const parts = names.split('+').map((n) => g.animations.find((a) => a.name === n));
   if (parts.some((p) => !p)) { console.log('缺', names); continue; }
   const frames = [];
@@ -123,11 +129,27 @@ for (const [names, label, loop] of CLIPS) {
     const p = pos(W[hipsI]).sub(hipsRest).divideScalar(hipsRest.y);
     hp.set([p.x, p.y, p.z], f * 3);
   });
-  const id = names.split('+')[0].replace(/_Loop$/, '').toLowerCase();
-  clipsOut.push({ id, label, loop, frames: NF, q: { off, n: q.length }, hips: { off: off + q.byteLength, n: hp.length } });
+  const id = opt.id ?? names.split('+')[0].replace(/_Loop$/, '').toLowerCase();
+  const extra = opt.hidden ? { hidden: true } : {};
+  if (STRIDE.has(id)) {
+    // 240 帧/秒细看：脚踝和脚尖都贴着地（离各自在整段里的最低点不到 2cm）的那些时刻，脚踝往后挪的速度取中位数。
+    // 跑步每步着地只有零点一几秒，脚跟落地、脚尖蹬地那几帧脚挪得更快，只看整只脚平贴着地的时候
+    const s0 = sampleClip(parts[0]), dt = 1 / 240, fr = [];
+    for (let t = 0; t <= s0.dur + 1e-9; t += dt) { const W = s0.frameAt(t); fr.push(Object.fromEntries(['L', 'R'].flatMap((S) => [[`a${S}`, pos(W[byName[`DEF-foot.${S}`]])], [`t${S}`, pos(W[byName[`DEF-toe.${S}`]])]]))); }
+    const v = [];
+    for (const S of ['L', 'R']) {
+      const alo = Math.min(...fr.map((f) => f[`a${S}`].y)), tlo = Math.min(...fr.map((f) => f[`t${S}`].y));
+      for (let i = 0; i + 1 < fr.length; i++) if (fr[i][`a${S}`].y < alo + 0.02 && fr[i][`t${S}`].y < tlo + 0.02) v.push((fr[i][`a${S}`].z - fr[i + 1][`a${S}`].z) / dt);
+    }
+    v.sort((a, b) => a - b);
+    let best = 0;
+    fr.forEach((f, i) => { if (f.tL.z > fr[best].tL.z) best = i; });
+    Object.assign(extra, { speed: +(v[v.length >> 1] / hipsRest.y).toFixed(3), phase: +(best * dt).toFixed(3) });
+  }
+  clipsOut.push({ id, label, loop, frames: NF, ...extra, q: { off, n: q.length }, hips: { off: off + q.byteLength, n: hp.length } });
   chunks.push(Buffer.from(q.buffer), Buffer.from(hp.buffer));
   off += q.byteLength + hp.byteLength;
-  console.log(id.padEnd(18), label, NF, 'frames');
+  console.log(id.padEnd(18), label, NF, 'frames', extra.speed ? `speed ${extra.speed} hip/s phase ${extra.phase}s` : '');
 }
 const raw = Buffer.concat(chunks);
 fs.writeFileSync(`${OUT}/anims.bin`, zlib.gzipSync(raw, { level: 9 }));

@@ -17,7 +17,8 @@
 //   docs/previews/creator-shoeways.jpg     鞋的配色方案（一点换整双）：球鞋、皮鞋和靴子、女款平底鞋和凉拖各几套，再加一排后来加的
 //   docs/previews/creator-hats.jpg         帽子的款式和配色
 //   docs/previews/creator-hats2.jpg        帽子（二）：社区资源包里的 12 顶帽子（棒球帽、平顶帽、圣诞帽、宽松毛线帽、高礼帽、厨师帽、迷彩帽、护耳帽、马术头盔、泳帽、皮飞行帽、女巫帽）
-//   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上；坐着、蹲下修理带着琴凳和工具箱）
+//   docs/previews/creator-motion.jpg       动作（Quaternius 的动作库换到 MakeHuman 的骨架上；走、跑的时候地上的格子往后滚；坐着、蹲下修理带着琴凳和工具箱）
+//   docs/previews/creator-demos.jpg        动作演示（几段动作连着播）：走路跑步、蹲下站起、跳跃、捡箱子、坐下站起，各取几帧
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -337,6 +338,11 @@ try {
   const mo = [['walk', 0.35, '走路'], ['jog_fwd', 0.2, '慢跑'], ['dance', 0.4, '跳舞'], ['punch_cross', 0.45, '直拳'], ['crouch_idle', 0.8, '蹲下'], ['idle_talking', 1.4, '说话'], ['sitting_idle', 0.6, '坐着（琴凳）'], ['fixing_kneeling', 0.6, '蹲下修理（工具箱）', 90]];
   const ms = await shoot(mo.map(([a, t, , az = 30]) => [`mo-${a}`, `preset=5&bare=1&az=${az}&frameH=1.9&anim=${a}&t=${t}`]), [420, 720]);
   await grid(ms, 8, 300, 520, path.join(out, 'creator-motion.jpg'), { labels: mo.map((m) => m[2]) });
+  // 动作演示“全套”里的几帧（第一项是演示的第几秒）；演示的镜头上面留出跳起来的高度，左右放得下纸箱和琴凳
+  const dm = [[3, '走路'], [6.5, '慢跑'], [9, '冲刺'], [17.6, '蹲下'], [19.3, '蹲着走'], [25.1, '起跳'], [25.66, '腾空'],
+    [26.1, '落地'], [30.72, '弯腰抓住箱子'], [32.42, '抱起来'], [34.02, '跪下放回去'], [38.8, '坐下'], [40.31, '坐着聊天'], [42.7, '站起来']];
+  const ds = await shoot(dm.map(([t]) => [`demo-${t}`, `preset=4&bare=1&cam=demo&az=20&anim=demo_all&t=${t}`]), [360, 480]);
+  await grid(ds, 7, 300, 400, path.join(out, 'creator-demos.jpg'), { labels: dm.map((d) => d[1]) });
 } finally {
   await browser.close();
   server.close();
