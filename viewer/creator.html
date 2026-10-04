@@ -1383,7 +1383,52 @@ function coverOf(p) {
 }
 // 没带 delete_verts 的衣服（社区的短裙、短裤）底下要藏的身体：宽松的部分也算（裙子里面的大腿，腿一迈会从前片穿出来），
 // 离衣服边再远一圈
-const underOf = (p) => (p.under ??= skinUnder(p, () => true, 5));
+const underOf = (p) => (p.under ??= p.cat === 'top' ? seenThrough(p, skinUnder(p, () => true, 5)) : skinUnder(p, () => true, 5));
+// 上衣的开口（拉链卫衣敞着的 V 领）：上面按“长三圈再缩回来”补洞时会把开口里的皮肤也算成盖住了，藏掉以后从开口看进去
+// 是衣服后片的里子，胸口一片黑。逐个皮肤顶点从静止形状上沿法线往外看 25cm：碰不到这件衣服的，就是从开口露出来的，不藏。
+// 只用在上衣上：裙子、短裤底下的大腿内侧往外看也碰不到裙子，可那里是要藏的（腿一迈会从前片穿出来）
+function seenThrough(p, set) {
+  const X0 = H.pos0, X = HM.fitProxy(p, X0), d = p.data, N = (REST_N ??= skinNormals(X0)), C = 0.04, R = 0.25;
+  const tri = [];
+  for (let t = 0; t < d.index.length; t += 3) tri.push(d.map[d.index[t]], d.map[d.index[t + 1]], d.map[d.index[t + 2]]);
+  // 三角形按包围盒（外扩半格）放进 4cm 的格子
+  const grid = new Map(), key = (i, j, k) => `${i},${j},${k}`;
+  for (let t = 0; t < tri.length; t += 3) {
+    const lo = [0, 1, 2].map((a) => Math.floor((Math.min(X[tri[t] * 3 + a], X[tri[t + 1] * 3 + a], X[tri[t + 2] * 3 + a]) - C / 2) / C));
+    const hi = [0, 1, 2].map((a) => Math.floor((Math.max(X[tri[t] * 3 + a], X[tri[t + 1] * 3 + a], X[tri[t + 2] * 3 + a]) + C / 2) / C));
+    for (let i = lo[0]; i <= hi[0]; i++) for (let j = lo[1]; j <= hi[1]; j++) for (let k = lo[2]; k <= hi[2]; k++) {
+      const c = key(i, j, k);
+      if (!grid.has(c)) grid.set(c, []);
+      grid.get(c).push(t);
+    }
+  }
+  // 射线和三角形（Möller–Trumbore）
+  const hit = (ox, oy, oz, dx, dy, dz, t) => {
+    const a = tri[t] * 3, b = tri[t + 1] * 3, c = tri[t + 2] * 3;
+    const e1x = X[b] - X[a], e1y = X[b + 1] - X[a + 1], e1z = X[b + 2] - X[a + 2], e2x = X[c] - X[a], e2y = X[c + 1] - X[a + 1], e2z = X[c + 2] - X[a + 2];
+    const px = dy * e2z - dz * e2y, py = dz * e2x - dx * e2z, pz = dx * e2y - dy * e2x, det = e1x * px + e1y * py + e1z * pz;
+    if (Math.abs(det) < 1e-12) return false;
+    const inv = 1 / det, sx = ox - X[a], sy = oy - X[a + 1], sz = oz - X[a + 2], u = (sx * px + sy * py + sz * pz) * inv;
+    if (u < 0 || u > 1) return false;
+    const qx = sy * e1z - sz * e1y, qy = sz * e1x - sx * e1z, qz = sx * e1y - sy * e1x, w = (dx * qx + dy * qy + dz * qz) * inv;
+    if (w < 0 || u + w > 1) return false;
+    const h = (e2x * qx + e2y * qy + e2z * qz) * inv;
+    return h > 0 && h < R;
+  };
+  const out = set.slice(), seen = new Set();
+  for (let v = 0; v < H.nv; v++) {
+    if (!set[v]) continue;
+    const dx = N[v * 3], dy = N[v * 3 + 1], dz = N[v * 3 + 2], ox = X0[v * 3] + dx * 0.002, oy = X0[v * 3 + 1] + dy * 0.002, oz = X0[v * 3 + 2] + dz * 0.002;
+    seen.clear();
+    let covered = false;
+    for (let r = 0; r <= R && !covered; r += C / 4) {
+      const list = grid.get(key(Math.floor((ox + dx * r) / C), Math.floor((oy + dy * r) / C), Math.floor((oz + dz * r) / C)));
+      if (list) for (const t of list) { if (seen.has(t)) continue; seen.add(t); if (hit(ox, oy, oz, dx, dy, dz, t)) { covered = true; break; } }
+    }
+    if (!covered) out[v] = 0;
+  }
+  return out;
+}
 // 衣服 p 底下的皮肤顶点：use(i) 的那些、不在边上的代理顶点，脚下的和挂的（权重大于 0.2，换成皮肤顶点）都算，
 // 往外长三圈补洞，再往里缩 shrinkBy 圈
 // 衣服边上的代理顶点（只属于一个三角形的边）
@@ -1469,12 +1514,17 @@ function bindRest() {
   skeleton.calculateInverses();
   for (const m of skinned) { m.bindMatrix.copy(m.matrixWorld); m.bindMatrixInverse.copy(m.matrixWorld).invert(); }
   // 动作换骨架：我们每根骨头的静止方向 → 源骨架静止方向的旋转
-  restQ = H.rig.bones.map((b, i) => {
+  restQ = [];
+  H.rig.bones.forEach((b, i) => {
     const k = ANIM.bones.indexOf(b.name);
-    if (k < 0) return null;
+    if (k < 0) { restQ[i] = null; return; }
     const d = tail(i).sub(head(i)).normalize();
     const s = new THREE.Vector3(...ANIM.restDir[k]);
-    return new THREE.Quaternion().setFromUnitVectors(d, s);
+    // 锁骨不对齐方向：动作库小人的锁骨静止时往后斜 30°，我们的几乎是平的（往下斜 10°）——硬对齐会把两个肩膀往后、往上
+    // 拽 6 ~ 9cm，胸口的皮肤被两边的肩膀挤成两团（男人也像有胸），衣服领口也被扯开。锁骨只跟着胸口（父骨头）的对齐走，
+    // 再加上动作库里锁骨相对胸口转了多少：肩膀留在我们自己的位置上，动作里耸肩、含胸照样有
+    if (/^clavicle_/.test(b.name)) { restQ[i] = (restQ[b.parent] ?? new THREE.Quaternion()).clone(); return; }
+    restQ[i] = new THREE.Quaternion().setFromUnitVectors(d, s);
   });
   pelvisRest = bones[BI.pelvis].position.clone();
   if (prop) prop.want.place(prop.obj, (pelvisRest.y - groundY) / 0.92);
