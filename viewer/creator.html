@@ -2177,7 +2177,7 @@ const TABS = [
   { id: 'motion', label: '动作', focus: 'full' },
 ];
 const LOOK_SUB = [{ id: 'hair', label: '头发', focus: 'bust' }, { id: 'brows', label: '眉毛睫毛', focus: 'eyes' }, { id: 'eyes', label: '眼睛', focus: 'eyes' }, { id: 'beard', label: '胡子', focus: 'face' }, { id: 'makeup', label: '妆容', focus: 'face' }, { id: 'skin', label: '皮肤', focus: 'face' }];
-let tab = params.get('tab') ?? (DEMOS[params.get('anim')] ? 'motion' : 'preset');
+let tab = params.get('tab') ?? 'preset';
 // 服装分三页：衣服看全身，鞋看脚，帽子看胸像
 const WEAR_SUB = [{ id: 'clothes', label: '衣服', focus: 'full' }, { id: 'shoes', label: '鞋', focus: 'feet' }, { id: 'hat', label: '帽子', focus: 'bust' }];
 let featSub = params.get('feat') ?? 'shape';
@@ -2827,6 +2827,8 @@ if (params.has('code')) { try { S = decode(params.get('code')); } catch { /* 忽
 if (EXPR[params.get('expr')]) S.expr = params.get('expr');
 if (params.has('anim')) S.anim = CLIPS[params.get('anim')] || DEMOS[params.get('anim')] ? params.get('anim') : '';
 else if (SHOT) S.anim = '';
+// 网址（或者网址里的捏脸码）带着动作演示、又没指定哪一页：直接开在“动作”页，演示接着播
+if (!params.has('tab') && DEMOS[S.anim]) tab = 'motion';
 for (const k of ['hair', 'eye', 'beardStyle', 'moustache']) if (params.has(k)) S.look[k] = params.get(k);
 if (params.has('hc')) S.look.hairColor = /^[0-9a-f]{6}$/i.test(params.get('hc')) ? '#' + params.get('hc') : '';
 if (params.has('sex')) S.sex = params.get('sex') === 'f' ? 'f' : 'm';
