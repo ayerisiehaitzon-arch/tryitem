@@ -2274,69 +2274,118 @@ function clothPresim(T) {
 // 模拟的链点（verlet）带着速度、有阻尼，每段长度不变、绕着上一个链点转，往目标的形状回弹（这一段的目标方向，按上一段
 // 偏过去的角度带过去三成，一节带一节）。身子的动作只有一部分甩得动头发：颅底往下 18cm 以内（马尾、辫子、长头发上面那截）
 // 目标挪多少、链点先跟着挪两成，剩下八成靠惯性；再往下的长头发大半披在背上，渐渐跟到九成，还往目标的位置拉。
-// 原地走、跑时有迎面的风；重力只算身子歪过去以后和静止时差的那一部分：马尾（一束的，见 HAIR_BUNDLE）头一低就给足，弯腰、
-// 跪着、低头时整束往下垂；辫子、披着的长头发只给 3m/s²（往背上贴一点）；
-// 碰到身体、上衣就沿那里的法线推出来，不比目标（不甩时的位置）陷得深，最多留 3cm，碰上了有摩擦；每段离目标方向最多偏多少按链长定。
-// 头发顶点按方位挂在相邻两根链上、按高度挂在相邻两个链点上，四个链点的转动、平移线性混合（就是蒙皮，“骨头”换成链点），
-// 着色器里在骨骼蒙皮以后再做一次（见 hairBend）；链的根（颅底，马尾是发圈）往下 3cm 渐渐挂足，再往上不动。颅底以下垂不到 5cm 的（短发）不动
+// 原地走、跑时有迎面的风；重力只算身子歪过去以后和静止时差的那一部分：马尾、辫子（一束一束的，见 HAIR_BUNDLE）弯腰、跪着、
+// 低头时整束往下垂，从脖子一侧绕过去；披着的长头发只给 3m/s²（往背上贴一点）；
+// 碰到身体、上衣就沿那里的法线推出来，不比目标（不甩时的位置）陷得深，最多留 3cm，碰上了有摩擦；一束的还跟脖子、头碰；
+// 每段离目标方向最多偏多少按链长定。
+// 头发顶点按方位挂在相邻两根链上、按高度挂在相邻两个链点上（一束的挂在自己那根上），四个链点的转动、平移线性混合（就是蒙皮，
+// “骨头”换成链点），着色器里在骨骼蒙皮以后再做一次（见 hairBend）；链的根（颅底，马尾是发圈）往下 3cm 渐渐挂足，再往上不动。
+// 颅底以下垂不到 5cm 的（短发）不动
 const HAIR_NS = 16, HAIR_DY = 0.07, HAIR_K = (2 * Math.PI * 1.6) ** 2, HAIR_DRAG = 0.12, HAIR_AIR = 0.1, HAIR_CLR = 0.03, HAIR_CAND = 48, HAIR_FOLLOW = 0.3, HAIR_FRICTION = 0.3, HAIR_G = 1, HAIR_G0 = 3, HAIR_KP = (2 * Math.PI * 2) ** 2;
 const hairBM = bones.map(() => new THREE.Matrix4()), hairM = new THREE.Matrix4();
 const HAIR_COLB = new Set(['pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'head', 'clavicle_l', 'clavicle_r'].map((n) => BI[n]));
 const hV1 = new THREE.Vector3(), hV2 = new THREE.Vector3(), hQ = new THREE.Quaternion(), hQI = new THREE.Quaternion(), hQs = Array.from({ length: HAIR_NP }, () => new THREE.Quaternion());
 const hTl = new Float32Array(HAIR_NP * 3), hPl = new Float32Array(HAIR_NP * 3);
-// 一束的头发（马尾）：弯腰、跪着、低头时整束往下垂（见 hairStep）；按形状分不清一束还是一片（辫子和披在背上的长头发都是
-// 脑后几根长链），挑出来的。root：链从颅底往上几个链点（7cm 一个）开始——马尾的发圈在颅底上面 10cm 左右，发圈到颅底那一截
-// 已经离开头皮、往后支着，链从颅底开始的话它跟着头硬硬地支着，下面垂下来的部分在颅底折成一个尖角。
-// 这时只有马尾自己的发片挂在链上（一片发片是网格里连着的一块，垂到颅底下面 7cm 以上的才算），头皮上的发片不动——
-// 不然后颈、耳后的短发跟着马尾从发圈那儿甩开，露出头皮。
-// 辫子不垂：辫子从后颈直接垂下来，头一低就得穿过脖子往下垂，被碰撞推回来，几根链各走各的，辫子扯成一缕缕的
-const HAIR_BUNDLE = { ponytail01: { root: 1 } };
-// 一款头发的链（只看形状，在基础网格上算一次）：哪些扇区有链、每根几个链点、每个链点由哪些顶点平均、链点的蒙皮、每个顶点挂在哪
+// 一束一束的头发（马尾、辫子）：每一束一根链，整束一起甩，弯腰、跪着、低头时整束往下垂（见 hairStep）。按绕头的扇区分链的话，
+// 一股辫子横跨三四根链，头一低几根链各走各的（辫子从后颈直接垂下来，头一低就得贴着脖子往下垂，几根被碰撞往不同方向推），
+// 辫子扯成一缕缕的。哪些发片是一束：网格里连着的一块垂到颅底下面 14cm 以上的（辫子上面那截短的几股按离得多远归进来，
+// 见 hairRig）；按它在颅底下面 14 ~ 28cm 那截的左右位置分成几束（隔开 2.5cm 以上的分开，双麻花辫是左右两束）。
+// 按形状分不清一束还是一片（披在背上的长头发也是连着的长发片），挑出来的几款。
+// root：链从哪儿开始（颅底往下第几个 7cm，负的在颅底以上），默认是这一束最上面的地方，在颅底以上的从颅底开始（长辫子是从头顶
+// 编下来的，贴着头皮的那截不动）。马尾的发圈在颅底上面 10cm 左右，发圈到颅底那一截已经离开头皮、往后支着，从发圈底下 3cm 开始
+// （链从颅底开始的话它跟着头硬硬地支着，垂下来的部分在颅底折成一个尖角）。一束以外的发片不动——挂在一束的链上的话，后颈、
+// 耳后的短发跟着马尾从发圈那儿甩开，露出头皮；挂在扇区的链上的话见 hairRig
+const HAIR_BUNDLE = { ponytail01: { root: -1 }, braid01: {}, double_braid: {}, lara: {} };
+// 一款头发的链（只看形状，在基础网格上算一次）：哪些扇区有链、哪几束、每根几个链点、每个链点由哪些顶点平均、链点的蒙皮、每个顶点挂在哪
 function hairRig(p) {
   if (p.hairRig !== undefined) return p.hairRig;
   const X = HM.fitProxy(p, H.pos0), Jt = HM.joints(H, H.pos0), hb = H.rig.bones[BI.head].head * 3, ya = Jt[hb + 1], xh = Jt[hb], zh = Jt[hb + 2];
   const nv = p.nv, TW = (2 * Math.PI) / HAIR_NS, U = new Float32Array(nv), S = new Float32Array(nv), cnt = new Uint32Array(HAIR_NS), smax = new Float32Array(HAIR_NS);
-  const bun = HAIR_BUNDLE[p.name], r = bun?.root ?? 0;
   // 方位 u 以扇区为单位，扇区 j 的中心在 u = j（j = 0 在正后方）；s：颅底往下第几个链点（连续的，颅底以上是负的）
   for (let i = 0; i < nv; i++) {
     S[i] = (ya - X[i * 3 + 1]) / HAIR_DY;
     U[i] = (Math.atan2(X[i * 3] - xh, X[i * 3 + 2] - zh) + Math.PI) / TW;
-    if (S[i] <= 0) continue;
-    const j = Math.round(U[i]) % HAIR_NS;
-    cnt[j]++; smax[j] = Math.max(smax[j], S[i]);
   }
-  // 垂到颅底下面 5cm 以上、有 20 个顶点以上的扇区才有链；链从颅底往上 r 个链点开始；一束头发里颅底以下 14cm 以上的链会往下垂（hang）
-  const row = new Int8Array(HAIR_NS).fill(-1), chains = [];
-  let NPT = 0;
-  for (let j = 0; j < HAIR_NS; j++) {
-    if (cnt[j] < 20 || smax[j] * HAIR_DY < 0.05) continue;
-    const n = Math.min(HAIR_NP, Math.ceil(smax[j]) + 1 + r);
-    // 每段最多偏多少（按颅底以下的长度）：垂下来 20 ~ 30cm 的一束（马尾、短辫子）69°；更短的（波波头的发梢）29°，40cm 以上的长头发 43°，中间渐变
-    const len = (n - 1 - r) * HAIR_DY, up = Math.min(1, Math.max(0, (len - 0.12) / 0.08)), down = Math.min(1, Math.max(0, (len - 0.3) / 0.1));
-    row[j] = chains.length; chains.push({ j, n, off: NPT, amax: 0.5 + 0.7 * up - 0.45 * down, hang: !!bun && n - 1 - r >= 2 }); NPT += n;
-  }
-  if (!chains.length) return (p.hairRig = null);
-  // 从发圈开始的（r > 0）：哪些顶点是马尾的发片——网格里连着的一块垂到颅底下面 7cm 以上
-  const off = new Uint8Array(nv).fill(1);
-  if (r > 0) {
+  // 一束一束的（见 HAIR_BUNDLE）：bun[i] 是顶点 i 在第几束（-1：不在）
+  const cfg = HAIR_BUNDLE[p.name], bun = new Int8Array(nv).fill(-1), bundles = [];
+  if (cfg) {
     const par = Int32Array.from({ length: nv }, (_, i) => i), find = (x) => { while (par[x] !== x) x = par[x] = par[par[x]]; return x; };
-    const { index, map } = p.data, low = new Float32Array(nv).fill(-Infinity);
+    const { index, map } = p.data;
     for (let t = 0; t < index.length; t += 3) {
       const u = find(map[index[t]]), v = find(map[index[t + 1]]), w = find(map[index[t + 2]]);
       par[v] = u; par[find(w)] = u;
     }
-    for (let i = 0; i < nv; i++) { const c = find(i); low[c] = Math.max(low[c], S[i]); }
-    for (let i = 0; i < nv; i++) off[i] = low[find(i)] > 1 ? 1 : 0;
+    const comp = new Map();
+    for (let i = 0; i < nv; i++) {
+      const c = find(i);
+      let e = comp.get(c);
+      if (!e) comp.set(c, (e = { top: Infinity, low: -Infinity, mx: 0, mn: 0, n: 0, x: 0, z: 0, s: 0 }));
+      e.top = Math.min(e.top, S[i]); e.low = Math.max(e.low, S[i]); e.n++; e.x += X[i * 3] - xh; e.z += X[i * 3 + 2]; e.s += S[i];
+      if (S[i] > 2 && S[i] < 4) { e.mx += X[i * 3] - xh; e.mn++; }
+    }
+    const long = [...comp.entries()].filter(([, e]) => e.low > 2).map(([c, e]) => [c, e.mn ? e.mx / e.mn : e.x / e.n]).sort((a, b) => a[1] - b[1]);
+    const which = new Map();
+    long.forEach(([c, x], m) => {
+      if (!m || x - long[m - 1][1] > 0.025) bundles.push({ top: Infinity, low: -Infinity, sx: 0 });
+      which.set(c, bundles.length - 1);
+    });
+    // 辫子上面那截还有些短的发片（编起来的头几股）：整块在颅底以下、离哪一束的中心线（这一束的顶点每 1/4 个链点一层的平均位置）
+    // 3.5cm 以内的也算那一束——不然它们挂在扇区的链上，辫子垂下去时留在原地，翘出几根
+    const line = bundles.map(() => new Map());
+    for (let i = 0; i < nv; i++) {
+      const g = which.get(find(i));
+      if (g === undefined) continue;
+      const k = Math.round(S[i] * 4), m = line[g].get(k) ?? [0, 0, 0];
+      line[g].set(k, m); m[0] += X[i * 3] - xh; m[1] += X[i * 3 + 2]; m[2]++;
+    }
+    for (const [c, e] of comp) {
+      if (which.has(c) || e.top < 0) continue;
+      let dmin = 0.035, g0 = -1;
+      line.forEach((L, g) => {
+        const m = L.get(Math.round((e.s / e.n) * 4));
+        if (!m) return;
+        const d = Math.hypot(e.x / e.n - m[0] / m[2], e.z / e.n - m[1] / m[2]);
+        if (d < dmin) { dmin = d; g0 = g; }
+      });
+      if (g0 >= 0) which.set(c, g0);
+    }
+    for (let i = 0; i < nv; i++) {
+      const g = which.get(find(i));
+      if (g === undefined) continue;
+      bun[i] = g; bundles[g].top = Math.min(bundles[g].top, S[i]); bundles[g].low = Math.max(bundles[g].low, S[i]); bundles[g].sx += X[i * 3] - xh;
+    }
   }
-  // 链点由哪些顶点平均：自己扇区里的顶点按 s 分给上下两个链点
+  // 扇区的链：颅底以下的头发，垂到颅底下面 5cm 以上、有 20 个顶点以上的扇区才有链。有一束一束的那几款，一束以外的发片
+  // （头皮上、后颈、耳边的短发）不挂：扇区里只剩这一点短发，短短一截链自己甩，后颈的发片翘起来，露出发片的边
+  for (let i = 0; i < nv && !bundles.length; i++) {
+    if (S[i] <= 0) continue;
+    const j = Math.round(U[i]) % HAIR_NS;
+    cnt[j]++; smax[j] = Math.max(smax[j], S[i]);
+  }
+  // 每段最多偏多少（按颅底以下的长度）：垂下来 20 ~ 30cm 的一束（马尾、短辫子）69°；更短的（波波头的发梢）29°，40cm 以上的长头发 43°，中间渐变
+  const amax = (len) => { const up = Math.min(1, Math.max(0, (len - 0.12) / 0.08)), down = Math.min(1, Math.max(0, (len - 0.3) / 0.1)); return 0.5 + 0.7 * up - 0.45 * down; };
+  const row = new Int8Array(HAIR_NS).fill(-1), chains = [];
+  let NPT = 0;
+  for (let j = 0; j < HAIR_NS; j++) {
+    if (cnt[j] < 20 || smax[j] * HAIR_DY < 0.05) continue;
+    const n = Math.min(HAIR_NP, Math.ceil(smax[j]) + 1);
+    row[j] = chains.length; chains.push({ j, n, off: NPT, amax: amax((n - 1) * HAIR_DY), hang: false, s0: 0 }); NPT += n;
+  }
+  // 一束一根链，从 s0 开始（链点 k 在颅底往下 s0 + k 处），会往下垂（hang）；side：这一束在左边还是右边，垂下去时从这一侧绕过脖子
+  for (const g of bundles) {
+    const s0 = cfg.root ?? Math.max(0, g.top), n = Math.min(HAIR_NP, Math.ceil(g.low - s0) + 1);
+    g.chain = chains.length; chains.push({ j: -1, n, off: NPT, amax: amax((n - 1 + Math.min(0, s0)) * HAIR_DY), hang: true, s0, side: g.sx >= 0 ? 1 : -1 }); NPT += n;
+  }
+  if (!chains.length) return (p.hairRig = null);
+  // 链点由哪些顶点平均：扇区的链——自己扇区里的顶点，一束的——这一束的顶点，按沿链的位置分给上下两个链点（链的根也算上它上面那截）
   const lists = Array.from({ length: NPT }, () => []);
   for (let i = 0; i < nv; i++) {
-    if (S[i] <= -r || !off[i]) continue;
-    const ri = row[Math.round(U[i]) % HAIR_NS];
-    if (ri < 0) continue;
-    const c = chains[ri], sr = S[i] + r, k = Math.floor(sr), f = sr - k;
-    if (k < c.n) lists[c.off + k].push(i, 1 - f);
-    if (k + 1 < c.n) lists[c.off + k + 1].push(i, f);
+    let c, sr;
+    if (bun[i] >= 0) { c = chains[bundles[bun[i]].chain]; sr = S[i] - c.s0; if (sr <= -1) continue; }
+    else { if (S[i] <= 0) continue; const ri = row[Math.round(U[i]) % HAIR_NS]; if (ri < 0) continue; c = chains[ri]; sr = S[i]; }
+    const k = Math.floor(sr), f = sr - k;
+    if (k >= 0 && k < c.n) lists[c.off + k].push(i, 1 - f);
+    if (k + 1 >= 0 && k + 1 < c.n) lists[c.off + k + 1].push(i, f);
   }
   const memStart = new Uint32Array(NPT + 1);
   for (let q = 0; q < NPT; q++) memStart[q + 1] = memStart[q] + lists[q].length / 2;
@@ -2365,30 +2414,36 @@ function hairRig(p) {
       break;
     }
   }
-  // 每个顶点挂在哪：方位两边的两个扇区的链（一边没有就只挂另一边，两边都没有就挂最近的），沿链的位置 s + r，挂多少
-  // （链的根往下 3cm 渐渐挂足）
+  // 每个顶点挂在哪：一束的挂在这一束的链上；别的按方位挂在两边两个扇区的链上（一边没有就只挂另一边，两边都没有就挂最近的）；
+  // 沿链的位置，挂多少（链的根往下 3cm 渐渐挂足，再往上不动）
   const bind = new Float32Array(nv * 4);
   for (let i = 0; i < nv; i++) {
-    if (S[i] <= -r || !off[i]) continue;
-    const j0 = Math.floor(U[i]) % HAIR_NS, f = U[i] - Math.floor(U[i]);
-    let a = row[j0], b = row[(j0 + 1) % HAIR_NS], wB = f;
-    if (a < 0 && b < 0) {
-      const jr = Math.round(U[i]);
-      for (const d of [1, -1, 2, -2]) { const ri = row[(((jr + d) % HAIR_NS) + HAIR_NS) % HAIR_NS]; if (ri >= 0) { a = b = ri; break; } }
-      if (a < 0) continue;
-    } else if (a < 0) a = b;
-    else if (b < 0) b = a;
-    if (a === b) wB = 0;
-    const sr = S[i] + r, t = Math.min(1, sr / (0.03 / HAIR_DY));
+    let a, b, wB = 0, sr;
+    if (bun[i] >= 0) { a = b = bundles[bun[i]].chain; sr = S[i] - chains[a].s0; }
+    else {
+      sr = S[i];
+      if (sr <= 0) continue;
+      const j0 = Math.floor(U[i]) % HAIR_NS, f = U[i] - Math.floor(U[i]);
+      a = row[j0]; b = row[(j0 + 1) % HAIR_NS]; wB = f;
+      if (a < 0 && b < 0) {
+        const jr = Math.round(U[i]);
+        for (const d of [1, -1, 2, -2]) { const ri = row[(((jr + d) % HAIR_NS) + HAIR_NS) % HAIR_NS]; if (ri >= 0) { a = b = ri; break; } }
+        if (a < 0) continue;
+      } else if (a < 0) a = b;
+      else if (b < 0) b = a;
+      if (a === b) wB = 0;
+    }
+    if (sr <= 0) continue;
+    const t = Math.min(1, sr / (0.03 / HAIR_DY));
     bind[i * 4] = a + 16 * b; bind[i * 4 + 1] = wB; bind[i * 4 + 2] = Math.min(sr, HAIR_NP - 1.001); bind[i * 4 + 3] = t * t * (3 - 2 * t);
   }
-  return (p.hairRig = { chains, NPT, r, memStart, memI, memW, psi, psw, bind });
+  return (p.hairRig = { chains, NPT, memStart, memI, memW, psi, psw, bind });
 }
 function hairSetup(s) {
   const R = hairRig(s.p);
   HAIR_U.uHairOn.value = R ? 1 : 0;
   hairTexReset();
-  s.hdyn = R ? { R, C: new Float32Array(R.NPT * 3), T: new Float32Array(R.NPT * 3), X: new Float32Array(R.NPT * 3), Xp: new Float32Array(R.NPT * 3), Tp: new Float32Array(R.NPT * 3), fr: new Float32Array(R.NPT), gv: new Float32Array(R.NPT * 3), cand: new Int32Array(R.NPT * HAIR_CAND), surf: null, fresh: true } : null;
+  s.hdyn = R ? { R, C: new Float32Array(R.NPT * 3), T: new Float32Array(R.NPT * 3), X: new Float32Array(R.NPT * 3), Xp: new Float32Array(R.NPT * 3), Tp: new Float32Array(R.NPT * 3), fr: new Float32Array(R.NPT), gv: new Float32Array(R.NPT * 3), ev: new Float32Array(R.NPT * 3), cand: new Int32Array(R.NPT * HAIR_CAND), surf: null, prox: null, fresh: true } : null;
 }
 // 体型、衣服变了：链点的静止位置（当前体型上贴好的头发），碰撞面（皮肤和上衣的顶点，每个链点留静止时离它最近的 HAIR_CAND 个，
 // 15cm 以内）
@@ -2466,6 +2521,33 @@ function hairFit(s) {
     const f = found.subarray(0, m).sort();
     for (let k = 0; k < Math.min(HAIR_CAND, m); k++) D.cand[q * HAIR_CAND + k] = f[k] % 65536;
   }
+  // 一束的另外跟脖子、头碰（见 hairStep）：脖子是 neck_01 的关节到头的关节一根胶囊，半径取脖子上（neck_01 的权重过半）皮肤顶点
+  // 到轴的距离的中位数；头是一个球，按头关节以上（head 的权重九成以上）皮肤顶点的半宽 w：中心在左右正中、关节往上 w / 2、
+  // 后脑勺往前 w，半径 w。各加 2cm（辫子的粗细），每个链点不超过它静止时离得多远（不甩的时候不推）
+  D.prox = null;
+  if (R.chains.some((c) => c.hang)) {
+    const jp = (b) => { const i = H.rig.bones[BI[b]].head * 3; return [J[i], J[i + 1], J[i + 2]]; };
+    const n0 = jp('neck_01'), n1 = jp('head'), ax = n1.map((v, e) => v - n0[e]), a2 = ax[0] ** 2 + ax[1] ** 2 + ax[2] ** 2;
+    const dseg = (x, y, z) => { const t = Math.min(1, Math.max(0, ((x - n0[0]) * ax[0] + (y - n0[1]) * ax[1] + (z - n0[2]) * ax[2]) / a2)); return Math.hypot(x - n0[0] - t * ax[0], y - n0[1] - t * ax[1], z - n0[2] - t * ax[2]); };
+    const ds = [], SI = H.rig.skinIndex, SW = H.rig.skinWeight;
+    let x0 = Infinity, x1 = -Infinity, zb = Infinity;
+    for (let v = 0; v < H.nv; v++) {
+      if (!SKIN_V[v]) continue;
+      let wn = 0, wh = 0, sum = 0;
+      for (let k = 0; k < 4; k++) { const w = SW[v * 4 + k]; sum += w; if (SI[v * 4 + k] === BI.neck_01) wn += w; else if (SI[v * 4 + k] === BI.head) wh += w; }
+      if (wn > 0.5 * sum) ds.push(dseg(P[v * 3], P[v * 3 + 1], P[v * 3 + 2]));
+      if (wh > 0.9 * sum && P[v * 3 + 1] > n1[1]) { x0 = Math.min(x0, P[v * 3]); x1 = Math.max(x1, P[v * 3]); zb = Math.min(zb, P[v * 3 + 2]); }
+    }
+    ds.sort((a, b) => a - b);
+    const w = (x1 - x0) / 2, rn = (ds[ds.length >> 1] ?? 0.05) + 0.02, rh = w + 0.02, hc = [(x0 + x1) / 2, n1[1] + w / 2, zb + w];
+    const lim = new Float32Array(R.NPT * 2);
+    for (const c of R.chains) for (let k = 1; c.hang && k < c.n; k++) {
+      const q = c.off + k, x = C[q * 3], y = C[q * 3 + 1], z = C[q * 3 + 2];
+      lim[q * 2] = Math.min(rn, dseg(x, y, z) - 0.005);
+      lim[q * 2 + 1] = Math.min(rh, Math.hypot(x - hc[0], y - hc[1], z - hc[2]) - 0.005);
+    }
+    D.prox = { n0, n1, hc, rn, rh, lim, w: new Float32Array(9) };
+  }
   D.fresh = true;
 }
 // 每帧：链点的目标（按链点的蒙皮），碰撞面跟着骨头走，模拟 steps 步，算出每个链点的变换写进贴图
@@ -2498,23 +2580,45 @@ function hairStep(s, steps) {
   // 风、重力也乘上 free。
   // 重力：建模时的样子已经是垂着的，只算身子歪过去以后重力方向和静止时不一样的那部分——这一段从静止方向转到目标方向，
   // 静止时“往下”跟着转过去，往下减去它；披着的长头发给 HAIR_G0（往背上贴一点，不整片往前翻）。
-  // 一束的（hang）：头低下去（歪过去）30° 以内还是 HAIR_G0（跑步时头一点一点的），到 60°（弯腰、跪着、低头）重力跟弹簧把它
-  // 拉回目标方向的力一样大（HAIR_G 倍），下面那截也全放开，整束往下垂（hw）。看头歪了多少，不看每一段的目标方向：
-  // 链点的蒙皮混着头、脖子、背上的骨头，跑步时目标本身就被扭过去五六十度。
-  // fr：每个链点能甩多少，gv：每个链点的重力（m/s²）
-  const free = (k) => { const t = Math.min(1, Math.max(0, ((k - R.r) * HAIR_DY - 0.18) / 0.27)); return 1 - 0.85 * t * t * (3 - 2 * t); };
-  const fr = D.fr, gv = D.gv, he = hairBM[BI.head].elements;
+  // 一束的（hang）：头低下去（歪过去）30° 以内还是 HAIR_G0（跑步时头一点一点的），到 60°（弯腰、跪着、低头）整束往下垂（hw），
+  // 下面那截也全放开。看头歪了多少，不看每一段的目标方向：链点的蒙皮混着头、脖子、背上的骨头，跑步时目标本身就被扭过去五六十度。
+  // 往下垂放进每一段想去的方向 ev，而不是当成一个力跟弹簧对着拉：弯腰时辫子的目标贴着背往上走，跟重力差不多正好反着，两个大力
+  // 抵着，一节带一节的转动差不多 180°，转轴不稳，链子折成锯齿。ev 先取目标方向和重力（跟弹簧一样大，HAIR_G 倍）平衡的方向，
+  // 再按 hw × free 转到正下方——辫子从后颈垂下来，正下方是脖子，靠近根的几段往这一束那一侧（脖子的左右轴）偏一点，
+  // 碰到脖子时从这边绕过去，贴着脸边垂下去（双麻花辫左右各一边）。
+  // fr：每个链点能甩多少，gv：每个链点的重力（HAIR_G0 那部分，m/s²），ev：每一段想去的方向
+  const free = (c, k) => { const t = Math.min(1, Math.max(0, ((k + c.s0) * HAIR_DY - 0.18) / 0.27)); return 1 - 0.85 * t * t * (3 - 2 * t); };
+  const fr = D.fr, gv = D.gv, ev = D.ev, he = hairBM[BI.head].elements;
   const hl = Math.hypot(he[4], he[5], he[6]) || 1, ht = Math.min(1, Math.max(0, (0.5 * Math.hypot(he[4] / hl, 1 - he[5] / hl, he[6] / hl) - 0.26) / 0.24)), hw = ht * ht * (3 - 2 * ht);
+  // 脖子的左右轴（垂下去时往这一束那边绕过脖子）；脖子、头的碰撞体换到世界里：w = 脖子两头、头的中心
+  const ne = hairBM[BI.neck_01].elements, nl = Math.hypot(ne[0], ne[1], ne[2]) || 1, sx = ne[0] / nl, sy = ne[1] / nl, sz = ne[2] / nl, PX = D.prox;
+  if (PX) {
+    const tf = (e, p, o) => { for (let a = 0; a < 3; a++) PX.w[o + a] = e[a] * p[0] + e[4 + a] * p[1] + e[8 + a] * p[2] + e[12 + a]; };
+    tf(ne, PX.n0, 0); tf(he, PX.n1, 3); tf(he, PX.hc, 6);
+  }
   for (const c of R.chains) for (let k = 1; k < c.n; k++) {
     const q = (c.off + k) * 3, p1 = q - 3, L = Math.hypot(T[q] - T[p1], T[q + 1] - T[p1 + 1], T[q + 2] - T[p1 + 2]) || 1e-4;
-    hV1.set(T[q] - T[p1], T[q + 1] - T[p1 + 1], T[q + 2] - T[p1 + 2]).divideScalar(L);
+    const ux = (T[q] - T[p1]) / L, uy = (T[q + 1] - T[p1 + 1]) / L, uz = (T[q + 2] - T[p1 + 2]) / L;
+    hV1.set(ux, uy, uz);
     hV2.set(C[q] - C[p1], C[q + 1] - C[p1 + 1], C[q + 2] - C[p1 + 2]).normalize();
     hQ.setFromUnitVectors(hV2, hV1);
     hV1.set(0, -1, 0).applyQuaternion(hQ);
     const dx = -hV1.x, dy = -1 - hV1.y, dz = -hV1.z;
-    let f = free(k), g = HAIR_G0;
-    if (c.hang) { f = Math.max(f, hw); g += (HAIR_G * HAIR_K * L - HAIR_G0) * hw; }
-    fr[q / 3] = f; gv[q] = g * f * dx; gv[q + 1] = g * f * dy; gv[q + 2] = g * f * dz;
+    let f = free(c, k), gh = 0;
+    if (c.hang) { f = Math.max(f, hw); gh = (HAIR_G * HAIR_K * L - HAIR_G0) * hw * f; }
+    fr[q / 3] = f; gv[q] = HAIR_G0 * f * dx; gv[q + 1] = HAIR_G0 * f * dy; gv[q + 2] = HAIR_G0 * f * dz;
+    let ex = HAIR_K * L * ux + gh * dx, ey = HAIR_K * L * uy + gh * dy, ez = HAIR_K * L * uz + gh * dz;
+    let el = Math.hypot(ex, ey, ez) || 1;
+    ex /= el; ey /= el; ez /= el;
+    const hv = c.hang ? hw * f : 0;
+    if (hv > 0) {
+      const b = 0.35 * Math.max(0, 1 - (k - 1) / 3) * c.side;
+      const hn = Math.hypot(b * sx, b * sy - 1, b * sz), hx = (b * sx) / hn, hy = (b * sy - 1) / hn, hz = (b * sz) / hn;
+      ex = ex * (1 - hv) + hx * hv; ey = ey * (1 - hv) + hy * hv; ez = ez * (1 - hv) + hz * hv;
+      el = Math.hypot(ex, ey, ez);
+      if (el > 1e-3) { ex /= el; ey /= el; ez /= el; } else { ex = hx; ey = hy; ez = hz; }
+    }
+    ev[q] = ex; ev[q + 1] = ey; ev[q + 2] = ez;
     const F = 1 - 0.8 * f;
     for (let e = 0; e < 3; e++) { const d = (T[q + e] - D.Tp[q + e]) * F; X[q + e] += d; Xp[q + e] += d; }
   }
@@ -2525,16 +2629,17 @@ function hairStep(s, steps) {
     for (let e = 0; e < 3; e++) X[r0 + e] = Xp[r0 + e] = T[r0 + e];
     for (let k = 1; k < c.n; k++) {
       const q = (c.off + k) * 3, p1 = q - 3;
-      // 这一段的目标方向 u；想去的方向：从第二段起按上一段偏过的角度转过来三成（一节带一节，又不至于越甩越卷）
+      // 这一段想去的方向 ev（见上，没加重力时就是目标方向）；从第二段起按上一段偏离它想去的方向的角度转过来三成
+      // （一节带一节，又不至于越甩越卷）
       const L = Math.hypot(T[q] - T[p1], T[q + 1] - T[p1 + 1], T[q + 2] - T[p1 + 2]) || 1e-4;
-      const ux = (T[q] - T[p1]) / L, uy = (T[q + 1] - T[p1 + 1]) / L, uz = (T[q + 2] - T[p1 + 2]) / L;
-      let tx = ux, ty = uy, tz = uz;
+      const ex = ev[q], ey = ev[q + 1], ez = ev[q + 2];
+      let tx = ex, ty = ey, tz = ez;
       if (k >= 2) {
         const p2 = p1 - 3;
-        hV1.set(T[p1] - T[p2], T[p1 + 1] - T[p2 + 1], T[p1 + 2] - T[p2 + 2]).normalize();
+        hV1.set(ev[p1], ev[p1 + 1], ev[p1 + 2]);
         hV2.set(X[p1] - X[p2], X[p1 + 1] - X[p2 + 1], X[p1 + 2] - X[p2 + 2]).normalize();
         hQ.setFromUnitVectors(hV1, hV2).slerp(hQI, 1 - HAIR_FOLLOW);
-        hV1.set(ux, uy, uz).applyQuaternion(hQ);
+        hV1.set(ex, ey, ez).applyQuaternion(hQ);
         tx = hV1.x; ty = hV1.y; tz = hV1.z;
       }
       const fk = fr[q / 3], gx = gv[q], gy = gv[q + 1], gz = gv[q + 2];
@@ -2544,15 +2649,9 @@ function hairStep(s, steps) {
       let nx = x + (x - Xp[q]) * (1 - HAIR_DRAG) + (K * (X[p1] + tx * L - x) + KP * (T[q] - x) + wx * fk + gx) * dt2;
       let ny = y + (y - Xp[q + 1]) * (1 - HAIR_DRAG) + (K * (X[p1 + 1] + ty * L - y) + KP * (T[q + 1] - y) + wy * fk + gy) * dt2;
       let nz = z + (z - Xp[q + 2]) * (1 - HAIR_DRAG) + (K * (X[p1 + 2] + tz * L - z) + KP * (T[q + 2] - z) + wz * fk + gz) * dt2;
-      // 长度不变；离目标方向 u 最多偏 c.amax（一束的：离受了重力以后该在的方向 e——目标方向往下垂过去——最多偏 c.amax）
+      // 长度不变；离想去的方向 ev 最多偏 c.amax
       let dx = nx - X[p1], dy = ny - X[p1 + 1], dz = nz - X[p1 + 2], l = Math.hypot(dx, dy, dz) || 1;
       dx /= l; dy /= l; dz /= l;
-      let ex = ux, ey = uy, ez = uz;
-      if (c.hang && hw > 0) {
-        ex = K * L * ux + gx; ey = K * L * uy + gy; ez = K * L * uz + gz;
-        const el = Math.hypot(ex, ey, ez) || 1;
-        ex /= el; ey /= el; ez /= el;
-      }
       const amax = c.amax, cosA = dx * ex + dy * ey + dz * ez;
       if (cosA < Math.cos(amax)) {
         const ox = dx - cosA * ex, oy = dy - cosA * ey, oz = dz - cosA * ez, ol = Math.hypot(ox, oy, oz) || 1, c = Math.cos(amax), sn = Math.sin(amax);
@@ -2570,7 +2669,9 @@ function hairStep(s, steps) {
       }
       // 碰上了（被推出来）就有摩擦：速度去掉三成，披在背上的头发跟着背走，不在背上乱滑
       let touch = false;
-      if (best >= 0) {
+      // 一束的垂下去以后离静止的地方远了，候选点是按静止的位置挑的：最近的也在 5cm 以外就不算——它的切面管不到这边，
+      // 绕到脖子侧面、垂到胸前的链点会被当成陷进了背里，从身子里推回背上
+      if (best >= 0 && !(c.hang && bd > 0.0025)) {
         // 要留的距离：目标（不甩时的位置）离这块表面多高，最多 3cm——不甩的时候怎么样都不推，甩起来也不比不甩时陷得深
         const h = (nx - P[best]) * Nn[best] + (ny - P[best + 1]) * Nn[best + 1] + (nz - P[best + 2]) * Nn[best + 2];
         const cl = Math.min(HAIR_CLR, (T[q] - P[best]) * Nn[best] + (T[q + 1] - P[best + 1]) * Nn[best + 1] + (T[q + 2] - P[best + 2]) * Nn[best + 2]);
@@ -2581,6 +2682,21 @@ function hairStep(s, steps) {
           nx = X[p1] + (dx * L) / l; ny = X[p1 + 1] + (dy * L) / l; nz = X[p1 + 2] + (dz * L) / l;
         }
       }
+      // 一束的：进了脖子（胶囊）、头（球）就沿径向推出去，再把长度拉回来
+      if (PX && c.hang) {
+        const W = PX.w, qq = (c.off + k) * 2;
+        let moved = false;
+        const bx = W[3] - W[0], by = W[4] - W[1], bz = W[5] - W[2], t = Math.min(1, Math.max(0, ((nx - W[0]) * bx + (ny - W[1]) * by + (nz - W[2]) * bz) / (bx * bx + by * by + bz * bz)));
+        const px = W[0] + t * bx, py = W[1] + t * by, pz = W[2] + t * bz, rd = Math.hypot(nx - px, ny - py, nz - pz), rl = PX.lim[qq];
+        if (rd < rl && rd > 1e-5) { nx = px + ((nx - px) * rl) / rd; ny = py + ((ny - py) * rl) / rd; nz = pz + ((nz - pz) * rl) / rd; moved = true; }
+        const hd = Math.hypot(nx - W[6], ny - W[7], nz - W[8]), hr = PX.lim[qq + 1];
+        if (hd < hr && hd > 1e-5) { nx = W[6] + ((nx - W[6]) * hr) / hd; ny = W[7] + ((ny - W[7]) * hr) / hd; nz = W[8] + ((nz - W[8]) * hr) / hd; moved = true; }
+        if (moved) {
+          dx = nx - X[p1]; dy = ny - X[p1 + 1]; dz = nz - X[p1 + 2]; l = Math.hypot(dx, dy, dz) || 1;
+          nx = X[p1] + (dx * L) / l; ny = X[p1 + 1] + (dy * L) / l; nz = X[p1 + 2] + (dz * L) / l;
+          touch = true;
+        }
+      }
       // 地板（y = 0）：躺下、趴着时垂下来的头发铺在地上，不穿进去
       if (ny < 0.01) { ny = 0.01; touch = true; }
       const mu = touch ? HAIR_FRICTION : 0;
@@ -2588,7 +2704,9 @@ function hairStep(s, steps) {
       X[q] = nx; X[q + 1] = ny; X[q + 2] = nz;
     }
   }
-  // 链点的变换（模型的局部坐标）：每段从目标方向转到模拟方向的转动，链点取前后两段的平均；平移让链点落到模拟的位置
+  // 链点的变换（模型的局部坐标）：每段从目标方向转到模拟方向的转动，链点取前后两段的平均；平移让链点落到模拟的位置。
+  // 一束的转得多（垂下去时转过去一百多度）：每段先跟着上一段转，再补上剩下那点（平行移动），不然相邻两段各转各的，
+  // 绕着自己的轴拧得不一样，辫子在根上拧成扁的一条
   hairM.copy(m0.matrixWorld).invert();
   const Mi = hairM.elements, tex = hairTex.image.data, W2 = HAIR_NP * 2;
   const loc = (A, q, out, o) => { const x = A[q * 3], y = A[q * 3 + 1], z = A[q * 3 + 2]; out[o] = Mi[0] * x + Mi[4] * y + Mi[8] * z + Mi[12]; out[o + 1] = Mi[1] * x + Mi[5] * y + Mi[9] * z + Mi[13]; out[o + 2] = Mi[2] * x + Mi[6] * y + Mi[10] * z + Mi[14]; };
@@ -2597,7 +2715,7 @@ function hairStep(s, steps) {
     for (let k = 0; k < c.n - 1; k++) {
       hV1.set(hTl[k * 3 + 3] - hTl[k * 3], hTl[k * 3 + 4] - hTl[k * 3 + 1], hTl[k * 3 + 5] - hTl[k * 3 + 2]).normalize();
       hV2.set(hPl[k * 3 + 3] - hPl[k * 3], hPl[k * 3 + 4] - hPl[k * 3 + 1], hPl[k * 3 + 5] - hPl[k * 3 + 2]).normalize();
-      hQs[k].setFromUnitVectors(hV1, hV2);
+      if (c.hang && k > 0) { hV1.applyQuaternion(hQs[k - 1]); hQs[k].setFromUnitVectors(hV1, hV2).multiply(hQs[k - 1]); } else hQs[k].setFromUnitVectors(hV1, hV2);
     }
     for (let k = 0; k < HAIR_NP; k++) {
       const kk = Math.min(k, c.n - 1);
